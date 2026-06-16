@@ -1,211 +1,100 @@
 import React from "react";
-import { motion } from "framer-motion";
-import {
-    User,
-    Lock,
-    ArrowRight,
-    Menu,
-} from "lucide-react";
-
 
 export default function LoginPage() {
-    const sparks = Array.from({ length: 20 });
-
     return (
-        <div className="nexforge-bg">
+        <div className="login-page">
 
-            {/* Background */}
-            <div className="bg-overlay" />
+            {/* Overlay */}
+            <div className="overlay"></div>
 
-            {/* Logo */}
-            <div className="logo-container">
-                <img
-                    src="/logo.png"
-                    alt="NexForge"
-                    className="logo"
-                />
+            <div className="particles">
+                {[...Array(15)].map((_, i) => (
+                    <span
+                        key={i}
+                        style={{
+                            left: `${Math.random() * 100}%`,
+                            animationDelay: `${Math.random() * 8}s`,
+                        }}
+                    />
+                ))}
             </div>
 
-            {/* Menu */}
-            <div className="menu-btn">
-                <Menu size={34} />
-            </div>
+            {/* Navbar */}
+            <nav className="navbar">
+                <div className="logo">
+                    <img src="/logo.png" alt="NexForge" />
+                </div>
 
-            <div className="content-wrapper">
+                <ul className="nav-links">
+                    <li>Home</li>
+                    <li>About</li>
+                    <li>Services</li>
+                    <li>Contact</li>
+                </ul>
 
-                {/* =========================
-              FORGE BOT
-        ========================== */}
+                <button className="nav-login-btn">
+                    Login
+                </button>
+            </nav>
 
-                <div className="forge-area">
+            {/* Login Card */}
+            <div className="login-container">
+                <div className="login-card">
 
-                    {/* Sparks */}
+                    <button className="close-btn">
+                        ✕
+                    </button>
 
-                    {sparks.map((_, i) => (
-                        <span
-                            key={i}
-                            className="spark"
-                            style={{
-                                "--x": `${Math.random() * 250 - 125}px`,
-                                "--y": `${-(Math.random() * 120)}px`,
-                                animationDelay: `${Math.random()}s`,
-                            }}
-                        />
-                    ))}
+                    <h1>Login</h1>
 
-                    {/* Anvil */}
+                    <form>
 
-                    <motion.div
-                        animate={{
-                            y: [0, 3, 0],
-                        }}
-                        transition={{
-                            repeat: Infinity,
-                            duration: 0.35,
-                        }}
-                        className="anvil-wrapper"
-                    >
-                        <div className="anvil" />
+                        <div className="form-group">
+                            <label>Email</label>
 
-                        <motion.div
-                            animate={{
-                                opacity: [0.5, 1, 0.5],
-                            }}
-                            transition={{
-                                repeat: Infinity,
-                                duration: 1,
-                            }}
-                            className="hot-metal"
-                        />
-                    </motion.div>
-
-                    {/* Robot */}
-
-                    <motion.div
-                        animate={{
-                            y: [0, -6, 0],
-                        }}
-                        transition={{
-                            repeat: Infinity,
-                            duration: 2,
-                        }}
-                        className="robot"
-                    >
-                        {/* Hammer */}
-
-                        <motion.div
-                            className="hammer"
-                            animate={{
-                                rotate: [0, -80, 20, 0],
-                            }}
-                            transition={{
-                                repeat: Infinity,
-                                duration: 0.7,
-                                ease: "easeInOut",
-                            }}
-                        >
-                            <div className="hammer-stick" />
-                            <div className="hammer-head" />
-                        </motion.div>
-
-                        {/* Head */}
-
-                        <div className="robot-head">
-                            <motion.div
-                                className="robot-eye"
-                                animate={{
-                                    opacity: [0.6, 1, 0.6],
-                                }}
-                                transition={{
-                                    repeat: Infinity,
-                                    duration: 1.5,
-                                }}
+                            <input
+                                type="email"
+                                placeholder="Enter email"
                             />
                         </div>
 
-                        {/* Body */}
+                        <div className="form-group">
+                            <label>Password</label>
 
-                        <div className="robot-body">
-                            <span className="text-orange-400 font-bold text-2xl">
-                                N
-                            </span>
+                            <input
+                                type="password"
+                                placeholder="Enter password"
+                            />
                         </div>
-                    </motion.div>
-                </div>
 
-                {/* =========================
-              LOGIN CARD
-        ========================== */}
+                        <div className="form-options">
+                            <label>
+                                <input type="checkbox" />
+                                Remember me
+                            </label>
 
-                <div className="login-card">
+                            <a href="/">
+                                Forgot Password?
+                            </a>
+                        </div>
 
-                    {/* Email */}
-
-                    <div className="input-wrapper active">
-
-                        <User className="input-icon" />
-
-                        <input
-                            type="text"
-                            placeholder="Email or Username"
-                            className="input-field"
-                        />
-                    </div>
-
-                    {/* Password */}
-
-                    <div className="input-wrapper">
-
-                        <Lock className="input-icon" />
-
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            className="input-field"
-                        />
-                    </div>
-
-                    {/* Remember */}
-
-                    <div className="remember-row">
-
-                        <label className="remember-me">
-                            <input type="checkbox" />
-                            Remember me
-                        </label>
-
-                        <button className="forgot-link">
-                            Forgot password?
+                        <button
+                            type="submit"
+                            className="login-btn"
+                        >
+                            Login
                         </button>
-                    </div>
 
-                    {/* Login */}
+                        <p className="register-text">
+                            Don't have an account?
+                            <span> Register</span>
+                        </p>
 
-                    <button className="login-btn">
-                        Login
-                        <ArrowRight />
-                    </button>
+                    </form>
 
-                    {/* Divider */}
-
-                    <div className="divider">
-                        <div />
-                        <span>or</span>
-                        <div />
-                    </div>
-
-                    {/* GitHub */}
-
-                    <button className="github-btn">
-                        <span className="text-2xl">⚡</span>
-                        Continue with GitHub
-                    </button>
-
-                    <p className="signup-text">
-                        New here? <span>Sign up</span>
-                    </p>
                 </div>
             </div>
+
         </div>
     );
 }
