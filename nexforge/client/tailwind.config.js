@@ -1,5 +1,8 @@
 // tailwind.config.js
 module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
   theme: {
     extend: {
       colors: {
@@ -7,6 +10,23 @@ module.exports = {
         'nex-card': '#11141D',
         'nex-blue': '#00B0FF',
         'nex-purple': '#6200EE',
+        
+        // Material Theme variables used in LoginPage.jsx
+        'background': '#05070A',
+        'on-background': '#ECF2F8',
+        'primary': '#38DEBB',
+        'on-primary': '#05070A',
+        'on-primary-fixed': '#05070A',
+        'surface-tint': '#38DEBB',
+        'on-surface': '#FFFFFF',
+        'on-surface-variant': '#94A3B8',
+        'outline': '#475569',
+        'outline-variant': '#334155',
+        'surface-container-lowest': '#020617',
+      },
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        display: ['Outfit', 'sans-serif'],
       },
       keyframes: {
         // High-velocity impact animation

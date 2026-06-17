@@ -1,625 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ===================================
-   RESET
-=================================== */
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  width: 100%;
-  min-height: 100%;
-  overflow-x: hidden;
-}
-
 body {
-  font-family: "Poppins", sans-serif;
-  background: #020617;
+  font-family: 'Inter', sans-serif;
 }
 
-/* ===================================
-   BACKGROUND
-=================================== */
+/* Typography Utility Classes */
+.font-body-md {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
 
-.login-page {
-  min-height: 100vh;
+.font-label-caps {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.font-headline-md {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.font-display-xl {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+}
+
+/* Gas Card with Holographic Effects */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid transparent;
+  background-clip: padding-box;
   position: relative;
-
-  background:
-    linear-gradient(rgba(2, 6, 23, 0.45),
-      rgba(2, 6, 23, 0.6)),
-    url("https://www.humanperf.com/en/blog/project-management/articles/collaborative-project-platform/collaborative-project-platform-banner.jpg");
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
   overflow: hidden;
 }
 
-/* animated glow layer */
-
-.login-page::before {
+.glass-card::before {
   content: "";
-
   position: absolute;
   inset: 0;
-
-  background:
-    radial-gradient(circle at 20% 20%,
-      rgba(37, 99, 235, .15),
-      transparent 40%),
-    radial-gradient(circle at 80% 80%,
-      rgba(139, 92, 246, .15),
-      transparent 40%);
-
-  animation: bgMove 12s ease-in-out infinite;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #38debb, #ffb3b0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
-@keyframes bgMove {
+/* Grain Texture */
+.grain-texture {
+  background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuDB90vHl9_X6g785w9nk1IH57yC8G1qRf_HWksDTH0c5eBIqMHaWZddTWbTqiUND1isO6ew9EfGO2wNfvcERw5KEGDuLVPZcf2M29EHoUIq4I9rLAaFm89Xa_MYTblAjLXNrzlvc1T9_4Zdg5bnbva9PeLN656VjzIj6BVeqL4G6BdC7yH0_QiaPBjhD2v5u1vebyowmy745wCl8n8pMuTcuiEYvlfvsTmn_q9WXEvnE9GPgI-e8PLYctmgJVpHobuStZ5z-Tw5aRA);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* Holographic Glow Animation */
+.holographic-glow {
+  box-shadow: 0 0 20px rgba(56, 222, 187, 0.3), 0 0 40px rgba(56, 222, 187, 0.1);
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+@keyframes pulse-glow {
 
   0%,
   100% {
+    box-shadow: 0 0 20px rgba(56, 222, 187, 0.3);
     transform: scale(1);
   }
 
   50% {
-    transform: scale(1.08);
+    box-shadow: 0 0 40px rgba(56, 222, 187, 0.5);
+    transform: scale(1.02);
   }
 }
 
-/* ===================================
-   OVERLAY
-=================================== */
-
-.overlay {
-  position: absolute;
-  inset: 0;
-
-  backdrop-filter: blur(2px);
-
-  background: rgba(0, 0, 0, .15);
+/* 3D Text Effect */
+.three-d-text {
+  text-shadow: 0 1px 0 #38debb, 0 2px 0 #32c6a7, 0 3px 0 #2cae93, 0 4px 0 #26967f, 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* ===================================
-   PARTICLES
-=================================== */
-
-.particles {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+/* Recessed Input */
+.input-recessed {
+  background: rgba(12, 15, 15, 0.6);
+  box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.4), inset -1px -1px 2px rgba(255, 255, 255, 0.05);
+  transition: border-color 0.3s ease;
 }
 
-.particles span {
-  position: absolute;
-
-  width: 4px;
-  height: 4px;
-
-  border-radius: 999px;
-
-  background: #60a5fa;
-
-  animation: floatParticle 10s linear infinite;
+.input-recessed:focus {
+  border-color: #38debb;
+  outline: none;
 }
 
-@keyframes floatParticle {
-  from {
-    transform: translateY(100vh);
-    opacity: 0;
-  }
-
-  20% {
-    opacity: 1;
-  }
-
-  to {
-    transform: translateY(-150px);
-    opacity: 0;
-  }
-}
-
-/* ===================================
-   NAVBAR
-=================================== */
-
-.navbar {
+/* Particle Canvas */
+#particle-canvas {
   position: fixed;
-
-  top: 20px;
-  left: 50%;
-
-  transform: translateX(-50%);
-
-  width: min(1100px, 92%);
-  height: 72px;
-
-  padding: 0 24px;
-
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  background: rgba(7, 12, 28, .65);
-
-  backdrop-filter: blur(14px);
-
-  border: 1px solid rgba(255, 255, 255, .08);
-
-  border-radius: 18px;
-
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, .25);
-
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
   z-index: 100;
 }
 
-/* ===================================
-   LOGO
-=================================== */
-
-.logo {
-  display: flex;
-  align-items: center;
+/* Flip Hint on Hover */
+.flip-hint:hover {
+  transform: perspective(1000px) rotateY(15deg);
 }
 
-.logo img {
-  height: 48px;
-  width: auto;
-  object-fit: contain;
-
-  transition: .4s;
-
-  animation: logoFloat 4s ease-in-out infinite;
+/* Bento Social Grid */
+.bento-social {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
-.logo img:hover {
-  transform: scale(1.06);
-
-  filter:
-    drop-shadow(0 0 10px rgba(37, 99, 235, .6)) drop-shadow(0 0 25px rgba(139, 92, 246, .5));
-}
-
-@keyframes logoFloat {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-4px);
-  }
-}
-
-/* ===================================
-   NAV LINKS
-=================================== */
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 45px;
-
-  list-style: none;
-}
-
-.nav-links li {
-  color: rgba(255, 255, 255, .9);
-
-  font-size: 15px;
-  font-weight: 500;
-
-  cursor: pointer;
-
-  position: relative;
-
-  transition: .3s;
-}
-
-.nav-links li:hover {
-  color: #60a5fa;
-}
-
-.nav-links li::after {
-  content: "";
-
+/* WebGL Shader Canvas */
+.shader-canvas {
   position: absolute;
-
-  left: 0;
-  bottom: -6px;
-
-  width: 0;
-  height: 2px;
-
-  border-radius: 10px;
-
-  background:
-    linear-gradient(90deg,
-      #2563eb,
-      #8b5cf6);
-
-  transition: .35s;
-}
-
-.nav-links li:hover::after {
-  width: 100%;
-}
-
-/* ===================================
-   NAV LOGIN BUTTON
-=================================== */
-
-.nav-login-btn {
-  width: 95px;
-  height: 42px;
-
-  border: none;
-  outline: none;
-
-  border-radius: 12px;
-
-  cursor: pointer;
-
-  color: white;
-  font-weight: 600;
-
-  background:
-    linear-gradient(135deg,
-      #2563eb,
-      #7c3aed);
-
-  transition: .3s;
-}
-
-.nav-login-btn:hover {
-  transform: translateY(-2px);
-
-  box-shadow:
-    0 10px 25px rgba(124, 58, 237, .4);
-}
-
-/* ===================================
-   LOGIN CONTAINER
-=================================== */
-
-.login-container {
-  min-height: 100vh;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  padding-top: 120px;
-  padding-bottom: 40px;
-
-  position: relative;
-  z-index: 5;
-}
-
-/* ===================================
-   LOGIN CARD
-=================================== */
-
-.login-card {
-  width: 430px;
-
-  padding: 40px;
-
-  position: relative;
-
-  border-radius: 24px;
-
-  background: rgba(255, 255, 255, .16);
-
-  backdrop-filter: blur(16px);
-
-  border: 1px solid rgba(255, 255, 255, .22);
-
-  box-shadow:
-    0 15px 40px rgba(0, 0, 0, .25),
-    0 0 40px rgba(37, 99, 235, .1);
-
-  animation: cardEnter .7s ease;
-}
-
-@keyframes cardEnter {
-  from {
-    opacity: 0;
-    transform: translateY(40px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ===================================
-   CLOSE BUTTON
-=================================== */
-
-.close-btn {
-  position: absolute;
-
-  top: 15px;
-  right: 15px;
-
-  width: 40px;
-  height: 40px;
-
-  border: none;
-
-  border-radius: 50%;
-
-  color: white;
-
-  cursor: pointer;
-
-  background: rgba(15, 23, 42, .8);
-
-  transition: .3s;
-}
-
-.close-btn:hover {
-  transform: rotate(90deg);
-}
-
-/* ===================================
-   TITLE
-=================================== */
-
-.login-card h1 {
-  color: white;
-
-  text-align: center;
-
-  margin-bottom: 30px;
-
-  font-size: 2rem;
-}
-
-/* ===================================
-   FORM GROUP
-=================================== */
-
-.form-group {
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.form-group label {
-  display: block;
-
-  color: rgba(255, 255, 255, .85);
-
-  margin-bottom: 8px;
-
-  font-size: .95rem;
-
-  transition: .3s;
-}
-
-.form-group:focus-within label {
-  color: #60a5fa;
-  transform: translateX(4px);
-}
-
-.form-group input {
-  width: 100%;
-
-  height: 52px;
-
-  border: none;
-  outline: none;
-
-  padding: 0 15px;
-
-  color: white;
-
-  border-radius: 12px;
-
-  background: rgba(255, 255, 255, .08);
-
-  border: 1px solid rgba(255, 255, 255, .15);
-
-  transition: .3s;
-}
-
-.form-group input::placeholder {
-  color: rgba(255, 255, 255, .55);
-}
-
-.form-group input:focus {
-  border-color: #60a5fa;
-
-  box-shadow:
-    0 0 0 4px rgba(96, 165, 250, .15);
-
-  transform: translateY(-2px);
-}
-
-/* ===================================
-   OPTIONS
-=================================== */
-
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  margin-bottom: 24px;
-
-  color: white;
-}
-
-.form-options a {
-  color: white;
-  text-decoration: none;
-
-  transition: .3s;
-}
-
-.form-options a:hover {
-  color: #60a5fa;
-}
-
-/* ===================================
-   LOGIN BUTTON
-=================================== */
-
-.login-btn {
-  width: 100%;
-
-  height: 52px;
-
-  border: none;
-
-  border-radius: 12px;
-
-  color: white;
-  font-weight: 600;
-  font-size: 1rem;
-
-  cursor: pointer;
-
-  position: relative;
-  overflow: hidden;
-
-  background:
-    linear-gradient(90deg,
-      #2563eb,
-      #7c3aed);
-
-  transition: .35s;
-}
-
-.login-btn:hover {
-  transform: translateY(-3px);
-
-  box-shadow:
-    0 12px 30px rgba(124, 58, 237, .4);
-}
-
-.login-btn::before {
-  content: "";
-
-  position: absolute;
-
-  top: 0;
-  left: -100%;
-
+  inset: 0;
   width: 100%;
   height: 100%;
-
-  background:
-    linear-gradient(120deg,
-      transparent,
-      rgba(255, 255, 255, .25),
-      transparent);
-
-  transition: .7s;
+  opacity: 0.6;
+  display: block;
 }
 
-.login-btn:hover::before {
-  left: 100%;
-}
-
-/* ===================================
-   REGISTER
-=================================== */
-
-.register-text {
-  text-align: center;
-
-  color: white;
-
-  margin-top: 20px;
-}
-
-.register-text span {
-  color: #60a5fa;
-
-  cursor: pointer;
-}
-
-/* ===================================
-   TABLET
-=================================== */
-
-@media (max-width: 768px) {
-
-  .navbar {
-    width: 95%;
-    height: 65px;
-
-    padding: 0 15px;
-  }
-
-  .nav-links {
-    display: none;
-  }
-
-  .logo img {
-    height: 40px;
-  }
-
-  .nav-login-btn {
-    width: 80px;
-    height: 38px;
-
-    font-size: 14px;
-  }
-
-  .login-card {
-    width: 92%;
-    padding: 30px;
-  }
-
-  .form-options {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-}
-
-/* ===================================
-   MOBILE
-=================================== */
-
-@media (max-width: 480px) {
-
-  .navbar {
-    top: 10px;
-  }
-
-  .logo img {
-    height: 34px;
-  }
-
-  .login-card {
-    width: 95%;
-    padding: 24px;
-  }
-
-  .login-card h1 {
-    font-size: 1.7rem;
-  }
-
-  .form-group input {
-    height: 48px;
-  }
-
-  .login-btn {
-    height: 48px;
-  }
+/* ThreeJS Container */
+.threejs-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: screen;
+  opacity: 0.4;
+  display: block;
 }
