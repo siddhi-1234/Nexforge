@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import '../index.css';
 
-const LoginPage = () => {
+const SignupPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const particleCanvasRef = useRef(null);
@@ -371,14 +371,17 @@ void main() {
                         <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-widest leading-[14px]">
                             Build Skills. Forge Futures.
                         </p>
+                        <p className="font-label-caps text-[11px] mt-3 text-on-surface-variant uppercase tracking-widest leading-[14px]">
+                            Join us now!!.
+                        </p>
                     </div>
 
-                    {/* Login Form */}
+                    {/* Signup Form */}
                     <form className="space-y-4" onSubmit={handleSubmit}>
                         {/* Email Field */}
                         <div className="space-y-1.5 relative group field-enter" style={{ animationDelay: '0.05s' }}>
                             <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
-                                Email or Username
+                                Email
                             </label>
                             <div className="relative">
                                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -401,9 +404,6 @@ void main() {
                                 <label className="font-label-caps text-[11px] text-surface-tint leading-[14px]">
                                     Password
                                 </label>
-                                <Link className="font-label-caps text-[15px] text-outline hover:text-surface-tint transition-colors duration-200" to="/forgot-password">
-                                    FORGOT?
-                                </Link>
                             </div>
                             <div className="relative">
                                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -426,7 +426,7 @@ void main() {
                             style={{ animationDelay: '0.15s' }}
                             type="submit"
                         >
-                            <span className="relative z-10">Login</span>
+                            <span className="relative z-10">Sign Up</span>
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out skew-x-12" />
                         </button>
                     </form>
@@ -457,12 +457,7 @@ void main() {
                         </button>
                     </div>
 
-                    {/* Secondary Navigation */}
-                    <div className="mt-6 text-center field-enter" style={{ animationDelay: '0.3s' }}>
-                        <Link className="inline-block font-body-md text-[13px] text-on-surface-variant hover:text-surface-tint transition-colors duration-200" to="/signup">
-                            New here? <span className="text-surface-tint font-bold">Create account</span>
-                        </Link>
-                    </div>
+
                 </div>
 
                 {/* System Footer */}
@@ -476,4 +471,4 @@ void main() {
     );
 };
 
-export default LoginPage;
+export default SignupPage;
