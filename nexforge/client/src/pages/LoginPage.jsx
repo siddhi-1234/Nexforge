@@ -1,7 +1,14 @@
 /* global THREE */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../index.css';
+
+const ROLE_REDIRECTS = {
+    student: '/dashboard/student',
+    mentor: '/dashboard/mentor',
+    recruiter: '/dashboard/recruiter',
+    admin: '/dashboard/admin',
+};
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -9,6 +16,7 @@ const LoginPage = () => {
     const particleCanvasRef = useRef(null);
     const shaderCanvasRef = useRef(null);
     const threejsContainerRef = useRef(null);
+    const navigate = useNavigate();
 
     // Particle Animation
     useEffect(() => {
@@ -340,11 +348,23 @@ void main() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // TODO: replace with real API call — POST /api/auth/login { email, password }
+        // The backend returns { token, user: { role, ... } }
         console.log('Login:', { email, password });
+
+        // TODO: store the real token + user from the API response
+        // localStorage.setItem('token', token);
+        // localStorage.setItem('user', JSON.stringify(user));
+
+        // TODO: replace this stub role with user.role from the API response
+        const role = 'student';
+
+        navigate(ROLE_REDIRECTS[role] || '/dashboard/student');
     };
 
     return (
-        <div className="bg-background text-on-background min-h-screen flex items-center justify-center overflow-hidden font-body-md selection:bg-surface-tint selection:text-surface-container-lowest px-4 py-6">
+        <div className="bg-background text-on-background min-h-screen flex items-center justify-center overflow-x-hidden overflow-y-auto font-body-md selection:bg-surface-tint selection:text-surface-container-lowest px-4 py-8 sm:py-6">
             {/* WebGL Shader Background */}
             <div className="absolute inset-0 w-full h-full opacity-60" style={{ display: 'block' }}>
                 <canvas ref={shaderCanvasRef} className="shader-canvas" style={{ display: 'block', width: '100%', height: '100%' }} />
@@ -401,7 +421,7 @@ void main() {
                                 <label className="font-label-caps text-[11px] text-surface-tint leading-[14px]">
                                     Password
                                 </label>
-                                <Link className="font-label-caps text-[15px] text-outline hover:text-surface-tint transition-colors duration-200" to="/forgot-password">
+                                <Link className="font-label-caps text-[10px] text-outline hover:text-surface-tint transition-colors duration-200" to="/forgot-password">
                                     FORGOT?
                                 </Link>
                             </div>

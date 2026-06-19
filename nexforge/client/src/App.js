@@ -1,8 +1,13 @@
-
 import './index.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+
+// TODO: create these dashboard components, then uncomment the imports below
+// import StudentDashboard from './pages/StudentDashboard';
+// import MentorDashboard from './pages/MentorDashboard';
+// import RecruiterDashboard from './pages/RecruiterDashboard';
+// import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -10,6 +15,12 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+
+        {/* TODO: swap these placeholder elements for the real dashboard components above */}
+        <Route path="/dashboard/student" element={<div>Student dashboard — build me next</div>} />
+        <Route path="/dashboard/mentor" element={<div>Mentor dashboard — build me next</div>} />
+        <Route path="/dashboard/recruiter" element={<div>Recruiter dashboard — build me next</div>} />
+        <Route path="/dashboard/admin" element={<div>Admin dashboard — build me next</div>} />
       </Routes>
     </BrowserRouter>
   );

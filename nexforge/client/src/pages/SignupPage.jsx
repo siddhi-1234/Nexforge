@@ -1,14 +1,26 @@
 /* global THREE */
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../index.css';
 
+const ROLES = [
+    { key: 'student', label: 'Student' },
+    { key: 'mentor', label: 'Mentor' },
+    { key: 'recruiter', label: 'Recruiter' },
+];
+
 const SignupPage = () => {
+    const [role, setRole] = useState('student');
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [college, setCollege] = useState('');
+    const [expertise, setExpertise] = useState('');
+    const [company, setCompany] = useState('');
     const particleCanvasRef = useRef(null);
     const shaderCanvasRef = useRef(null);
     const threejsContainerRef = useRef(null);
+    const navigate = useNavigate();
 
     // Particle Animation
     useEffect(() => {
@@ -340,11 +352,21 @@ void main() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Login:', { email, password });
+        const payload = { role, name, email, password };
+        if (role === 'student') payload.college = college;
+        if (role === 'mentor') payload.expertise = expertise;
+        if (role === 'recruiter') payload.company = company;
+
+        console.log('Signup:', payload);
+
+        // TODO: replace with real API call, then store user + token
+        // localStorage.setItem('user', JSON.stringify({ ...payload, password: undefined }));
+
+        navigate('/');
     };
 
     return (
-        <div className="bg-background text-on-background min-h-screen flex items-center justify-center overflow-hidden font-body-md selection:bg-surface-tint selection:text-surface-container-lowest px-4 py-6">
+        <div className="bg-background text-on-background min-h-screen flex items-center justify-center overflow-x-hidden overflow-y-auto font-body-md selection:bg-surface-tint selection:text-surface-container-lowest px-4 py-8 sm:py-6">
             {/* WebGL Shader Background */}
             <div className="absolute inset-0 w-full h-full opacity-60" style={{ display: 'block' }}>
                 <canvas ref={shaderCanvasRef} className="shader-canvas" style={{ display: 'block', width: '100%', height: '100%' }} />
@@ -358,30 +380,52 @@ void main() {
             {/* Particle Canvas */}
             <canvas ref={particleCanvasRef} id="particle-canvas" />
 
-            {/* Main Login Container */}
+            {/* Main Signup Container */}
             <main className="relative z-10 w-full max-w-[380px] my-auto">
-                <div className="glass-card rounded-xl p-6 sm:p-7 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 login-card-enter">
+                <div className="glass-card rounded-xl p-5 sm:p-7 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 login-card-enter">
                     <div className="grain-texture absolute inset-0" />
 
                     {/* Branding */}
-                    <div className="text-center mb-6">
-                        <h1 className="font-display-sm text-[34px] sm:text-[38px] three-d-text text-primary tracking-tighter mb-1 leading-[1.1]">
+                    <div className="text-center mb-5">
+                        <h1 className="font-display-sm text-[30px] sm:text-[36px] three-d-text text-primary tracking-tighter mb-1 leading-[1.1]">
                             Nexforge
                         </h1>
-                        <p className="font-label-caps text-[11px] text-on-surface-variant uppercase tracking-widest leading-[14px]">
+                        <p className="font-label-caps text-[10px] sm:text-[11px] text-on-surface-variant uppercase tracking-widest leading-[14px]">
                             Build Skills. Forge Futures.
                         </p>
-                        <p className="font-label-caps text-[11px] mt-3 text-on-surface-variant uppercase tracking-widest leading-[14px]">
-                            Join us now!!.
+                        <p className="font-label-caps text-[10px] sm:text-[11px] mt-2 text-on-surface-variant uppercase tracking-widest leading-[14px]">
+                            Join us now
                         </p>
                     </div>
 
+                    {/* Role Selector */}
+                    <div className="field-enter mb-4" style={{ animationDelay: '0.02s' }}>
+                        <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px] block mb-1.5">
+                            I am a
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {ROLES.map((r) => (
+                                <button
+                                    key={r.key}
+                                    type="button"
+                                    onClick={() => setRole(r.key)}
+                                    className={`role-pill py-2.5 rounded-lg text-[11px] sm:text-[12px] font-label-caps tracking-wide transition-all duration-200 border ${role === r.key
+                                            ? 'bg-surface-tint text-on-primary-fixed border-surface-tint font-bold'
+                                            : 'bg-white/5 text-on-surface-variant border-white/10 hover:bg-white/10 hover:border-white/20'
+                                        }`}
+                                >
+                                    {r.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Signup Form */}
-                    <form className="space-y-4" onSubmit={handleSubmit}>
-                        {/* Email Field */}
-                        <div className="space-y-1.5 relative group field-enter" style={{ animationDelay: '0.05s' }}>
+                    <form className="space-y-3.5" onSubmit={handleSubmit}>
+                        {/* Name Field */}
+                        <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.05s' }}>
                             <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
-                                Email
+                                Full name
                             </label>
                             <div className="relative">
                                 <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -389,7 +433,27 @@ void main() {
                                     <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
                                 </svg>
                                 <input
-                                    className="input-field w-full pl-11 pr-4 py-3.5 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
+                                    className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
+                                    placeholder="Your full name"
+                                    type="text"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Email Field */}
+                        <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.08s' }}>
+                            <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
+                                Email
+                            </label>
+                            <div className="relative">
+                                <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                                    <path d="M3 7l9 6 9-6" />
+                                </svg>
+                                <input
+                                    className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
                                     placeholder="you@nexforge.io"
                                     type="email"
                                     value={email}
@@ -398,8 +462,71 @@ void main() {
                             </div>
                         </div>
 
+                        {/* Role-specific field */}
+                        {role === 'student' && (
+                            <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.1s' }}>
+                                <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
+                                    College / university
+                                </label>
+                                <div className="relative">
+                                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                        <path d="M2 9l10-5 10 5-10 5-10-5Z" />
+                                        <path d="M6 11v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5" />
+                                    </svg>
+                                    <input
+                                        className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
+                                        placeholder="e.g. NIT Trichy"
+                                        type="text"
+                                        value={college}
+                                        onChange={(e) => setCollege(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {role === 'mentor' && (
+                            <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.1s' }}>
+                                <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
+                                    Area of expertise
+                                </label>
+                                <div className="relative">
+                                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                        <path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L12 2Z" />
+                                    </svg>
+                                    <input
+                                        className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
+                                        placeholder="e.g. Backend, DevOps"
+                                        type="text"
+                                        value={expertise}
+                                        onChange={(e) => setExpertise(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {role === 'recruiter' && (
+                            <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.1s' }}>
+                                <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
+                                    Company name
+                                </label>
+                                <div className="relative">
+                                    <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-surface-tint opacity-70 group-focus-within:opacity-100 transition-opacity pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                                        <rect x="4" y="7" width="16" height="13" rx="1.5" />
+                                        <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
+                                    </svg>
+                                    <input
+                                        className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
+                                        placeholder="e.g. Acme Corp"
+                                        type="text"
+                                        value={company}
+                                        onChange={(e) => setCompany(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Password Field */}
-                        <div className="space-y-1.5 relative group field-enter" style={{ animationDelay: '0.1s' }}>
+                        <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.13s' }}>
                             <div className="flex justify-between items-center px-1">
                                 <label className="font-label-caps text-[11px] text-surface-tint leading-[14px]">
                                     Password
@@ -411,7 +538,7 @@ void main() {
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                                 </svg>
                                 <input
-                                    className="input-field w-full pl-11 pr-4 py-3.5 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
+                                    className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
                                     placeholder="••••••••"
                                     type="password"
                                     value={password}
@@ -423,16 +550,16 @@ void main() {
                         {/* Primary Action */}
                         <button
                             className="submit-btn w-full py-3.5 rounded-lg bg-surface-tint text-on-primary-fixed font-headline-md text-[15px] font-bold holographic-glow transition-all active:scale-95 group overflow-hidden relative field-enter"
-                            style={{ animationDelay: '0.15s' }}
+                            style={{ animationDelay: '0.16s' }}
                             type="submit"
                         >
-                            <span className="relative z-10">Sign Up</span>
+                            <span className="relative z-10">Create account</span>
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out skew-x-12" />
                         </button>
                     </form>
 
                     {/* Divider */}
-                    <div className="flex items-center gap-3 my-6 field-enter" style={{ animationDelay: '0.2s' }}>
+                    <div className="flex items-center gap-3 my-5 field-enter" style={{ animationDelay: '0.2s' }}>
                         <div className="h-[1px] flex-1 bg-white/10" />
                         <span className="font-label-caps text-[10px] text-outline-variant uppercase">or</span>
                         <div className="h-[1px] flex-1 bg-white/10" />
@@ -457,7 +584,12 @@ void main() {
                         </button>
                     </div>
 
-
+                    {/* Secondary Navigation */}
+                    <div className="mt-5 text-center field-enter" style={{ animationDelay: '0.3s' }}>
+                        <Link className="inline-block font-body-md text-[13px] text-on-surface-variant hover:text-surface-tint transition-colors duration-200" to="/">
+                            Already have an account? <span className="text-surface-tint font-bold">Log in</span>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* System Footer */}

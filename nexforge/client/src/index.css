@@ -42,9 +42,28 @@ body {
   background-clip: padding-box;
   position: relative;
   overflow: hidden;
-  /* Prevent the card from ever exceeding the viewport height */
-  max-height: calc(100vh - 48px);
+  /* Allow the card to size to content; only cap height on short viewports */
+  max-height: 100vh;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 222, 187, 0.4) transparent;
+}
+
+.glass-card::-webkit-scrollbar {
+  width: 5px;
+}
+
+.glass-card::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.glass-card::-webkit-scrollbar-thumb {
+  background: rgba(56, 222, 187, 0.35);
+  border-radius: 4px;
+}
+
+.glass-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 222, 187, 0.6);
 }
 
 .glass-card::before {
@@ -213,13 +232,13 @@ body {
 ─────────────────────────────────────────── */
 @media (max-width: 480px) {
   .glass-card {
-    max-height: calc(100vh - 32px);
+    max-height: 100vh;
   }
 }
 
-@media (max-height: 700px) {
+@media (max-height: 750px) {
   .glass-card {
-    max-height: calc(100vh - 24px);
+    max-height: calc(100vh - 16px);
   }
 }
 
