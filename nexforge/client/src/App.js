@@ -2,6 +2,7 @@ import './index.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ForgotPassword from './pages/ForgotPassword';
 
 // TODO: create these dashboard components, then uncomment the imports below
 // import StudentDashboard from './pages/StudentDashboard';
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* TODO: swap these placeholder elements for the real dashboard components above */}
         <Route path="/dashboard/student" element={<div>Student dashboard — build me next</div>} />
