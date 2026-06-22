@@ -1,6 +1,8 @@
 /* global THREE */
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebaseConfig';
 import '../index.css';
 
 const ROLES = [
@@ -17,12 +19,15 @@ const SignupPage = () => {
     const [college, setCollege] = useState('');
     const [expertise, setExpertise] = useState('');
     const [company, setCompany] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
     const particleCanvasRef = useRef(null);
     const shaderCanvasRef = useRef(null);
     const threejsContainerRef = useRef(null);
     const navigate = useNavigate();
 
-    // Particle Animation
+    // ── Particle Animation ──
     useEffect(() => {
         const canvas = particleCanvasRef.current;
         const ctx = canvas.getContext('2d');
@@ -91,7 +96,7 @@ const SignupPage = () => {
         };
     }, []);
 
-    // WebGL Shader Animation
+    // ── WebGL Shader Animation ──
     useEffect(() => {
         const canvas = shaderCanvasRef.current;
         if (!canvas) return;
@@ -200,7 +205,7 @@ void main() {
         };
     }, []);
 
-    // ThreeJS Animation
+    // ── ThreeJS Animation ──
     useEffect(() => {
         const container = threejsContainerRef.current;
         if (!container || !window.THREE) return;
@@ -226,7 +231,6 @@ void main() {
         const group = new THREE.Group();
         scene.add(group);
 
-        // Shared glow material — teal "forge energy" look, matches existing palette
         const glowMaterial = new THREE.MeshPhongMaterial({
             color: 0x64FFDA,
             transparent: true,
@@ -237,7 +241,6 @@ void main() {
             wireframe: true
         });
 
-        // ── ANVIL — low-poly wireframe, rotates slowly center-left ──
         const anvilGroup = new THREE.Group();
         const anvilBody = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.5, 0.8), glowMaterial);
         const anvilHorn = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.9, 8), glowMaterial);
@@ -250,7 +253,6 @@ void main() {
         anvilGroup.scale.setScalar(0.85);
         group.add(anvilGroup);
 
-        // ── HAMMER — orbits/swings above the anvil, like a forging strike ──
         const hammerGroup = new THREE.Group();
         const hammerHead = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.35, 0.35), glowMaterial);
         const hammerHandle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.1, 6), glowMaterial);
@@ -260,7 +262,6 @@ void main() {
         hammerGroup.rotation.z = -0.5;
         group.add(hammerGroup);
 
-        // ── WIREFRAME HEX SHIELD — subtle brand nod, floats top right ──
         const hexMat = new THREE.MeshPhongMaterial({
             color: 0xffffff,
             wireframe: true,
@@ -272,7 +273,6 @@ void main() {
         hex.rotation.x = Math.PI / 2.3;
         group.add(hex);
 
-        // ── EMBER PARTICLES — rise upward like sparks from the forge ──
         const emberGeo = new THREE.SphereGeometry(0.045, 8, 8);
         const emberMat = new THREE.MeshPhongMaterial({
             color: 0xFF8A50,
@@ -304,22 +304,18 @@ void main() {
         function animate(t) {
             requestAnimationFrame(animate);
 
-            // Whole scene drifts gently, like it's breathing
             group.rotation.y = Math.sin(t * 0.00015) * 0.15;
             group.rotation.x = Math.sin(t * 0.0001) * 0.06;
 
-            // Anvil rotates slowly on its own axis
             anvilGroup.rotation.y += 0.0025;
 
-            // Hammer swings down toward anvil and back up — forging motion
             const swing = Math.sin(t * 0.0012);
             hammerGroup.rotation.z = -0.5 + swing * 0.35;
             hammerGroup.position.y = 1 + Math.abs(swing) * 0.15;
 
-            // Hex shield slowly spins
             hex.rotation.z += 0.0015;
 
-            // Embers rise and fade, reset to bottom when they reach the top
+            //  Corrected to "embers" to match the array definition above
             embers.forEach(ember => {
                 ember.position.y += ember.userData.riseSpeed;
                 ember.position.x += ember.userData.driftX;
@@ -344,48 +340,112 @@ void main() {
         });
 
         return () => {
-            if (renderer.domElement) {
+            if (renderer.domElement && container.contains(renderer.domElement)) {
                 container.removeChild(renderer.domElement);
             }
         };
     }, []);
 
-    const handleSubmit = (e) => {
+    // ── Operational Handoff Submission Controller ──
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        const payload = { role, name, email, password };
-        if (role === 'student') payload.college = college;
-        if (role === 'mentor') payload.expertise = expertise;
-        if (role === 'recruiter') payload.company = company;
+        setError('');
+        setLoading(true);
 
-        console.log('Signup:', payload);
+        // 1. Client-Side Security Shield: Intercept insufficient lengths directly
+        if (password.length < 6) {
+            setError('Password must be at least 6 characters long.');
+            setLoading(false);
+            return;
+        }
 
-        // TODO: replace with real API call, then store user + token
-        // localStorage.setItem('user', JSON.stringify({ ...payload, password: undefined }));
+        try {
+            // 2. Transmit Creation Directive to Firebase Core Auth
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const idToken = await userCredential.user.getIdToken();
 
-        navigate('/');
+            const profilePayload = {
+                uid: userCredential.user.uid,
+                name,
+                email,
+                role,
+                college: role === 'student' ? college : undefined,
+                expertise: role === 'mentor' ? expertise : undefined,
+                company: role === 'recruiter' ? company : undefined
+            };
+
+            // 3. Transmit Structural Metadata Records over to MongoDB Instance
+            const response = await fetch('http://localhost:5000/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify(profilePayload)
+            });
+
+            const data = await response.json();
+
+            // Intercept route execution if the custom server breaks or times out
+            if (!response.ok) {
+                throw new Error(data.message || 'Database orchestration sync protocol failed.');
+            }
+
+            // Route safely upon absolute double-commit verification
+            navigate('/');
+
+        } catch (err) {
+            console.error("Signup structural block validation error:", err);
+            setError(err.message.replace("Firebase:", "").trim());
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSocialAuth = async (provider) => {
+        setError('');
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const idToken = await result.user.getIdToken();
+
+            const response = await fetch('http://localhost:5000/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({
+                    uid: result.user.uid,
+                    name: result.user.displayName || 'Forge Builder',
+                    email: result.user.email,
+                    role: 'student'
+                })
+            });
+
+            if (!response.ok) throw new Error('Social pipeline database record sync failed.');
+            navigate('/dashboard/student');
+        } catch (err) {
+            setError(err.message.replace("Firebase:", "").trim());
+        }
     };
 
     return (
         <div className="bg-background text-on-background min-h-screen flex items-center justify-center overflow-x-hidden overflow-y-auto font-body-md selection:bg-surface-tint selection:text-surface-container-lowest px-4 py-8 sm:py-6">
-            {/* WebGL Shader Background */}
+            {/* Dynamic Rendering Canvas Units */}
             <div className="absolute inset-0 w-full h-full opacity-60" style={{ display: 'block' }}>
                 <canvas ref={shaderCanvasRef} className="shader-canvas" style={{ display: 'block', width: '100%', height: '100%' }} />
             </div>
-
-            {/* ThreeJS Background */}
             <div className="absolute inset-0 w-full h-full mix-blend-screen opacity-40" style={{ display: 'block' }}>
                 <div ref={threejsContainerRef} className="threejs-container" style={{ width: '100%', height: '100%' }} />
             </div>
-
-            {/* Particle Canvas */}
             <canvas ref={particleCanvasRef} id="particle-canvas" />
 
-            {/* Main Signup Container */}
+            {/* Main Operational Container */}
             <main className="relative z-10 w-full max-w-[380px] my-auto">
                 <div className="glass-card rounded-xl p-5 sm:p-7 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5 login-card-enter">
                     <div className="grain-texture absolute inset-0" />
 
-                    {/* Branding */}
+                    {/* Branding Display */}
                     <div className="text-center mb-5">
                         <h1 className="font-display-sm text-[30px] sm:text-[36px] three-d-text text-primary tracking-tighter mb-1 leading-[1.1]">
                             Nexforge
@@ -398,7 +458,14 @@ void main() {
                         </p>
                     </div>
 
-                    {/* Role Selector */}
+                    {/* Security Diagnostics Status Flag Container */}
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-xs font-mono text-center">
+                            {error}
+                        </div>
+                    )}
+
+                    {/* Custom Role Pill Assignment Elements */}
                     <div className="field-enter mb-4" style={{ animationDelay: '0.02s' }}>
                         <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px] block mb-1.5">
                             I am a
@@ -410,8 +477,8 @@ void main() {
                                     type="button"
                                     onClick={() => setRole(r.key)}
                                     className={`role-pill py-2.5 rounded-lg text-[11px] sm:text-[12px] font-label-caps tracking-wide transition-all duration-200 border ${role === r.key
-                                            ? 'bg-surface-tint text-on-primary-fixed border-surface-tint font-bold'
-                                            : 'bg-white/5 text-on-surface-variant border-white/10 hover:bg-white/10 hover:border-white/20'
+                                        ? 'bg-surface-tint text-on-primary-fixed border-surface-tint font-bold'
+                                        : 'bg-white/5 text-on-surface-variant border-white/10 hover:bg-white/10 hover:border-white/20'
                                         }`}
                                 >
                                     {r.label}
@@ -420,9 +487,9 @@ void main() {
                         </div>
                     </div>
 
-                    {/* Signup Form */}
+                    {/* Operational Functional Form Block Mapping */}
                     <form className="space-y-3.5" onSubmit={handleSubmit}>
-                        {/* Name Field */}
+                        {/* Interactive Full Name Module */}
                         <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.05s' }}>
                             <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
                                 Full name
@@ -436,13 +503,14 @@ void main() {
                                     className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
                                     placeholder="Your full name"
                                     type="text"
+                                    required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        {/* Email Field */}
+                        {/* Interactive Transmission Target Identifier Email Module */}
                         <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.08s' }}>
                             <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
                                 Email
@@ -456,13 +524,14 @@ void main() {
                                     className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
                                     placeholder="you@nexforge.io"
                                     type="email"
+                                    required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        {/* Role-specific field */}
+                        {/* Student Secondary Meta Parameter Allocation Slot */}
                         {role === 'student' && (
                             <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.1s' }}>
                                 <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
@@ -475,8 +544,9 @@ void main() {
                                     </svg>
                                     <input
                                         className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
-                                        placeholder="e.g. NIT Trichy"
+                                        placeholder="e.g. WIT Solapur"
                                         type="text"
+                                        required
                                         value={college}
                                         onChange={(e) => setCollege(e.target.value)}
                                     />
@@ -484,6 +554,7 @@ void main() {
                             </div>
                         )}
 
+                        {/* Mentor Secondary Meta Parameter Allocation Slot */}
                         {role === 'mentor' && (
                             <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.1s' }}>
                                 <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
@@ -495,8 +566,9 @@ void main() {
                                     </svg>
                                     <input
                                         className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
-                                        placeholder="e.g. Backend, DevOps"
+                                        placeholder="e.g. Full Stack Developer, ML Eng"
                                         type="text"
+                                        required
                                         value={expertise}
                                         onChange={(e) => setExpertise(e.target.value)}
                                     />
@@ -504,9 +576,10 @@ void main() {
                             </div>
                         )}
 
+                        {/* Recruiter Secondary Meta Parameter Allocation Slot */}
                         {role === 'recruiter' && (
                             <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.1s' }}>
-                                <label className="font-label-caps text-[11px] text-surface-tint ml-1 leading-[14px]">
+                                <label className="font-label-caps text-[11px] text-surface-tint ml-1 Estates leading-[14px]">
                                     Company name
                                 </label>
                                 <div className="relative">
@@ -516,8 +589,9 @@ void main() {
                                     </svg>
                                     <input
                                         className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
-                                        placeholder="e.g. Acme Corp"
+                                        placeholder="e.g. Stripe, Vercel"
                                         type="text"
+                                        required
                                         value={company}
                                         onChange={(e) => setCompany(e.target.value)}
                                     />
@@ -525,7 +599,7 @@ void main() {
                             </div>
                         )}
 
-                        {/* Password Field */}
+                        {/* Secure Passphrase Mask Input Field Module */}
                         <div className="space-y-1 relative group field-enter" style={{ animationDelay: '0.13s' }}>
                             <div className="flex justify-between items-center px-1">
                                 <label className="font-label-caps text-[11px] text-surface-tint leading-[14px]">
@@ -539,35 +613,41 @@ void main() {
                                 </svg>
                                 <input
                                     className="input-field w-full pl-11 pr-4 py-3 rounded-lg border border-white/10 input-recessed text-on-surface placeholder:text-outline-variant focus:outline-none font-body-md"
-                                    placeholder="••••••••"
+                                    placeholder="At least 6 characters"
                                     type="password"
+                                    required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
                         </div>
 
-                        {/* Primary Action */}
+                        {/* Form Submission Action Directive */}
                         <button
                             className="submit-btn w-full py-3.5 rounded-lg bg-surface-tint text-on-primary-fixed font-headline-md text-[15px] font-bold holographic-glow transition-all active:scale-95 group overflow-hidden relative field-enter"
-                            style={{ animationDelay: '0.16s' }}
+                            style={{ animationDelay: '0.15s' }}
                             type="submit"
+                            disabled={loading}
                         >
-                            <span className="relative z-10">Create account</span>
+                            <span className="relative z-10">{loading ? 'Forging Profile...' : 'Create account'}</span>
                             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out skew-x-12" />
                         </button>
                     </form>
 
-                    {/* Divider */}
+                    {/* UI Divider Element */}
                     <div className="flex items-center gap-3 my-5 field-enter" style={{ animationDelay: '0.2s' }}>
                         <div className="h-[1px] flex-1 bg-white/10" />
                         <span className="font-label-caps text-[10px] text-outline-variant uppercase">or</span>
                         <div className="h-[1px] flex-1 bg-white/10" />
                     </div>
 
-                    {/* Bento Social Grid */}
+                    {/* Social OAuth Access Framework Hub Interface */}
                     <div className="bento-social field-enter" style={{ animationDelay: '0.25s' }}>
-                        <button className="social-btn flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 group">
+                        <button
+                            type="button"
+                            onClick={() => handleSocialAuth(googleProvider)}
+                            className="social-btn col-span-2 flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 group"
+                        >
                             <svg className="w-4 h-4" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
@@ -576,15 +656,9 @@ void main() {
                             </svg>
                             <span className="font-label-caps text-[11px]">Google</span>
                         </button>
-                        <button className="social-btn flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 group">
-                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="white">
-                                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0 0 22 12.017C22 6.484 17.522 2 12 2Z" />
-                            </svg>
-                            <span className="font-label-caps text-[11px]">GitHub</span>
-                        </button>
                     </div>
 
-                    {/* Secondary Navigation */}
+                    {/* Routing Links Core Footnote */}
                     <div className="mt-5 text-center field-enter" style={{ animationDelay: '0.3s' }}>
                         <Link className="inline-block font-body-md text-[13px] text-on-surface-variant hover:text-surface-tint transition-colors duration-200" to="/">
                             Already have an account? <span className="text-surface-tint font-bold">Log in</span>
@@ -592,7 +666,7 @@ void main() {
                     </div>
                 </div>
 
-                {/* System Footer */}
+                {/* Footer Security Active Tag */}
                 <footer className="mt-5 text-center">
                     <p className="font-label-caps text-[9px] text-outline-variant uppercase tracking-widest opacity-60">
                         Nexforge Security Protocol v2.4.0 active
