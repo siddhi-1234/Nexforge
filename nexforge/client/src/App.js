@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPassword from './pages/ForgotPassword';
+import StudentDashboard from './pages/StudentDashboard';
 
-// TODO: create these dashboard components, then uncomment the imports below
-// import StudentDashboard from './pages/StudentDashboard';
+
 // import MentorDashboard from './pages/MentorDashboard';
 // import RecruiterDashboard from './pages/RecruiterDashboard';
 // import AdminDashboard from './pages/AdminDashboard';
@@ -19,7 +19,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* TODO: swap these placeholder elements for the real dashboard components above */}
-        <Route path="/dashboard/student" element={<div>Student dashboard — build me next</div>} />
+        <Route path="/dashboard/student" element={<StudentDashboard />} />
         <Route path="/dashboard/mentor" element={<div>Mentor dashboard — build me next</div>} />
         <Route path="/dashboard/recruiter" element={<div>Recruiter dashboard — build me next</div>} />
         <Route path="/dashboard/admin" element={<div>Admin dashboard — build me next</div>} />
