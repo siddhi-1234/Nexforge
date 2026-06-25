@@ -5,43 +5,101 @@ import './dashboard.css';
    Small reusable bits
 ──────────────────────────────────────────── */
 
-// Animated count-up number, plain React state + interval, no extra libs
-function CountUp({ target, duration = 1200 }) {
+// Animated count-up number
+function CountUp({ target, duration = 1500 }) {
     const [value, setValue] = useState(0);
+    const countRef = useRef(null);
 
     useEffect(() => {
         let frame;
         const start = performance.now();
         const animate = (now) => {
             const progress = Math.min((now - start) / duration, 1);
-            setValue(Math.ceil(progress * target));
+            // Use easeOutExpo for smoother count-up
+            const easeOutExpo = 1 - Math.pow(2, -10 * progress);
+            setValue(Math.ceil(easeOutExpo * target));
             if (progress < 1) frame = requestAnimationFrame(animate);
         };
         frame = requestAnimationFrame(animate);
         return () => cancelAnimationFrame(frame);
     }, [target, duration]);
 
-    return <>{value}</>;
+    return <>{value.toLocaleString()}</>;
 }
 
-// Simple circular progress ring using conic-gradient (no SVG needed)
+// Enhanced Progress Ring with smooth drawing animation
 function ProgressRing({ percent, size = 160, label, sublabel, color = '#38debb' }) {
+    const [currentPercent, setCurrentPercent] = useState(0);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setCurrentPercent(percent);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [percent]);
+
     return (
         <div
-            className="progress-ring"
-            style={{
-                width: size,
-                height: size,
-                background: `conic-gradient(${color} ${percent * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
-            }}
+            className="progress-ring-container"
+            style={{ width: size, height: size }}
         >
-            <div className="progress-ring-inner">
-                <span className="progress-ring-value">{label ?? percent}</span>
-                {sublabel && <span className="progress-ring-sublabel">{sublabel}</span>}
+            <div
+                className="progress-ring"
+                style={{
+                    width: size,
+                    height: size,
+                    background: `conic-gradient(${color} ${currentPercent * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
+                }}
+            >
+                <div className="progress-ring-inner">
+                    <span className="progress-ring-value">{label ?? currentPercent}</span>
+                    {sublabel && <span className="progress-ring-sublabel">{sublabel}</span>}
+                </div>
             </div>
         </div>
     );
 }
+
+// Tilt effect hook for cards
+function useTilt(ref) {
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+
+        const handleMouseMove = (e) => {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = (y - centerY) / 15;
+            const rotateY = (centerX - x) / 15;
+
+            el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+        };
+
+        const handleMouseLeave = () => {
+            el.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+        };
+
+        el.addEventListener('mousemove', handleMouseMove);
+        el.addEventListener('mouseleave', handleMouseLeave);
+        return () => {
+            el.removeEventListener('mousemove', handleMouseMove);
+            el.removeEventListener('mouseleave', handleMouseLeave);
+        };
+    }, [ref]);
+}
+
+const TiltCard = ({ children, className = '', style = {} }) => {
+    const ref = useRef(null);
+    useTilt(ref);
+    return (
+        <div ref={ref} className={`dash-card tilt-card ${className}`} style={style}>
+            {children}
+        </div>
+    );
+};
 
 /* ────────────────────────────────────────────
    Main Dashboard
@@ -52,13 +110,15 @@ const StudentDashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const sectionRefs = useRef([]);
 
-    // Simple scroll-reveal using IntersectionObserver — no animation libs
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
-                        setVisibleSections((prev) => ({ ...prev, [entry.target.dataset.section]: true }));
+                        const section = entry.target.dataset.section;
+                        if (section) {
+                            setVisibleSections((prev) => ({ ...prev, [section]: true }));
+                        }
                     }
                 });
             },
@@ -76,56 +136,50 @@ const StudentDashboard = () => {
         }
     };
 
-    const sectionClass = (key) =>
+    const sectionClass = (key: string) =>
         `dash-section ${visibleSections[key] ? 'dash-section-visible' : ''}`;
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
-        <div className="dashboard-page">
-            {/* Ambient background glow blobs — pure CSS, no canvas/WebGL */}
+        <div className="dashboard-page dark-theme">
+            {/* Ambient background glow blobs */}
             <div className="dash-bg-glow dash-bg-glow-1" />
             <div className="dash-bg-glow dash-bg-glow-2" />
+            <div className="dash-bg-glow dash-bg-glow-3" />
 
             <div className="dash-layout">
-                {/* Mobile Sidebar Overlay - Now inside layout to control z-index better */}
                 {isSidebarOpen && <div className="dash-sidebar-overlay" onClick={toggleSidebar} />}
 
                 {/* ── SIDEBAR ── */}
                 <aside className={`dash-sidebar ${isSidebarOpen ? 'dash-sidebar-open' : ''}`}>
                     <div className="dash-sidebar-header">
                         <div className="dash-logo">
-                            <h1>NexForge</h1>
-                            <p>V3.0 Beta</p>
+                            <h1 className="neon-text-teal">NexForge</h1>
+                            <p>V3.0 Premium</p>
                         </div>
                         <button className="dash-sidebar-close" onClick={toggleSidebar}>✕</button>
                     </div>
 
                     <nav className="dash-nav">
-                        <a href="#" className="dash-nav-item dash-nav-active">
-                            <span className="dash-nav-icon">🧭</span>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="#" className="dash-nav-item">
-                            <span className="dash-nav-icon">🚀</span>
-                            <span>My Projects</span>
-                        </a>
-                        <a href="#" className="dash-nav-item">
-                            <span className="dash-nav-icon">🌐</span>
-                            <span>Team Activity</span>
-                        </a>
-                        <a href="#" className="dash-nav-item">
-                            <span className="dash-nav-icon">⚡</span>
-                            <span>Recommendations</span>
-                        </a>
-                        <a href="#" className="dash-nav-item">
-                            <span className="dash-nav-icon">🎓</span>
-                            <span>Skills</span>
-                        </a>
-                        <a href="#" className="dash-nav-item">
-                            <span className="dash-nav-icon">💻</span>
-                            <span>Internship Prep</span>
-                        </a>
+                        {[
+                            { icon: '🧭', label: 'Dashboard', active: true },
+                            { icon: '🚀', label: 'My Projects' },
+                            { icon: '🌐', label: 'Team Activity' },
+                            { icon: '⚡', label: 'Recommendations' },
+                            { icon: '🎓', label: 'Skills' },
+                            { icon: '💻', label: 'Internship Prep' },
+                        ].map((item, i) => (
+                            <a
+                                key={item.label}
+                                href="#"
+                                className={`dash-nav-item ${item.active ? 'dash-nav-active' : ''}`}
+                                style={{ animationDelay: `${i * 0.1}s` }}
+                            >
+                                <span className="dash-nav-icon floating-icon">{item.icon}</span>
+                                <span>{item.label}</span>
+                            </a>
+                        ))}
                     </nav>
 
                     <div className="dash-nav-bottom">
@@ -142,78 +196,67 @@ const StudentDashboard = () => {
 
                 {/* ── MAIN ── */}
                 <main className="dash-main">
-                    {/* Top bar */}
-                    <header className="dash-topbar">
+                    <header className="dash-topbar glassmorphism">
                         <div className="dash-topbar-left">
                             <button className="dash-menu-btn" onClick={toggleSidebar}>☰</button>
-                            <div className="dash-search">
+                            <div className="dash-search glass-input">
                                 <span>🔎</span>
-                                <input type="text" placeholder="Search..." />
+                                <input type="text" placeholder="Search projects, skills..." />
                             </div>
                         </div>
 
                         <div className="dash-topbar-right">
                             <div className="dash-icon-group">
-                                <button className="dash-icon-btn">
-                                    🔔<span className="dash-notif-dot" />
+                                <button className="dash-icon-btn pulse-hover">
+                                    🔔<span className="dash-notif-dot pulse-animation" />
                                 </button>
-                                <button className="dash-icon-btn">💬</button>
+                                <button className="dash-icon-btn pulse-hover">💬</button>
                             </div>
 
-                            <div className="dash-profile">
+                            <div className="dash-profile glass-profile">
                                 <div className="dash-profile-text">
                                     <p>Student Developer</p>
-                                    <span>LEVEL 42</span>
+                                    <span className="neon-text-coral">LEVEL 42</span>
                                 </div>
-                                <div className="dash-avatar">SD</div>
+                                <div className="dash-avatar neon-border-teal">SD</div>
                             </div>
                         </div>
                     </header>
 
                     <div className="dash-content">
-
                         {/* ── HERO OVERVIEW ── */}
                         <section ref={setRef('hero')} className={sectionClass('hero')}>
-                            <div className="dash-card dash-hero">
+                            <div className="dash-card dash-hero glassmorphism staggered-item">
                                 <div className="dash-hero-stats">
-                                    <div className="dash-stat-box">
-                                        <p className="dash-stat-label">Contribution Score</p>
-                                        <h3 className="dash-stat-value dash-stat-teal">
-                                            <CountUp target={847} />
-                                        </h3>
-                                        <div className="dash-stat-bar">
-                                            <div className="dash-stat-bar-fill" style={{ width: '70%' }} />
+                                    {[
+                                        { label: 'Contribution Score', value: 847, colorClass: 'dash-stat-teal', barWidth: '70%' },
+                                        { label: 'Active Projects', value: 3, colorClass: 'dash-stat-coral' },
+                                        { label: 'Tasks Pending', value: 12, colorClass: 'dash-stat-error', hasPulse: true },
+                                        { label: 'Skill Growth', value: '+28%', colorClass: 'dash-stat-teal', isGrowth: true },
+                                    ].map((stat, i) => (
+                                        <div key={stat.label} className="dash-stat-box glass-inner staggered-item" style={{ animationDelay: `${i * 0.15}s` }}>
+                                            <p className="dash-stat-label">{stat.label}</p>
+                                            <h3 className={`dash-stat-value ${stat.colorClass}`}>
+                                                {typeof stat.value === 'number' ? <CountUp target={stat.value} /> : stat.value}
+                                            </h3>
+                                            {stat.barWidth && (
+                                                <div className="dash-stat-bar">
+                                                    <div className="dash-stat-bar-fill progress-draw" style={{ width: stat.barWidth }} />
+                                                </div>
+                                            )}
+                                            {stat.hasPulse && <span className="dash-pulse-dot pulse-animation" />}
+                                            {stat.isGrowth && (
+                                                <div className="dash-mini-bars">
+                                                    {[8, 16, 24, 20].map((h, j) => (
+                                                        <span key={j} style={{ height: `${h}px`, animationDelay: `${j * 0.1}s` }} className="bar-grow" />
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-
-                                    <div className="dash-stat-box">
-                                        <p className="dash-stat-label">Active Projects</p>
-                                        <h3 className="dash-stat-value dash-stat-coral">
-                                            <CountUp target={3} />
-                                        </h3>
-                                    </div>
-
-                                    <div className="dash-stat-box">
-                                        <p className="dash-stat-label">Tasks Pending</p>
-                                        <h3 className="dash-stat-value dash-stat-error">
-                                            <CountUp target={12} />
-                                        </h3>
-                                        <span className="dash-pulse-dot" />
-                                    </div>
-
-                                    <div className="dash-stat-box">
-                                        <p className="dash-stat-label">Skill Growth</p>
-                                        <h3 className="dash-stat-value dash-stat-teal">+28%</h3>
-                                        <div className="dash-mini-bars">
-                                            <span style={{ height: '8px' }} />
-                                            <span style={{ height: '16px' }} />
-                                            <span style={{ height: '24px' }} />
-                                            <span style={{ height: '20px' }} />
-                                        </div>
-                                    </div>
+                                    ))}
                                 </div>
 
-                                <div className="dash-readiness-mini">
+                                <div className="dash-readiness-mini staggered-item" style={{ animationDelay: '0.6s' }}>
                                     <p className="dash-stat-label">Internship Readiness</p>
                                     <ProgressRing percent={87} size={150} label="87" sublabel="/ 100" />
                                 </div>
@@ -223,130 +266,94 @@ const StudentDashboard = () => {
                         {/* ── MY PROJECTS ── */}
                         <section ref={setRef('projects')} className={sectionClass('projects')}>
                             <div className="dash-section-header">
-                                <h2>🚀 Current Projects</h2>
-                                <button className="dash-link-btn">View All Archives</button>
+                                <h2 className="staggered-item">🚀 Current Projects</h2>
+                                <button className="dash-link-btn hover-glow staggered-item">View All Archives</button>
                             </div>
 
                             <div className="dash-project-scroll">
-                                <div className="dash-card dash-project-card">
-                                    <div className="dash-project-top">
-                                        <div>
-                                            <h4>E-Commerce Platform</h4>
-                                            <p>Full-stack Marketplace Deployment</p>
+                                {[
+                                    { title: 'E-Commerce Platform', desc: 'Full-stack Marketplace Deployment', progress: 65, avatars: ['JK', 'RS', '+2'], color: 'teal', time: '4 Days left', status: 'STABLE' },
+                                    { title: 'Neural Task Manager', desc: 'AI-driven Productivity Engine', progress: 12, avatars: ['ML', '+1'], color: 'coral', time: '12 Days left', status: 'BETA' },
+                                ].map((proj, i) => (
+                                    <TiltCard key={proj.title} className="dash-project-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.2}s` }}>
+                                        <div className="dash-project-top">
+                                            <div>
+                                                <h4 className="neon-text-teal">{proj.title}</h4>
+                                                <p>{proj.desc}</p>
+                                            </div>
+                                            <div className="dash-avatar-stack">
+                                                {proj.avatars.map((av, j) => (
+                                                    <div key={j} className={`dash-mini-avatar ${av.startsWith('+') ? 'dash-mini-avatar-more' : ''}`}>{av}</div>
+                                                ))}
+                                            </div>
                                         </div>
-                                        <div className="dash-avatar-stack">
-                                            <div className="dash-mini-avatar">JK</div>
-                                            <div className="dash-mini-avatar">RS</div>
-                                            <div className="dash-mini-avatar dash-mini-avatar-more">+2</div>
-                                        </div>
-                                    </div>
 
-                                    <div className="dash-sprint-box">
-                                        <div className="dash-sprint-top">
-                                            <span>CURRENT SPRINT</span>
-                                            <span className="dash-sprint-pct dash-stat-teal">65% DONE</span>
+                                        <div className="dash-sprint-box glass-inner">
+                                            <div className="dash-sprint-top">
+                                                <span>CURRENT SPRINT</span>
+                                                <span className={`dash-sprint-pct dash-stat-${proj.color}`}>{proj.progress}% DONE</span>
+                                            </div>
+                                            <div className="dash-stat-bar">
+                                                <div className={`dash-stat-bar-fill ${proj.color === 'teal' ? 'dash-gradient-fill' : 'dash-gradient-fill-rev'} progress-draw`} style={{ width: `${proj.progress}%` }} />
+                                            </div>
                                         </div>
-                                        <div className="dash-stat-bar">
-                                            <div className="dash-stat-bar-fill dash-gradient-fill" style={{ width: '65%' }} />
-                                        </div>
-                                    </div>
 
-                                    <div className="dash-project-footer">
-                                        <span>⏱ 4 Days left</span>
-                                        <span className="dash-pill dash-pill-teal">STABLE</span>
-                                    </div>
-                                </div>
-
-                                <div className="dash-card dash-project-card">
-                                    <div className="dash-project-top">
-                                        <div>
-                                            <h4>Neural Task Manager</h4>
-                                            <p>AI-driven Productivity Engine</p>
+                                        <div className="dash-project-footer">
+                                            <span>⏱ {proj.time}</span>
+                                            <span className={`dash-pill dash-pill-${proj.color} glow-pill`}>{proj.status}</span>
                                         </div>
-                                        <div className="dash-avatar-stack">
-                                            <div className="dash-mini-avatar">ML</div>
-                                            <div className="dash-mini-avatar dash-mini-avatar-more">+1</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="dash-sprint-box">
-                                        <div className="dash-sprint-top">
-                                            <span>CURRENT SPRINT</span>
-                                            <span className="dash-sprint-pct dash-stat-coral">12% DONE</span>
-                                        </div>
-                                        <div className="dash-stat-bar">
-                                            <div className="dash-stat-bar-fill dash-gradient-fill-rev" style={{ width: '12%' }} />
-                                        </div>
-                                    </div>
-
-                                    <div className="dash-project-footer">
-                                        <span>⏱ 12 Days left</span>
-                                        <span className="dash-pill dash-pill-coral">BETA</span>
-                                    </div>
-                                </div>
+                                    </TiltCard>
+                                ))}
                             </div>
                         </section>
 
                         {/* ── GITHUB ACTIVITY + LIVE CHANGES ── */}
-                        <section
-                            ref={setRef('activity')}
-                            className={`dash-two-col ${sectionClass('activity')}`}
-                        >
-                            <div>
+                        <section ref={setRef('activity')} className={`dash-two-col ${sectionClass('activity')}`}>
+                            <div className="staggered-item">
                                 <h2 className="dash-col-heading">💻 GitHub Activity</h2>
-                                <div className="dash-card dash-activity-list">
-                                    <div className="dash-activity-item">
-                                        <div className="dash-activity-icon">⚡</div>
-                                        <div className="dash-activity-text">
-                                            <p>feat: implemented auth provider</p>
-                                            <span>COMMIT #f29a01 • 2m ago</span>
+                                <div className="dash-card dash-activity-list glassmorphism">
+                                    {[
+                                        { icon: '⚡', title: 'feat: implemented auth provider', meta: 'COMMIT #f29a01 • 2m ago' },
+                                        { icon: '🔧', title: 'fix: resolved hydration error in layout', meta: 'COMMIT #a102bc • 45m ago' },
+                                        { icon: '📦', title: 'build: updated dependencies', meta: 'COMMIT #d83e21 • 3h ago' },
+                                    ].map((act, i) => (
+                                        <div key={i} className="dash-activity-item hover-lift" style={{ animationDelay: `${i * 0.1}s` }}>
+                                            <div className="dash-activity-icon floating-icon">{act.icon}</div>
+                                            <div className="dash-activity-text">
+                                                <p>{act.title}</p>
+                                                <span>{act.meta}</span>
+                                            </div>
+                                            <span className="dash-arrow">→</span>
                                         </div>
-                                        <span className="dash-arrow">→</span>
-                                    </div>
-                                    <div className="dash-activity-item">
-                                        <div className="dash-activity-icon">🔧</div>
-                                        <div className="dash-activity-text">
-                                            <p>fix: resolved hydration error in layout</p>
-                                            <span>COMMIT #a102bc • 45m ago</span>
-                                        </div>
-                                        <span className="dash-arrow">→</span>
-                                    </div>
-                                    <div className="dash-activity-item">
-                                        <div className="dash-activity-icon">📦</div>
-                                        <div className="dash-activity-text">
-                                            <p>build: updated dependencies</p>
-                                            <span>COMMIT #d83e21 • 3h ago</span>
-                                        </div>
-                                        <span className="dash-arrow">→</span>
-                                    </div>
+                                    ))}
                                 </div>
                             </div>
 
-                            <div>
+                            <div className="staggered-item" style={{ animationDelay: '0.3s' }}>
                                 <h2 className="dash-col-heading dash-col-heading-error">🔥 Live Changes</h2>
-                                <div className="dash-card dash-live-card">
-                                    <div className="dash-live-item">
+                                <div className="dash-card dash-live-card glassmorphism">
+                                    <div className="dash-live-item hover-lift">
                                         <div className="dash-live-avatar-wrap">
-                                            <div className="dash-avatar dash-avatar-error">JD</div>
-                                            <span className="dash-pulse-dot dash-pulse-dot-corner" />
+                                            <div className="dash-avatar dash-avatar-error neon-border-coral">JD</div>
+                                            <span className="dash-pulse-dot dash-pulse-dot-corner pulse-animation" />
                                         </div>
                                         <div className="dash-live-text">
                                             <div className="dash-live-row">
-                                                <p>John Doe <span>editing</span></p>
-                                                <span className="dash-live-badge dash-live-badge-error">LIVE</span>
+                                                <p>John Doe <span className="neon-text-coral">editing</span></p>
+                                                <span className="dash-live-badge dash-live-badge-error pulse-glow">LIVE</span>
                                             </div>
                                             <p className="dash-live-file">/src/components/Header.tsx</p>
                                         </div>
                                     </div>
 
-                                    <div className="dash-live-item">
+                                    <div className="dash-live-item hover-lift">
                                         <div className="dash-live-avatar-wrap">
-                                            <div className="dash-avatar dash-avatar-teal">AS</div>
-                                            <span className="dash-status-dot" />
+                                            <div className="dash-avatar dash-avatar-teal neon-border-teal">AS</div>
+                                            <span className="dash-status-dot pulse-animation" />
                                         </div>
                                         <div className="dash-live-text">
                                             <div className="dash-live-row">
-                                                <p>Alice Smith <span>reviewing</span></p>
+                                                <p>Alice Smith <span className="neon-text-teal">reviewing</span></p>
                                                 <span className="dash-live-badge dash-live-badge-teal">ONLINE</span>
                                             </div>
                                             <p className="dash-live-file">/src/api/auth.ts</p>
@@ -359,38 +366,29 @@ const StudentDashboard = () => {
                         {/* ── AI SMART MATCHES ── */}
                         <section ref={setRef('matches')} className={sectionClass('matches')}>
                             <div className="dash-section-header">
-                                <h2>✨ AI Smart Matches</h2>
-                                <button className="dash-link-btn">Refresh AI Scan</button>
+                                <h2 className="staggered-item">✨ AI Smart Matches</h2>
+                                <button className="dash-link-btn hover-glow staggered-item">Refresh AI Scan</button>
                             </div>
 
                             <div className="dash-match-grid">
-                                <div className="dash-card dash-match-card">
-                                    <span className="dash-match-pct">98% MATCH</span>
-                                    <div className="dash-match-avatar">🚀</div>
-                                    <h4>Senior React Dev</h4>
-                                    <p>Stripe • Remote • Full-time</p>
-                                    <div className="dash-tag-row">
-                                        <span className="dash-tag">React</span>
-                                        <span className="dash-tag">Node.js</span>
-                                        <span className="dash-tag">AWS</span>
-                                    </div>
-                                    <button className="dash-btn-primary">Apply with AI</button>
-                                </div>
+                                {[
+                                    { pct: '98%', icon: '🚀', title: 'Senior React Dev', company: 'Stripe • Remote • Full-time', tags: ['React', 'Node.js', 'AWS'] },
+                                    { pct: '92%', icon: '🎨', title: 'UI/UX Designer', company: 'Figma • London • Hybrid', tags: ['Figma', 'Design Systems'] },
+                                ].map((match, i) => (
+                                    <TiltCard key={match.title} className="dash-match-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.2}s` }}>
+                                        <span className="dash-match-pct neon-text-teal">{match.pct} MATCH</span>
+                                        <div className="dash-match-avatar floating-icon">{match.icon}</div>
+                                        <h4 className="neon-text-teal">{match.title}</h4>
+                                        <p>{match.company}</p>
+                                        <div className="dash-tag-row">
+                                            {match.tags.map(tag => <span key={tag} className="dash-tag glass-tag">{tag}</span>)}
+                                        </div>
+                                        <button className="dash-btn-primary neon-btn-teal">Apply with AI</button>
+                                    </TiltCard>
+                                ))}
 
-                                <div className="dash-card dash-match-card">
-                                    <span className="dash-match-pct">92% MATCH</span>
-                                    <div className="dash-match-avatar">🎨</div>
-                                    <h4>UI/UX Designer</h4>
-                                    <p>Figma • London • Hybrid</p>
-                                    <div className="dash-tag-row">
-                                        <span className="dash-tag">Figma</span>
-                                        <span className="dash-tag">Design Systems</span>
-                                    </div>
-                                    <button className="dash-btn-primary">Apply with AI</button>
-                                </div>
-
-                                <div className="dash-card dash-match-empty">
-                                    <div className="dash-match-empty-icon">➕</div>
+                                <div className="dash-card dash-match-empty glassmorphism staggered-item" style={{ animationDelay: '0.4s' }}>
+                                    <div className="dash-match-empty-icon floating-icon">➕</div>
                                     <p>More matches loading based on your recent skill growth...</p>
                                 </div>
                             </div>
@@ -399,112 +397,70 @@ const StudentDashboard = () => {
                         {/* ── VERIFIED PROFICIENCIES ── */}
                         <section ref={setRef('skills')} className={sectionClass('skills')}>
                             <div className="dash-section-header">
-                                <h2>✅ Verified Proficiencies</h2>
-                                <button className="dash-link-btn">Take Assessment</button>
+                                <h2 className="staggered-item">✅ Verified Proficiencies</h2>
+                                <button className="dash-link-btn hover-glow staggered-item">Take Assessment</button>
                             </div>
 
                             <div className="dash-skills-grid">
-                                <div className="dash-card dash-skill-card">
-                                    <div className="dash-skill-top">
-                                        <div className="dash-skill-icon dash-skill-icon-blue">⚛️</div>
-                                        <span className="dash-badge dash-badge-verified">VERIFIED</span>
-                                    </div>
-                                    <h4>React.js</h4>
-                                    <div className="dash-skill-stats">
-                                        <div><span>Expertise</span><span>Advanced</span></div>
-                                        <div><span>Score</span><span>942 / 1000</span></div>
-                                    </div>
-                                </div>
-
-                                <div className="dash-card dash-skill-card">
-                                    <div className="dash-skill-top">
-                                        <div className="dash-skill-icon dash-skill-icon-green">🐍</div>
-                                        <span className="dash-badge dash-badge-verified">VERIFIED</span>
-                                    </div>
-                                    <h4>Python</h4>
-                                    <div className="dash-skill-stats">
-                                        <div><span>Expertise</span><span>Intermediate</span></div>
-                                        <div><span>Score</span><span>720 / 1000</span></div>
-                                    </div>
-                                </div>
-
-                                <div className="dash-card dash-skill-card">
-                                    <div className="dash-skill-top">
-                                        <div className="dash-skill-icon dash-skill-icon-orange">🛠️</div>
-                                        <span className="dash-badge dash-badge-level">L3</span>
-                                    </div>
-                                    <h4>System Design</h4>
-                                    <div className="dash-skill-stats">
-                                        <div><span>Expertise</span><span>Intermediate</span></div>
-                                        <div><span>Score</span><span>610 / 1000</span></div>
-                                    </div>
-                                </div>
-
-                                <div className="dash-card dash-skill-card">
-                                    <div className="dash-skill-top">
-                                        <div className="dash-skill-icon dash-skill-icon-purple">☁️</div>
-                                        <span className="dash-badge dash-badge-level">L2</span>
-                                    </div>
-                                    <h4>Cloud Ops</h4>
-                                    <div className="dash-skill-stats">
-                                        <div><span>Expertise</span><span>Beginner</span></div>
-                                        <div><span>Score</span><span>420 / 1000</span></div>
-                                    </div>
-                                </div>
+                                {[
+                                    { icon: '⚛️', title: 'React.js', meta: 'Expertise: Advanced', score: '942 / 1000', color: 'blue', badge: 'VERIFIED' },
+                                    { icon: '🐍', title: 'Python', meta: 'Expertise: Intermediate', score: '720 / 1000', color: 'green', badge: 'VERIFIED' },
+                                    { icon: '🛠️', title: 'System Design', meta: 'Expertise: Intermediate', score: '610 / 1000', color: 'orange', badge: 'L3' },
+                                    { icon: '☁️', title: 'Cloud Ops', meta: 'Expertise: Beginner', score: '420 / 1000', color: 'purple', badge: 'L2' },
+                                ].map((skill, i) => (
+                                    <TiltCard key={skill.title} className="dash-skill-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.1}s` }}>
+                                        <div className="dash-skill-top">
+                                            <div className={`dash-skill-icon dash-skill-icon-${skill.color} floating-icon`}>{skill.icon}</div>
+                                            <span className={`dash-badge dash-badge-${skill.badge === 'VERIFIED' ? 'verified' : 'level'} neon-text-${skill.color === 'blue' ? 'teal' : 'coral'}`}>{skill.badge}</span>
+                                        </div>
+                                        <h4 className="neon-text-teal">{skill.title}</h4>
+                                        <div className="dash-skill-stats">
+                                            <div><span>Expertise</span><span>{skill.meta.split(': ')[1]}</span></div>
+                                            <div><span>Score</span><span>{skill.score}</span></div>
+                                        </div>
+                                    </TiltCard>
+                                ))}
                             </div>
                         </section>
 
                         {/* ── READINESS DETAIL ── */}
                         <section ref={setRef('readiness')} className={sectionClass('readiness')}>
-                            <div className="dash-card dash-readiness-detail">
-                                <div className="dash-readiness-ring-wrap">
+                            <div className="dash-card dash-readiness-detail glassmorphism staggered-item">
+                                <div className="dash-readiness-ring-wrap floating-icon">
                                     <ProgressRing percent={87} size={180} label="87" sublabel="READY" />
                                 </div>
                                 <div className="dash-readiness-breakdown">
-                                    <h2>Internship Readiness Analysis</h2>
-                                    <div className="dash-breakdown-item">
-                                        <div className="dash-breakdown-row">
-                                            <span>Technical Skillset</span>
-                                            <span>92%</span>
+                                    <h2 className="neon-text-teal">Internship Readiness Analysis</h2>
+                                    {[
+                                        { label: 'Technical Skillset', val: '92%' },
+                                        { label: 'Project Experience', val: '78%' },
+                                        { label: 'Collaboration History', val: '85%' },
+                                    ].map((item, i) => (
+                                        <div key={item.label} className="dash-breakdown-item staggered-item" style={{ animationDelay: `${i * 0.1}s` }}>
+                                            <div className="dash-breakdown-row">
+                                                <span>{item.label}</span>
+                                                <span className="neon-text-teal">{item.val}</span>
+                                            </div>
+                                            <div className="dash-stat-bar">
+                                                <div className="dash-stat-bar-fill progress-draw" style={{ width: item.val }} />
+                                            </div>
                                         </div>
-                                        <div className="dash-stat-bar">
-                                            <div className="dash-stat-bar-fill" style={{ width: '92%' }} />
-                                        </div>
-                                    </div>
-                                    <div className="dash-breakdown-item">
-                                        <div className="dash-breakdown-row">
-                                            <span>Project Experience</span>
-                                            <span>78%</span>
-                                        </div>
-                                        <div className="dash-stat-bar">
-                                            <div className="dash-stat-bar-fill" style={{ width: '78%' }} />
-                                        </div>
-                                    </div>
-                                    <div className="dash-breakdown-item">
-                                        <div className="dash-breakdown-row">
-                                            <span>Collaboration History</span>
-                                            <span>85%</span>
-                                        </div>
-                                        <div className="dash-stat-bar">
-                                            <div className="dash-stat-bar-fill" style={{ width: '85%' }} />
-                                        </div>
-                                    </div>
-                                    <button className="dash-btn-report">
+                                    ))}
+                                    <button className="dash-btn-report neon-btn-coral staggered-item" style={{ animationDelay: '0.4s' }}>
                                         <span>Download Full AI Readiness Report</span>
-                                        <span>📄</span>
+                                        <span className="floating-icon">📄</span>
                                     </button>
                                 </div>
                             </div>
                         </section>
-
                     </div>
                 </main>
             </div>
 
             {/* Floating Action Button */}
-            <button className="dash-fab">
+            <button className="dash-fab pulse-animation">
                 <span>+</span>
-                <div className="dash-fab-tooltip">New Project</div>
+                <div className="dash-fab-tooltip glassmorphism">New Project</div>
             </button>
         </div>
     );
