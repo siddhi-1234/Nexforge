@@ -2,20 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import './dashboard.css';
 
 /* ────────────────────────────────────────────
-   Small reusable bits
+Small reusable bits
 ──────────────────────────────────────────── */
-
-// Animated count-up number
-function CountUp({ target, duration = 1500 }) {
+function CountUp({ target, duration = 1200 }) {
     const [value, setValue] = useState(0);
-    const countRef = useRef(null);
 
     useEffect(() => {
         let frame;
         const start = performance.now();
         const animate = (now) => {
             const progress = Math.min((now - start) / duration, 1);
-            // Use easeOutExpo for smoother count-up
             const easeOutExpo = 1 - Math.pow(2, -10 * progress);
             setValue(Math.ceil(easeOutExpo * target));
             if (progress < 1) frame = requestAnimationFrame(animate);
@@ -27,28 +23,24 @@ function CountUp({ target, duration = 1500 }) {
     return <>{value.toLocaleString()}</>;
 }
 
-// Enhanced Progress Ring with smooth drawing animation
-function ProgressRing({ percent, size = 160, label, sublabel, color = '#38debb' }) {
+function ProgressRing({ percent, size = 130, label, sublabel, color = '#38debb' }) {
     const [currentPercent, setCurrentPercent] = useState(0);
 
     useEffect(() => {
         const timer = setTimeout(() => {
             setCurrentPercent(percent);
-        }, 500);
+        }, 300);
         return () => clearTimeout(timer);
     }, [percent]);
 
     return (
-        <div
-            className="progress-ring-container"
-            style={{ width: size, height: size }}
-        >
+        <div className="progress-ring-container" style={{ width: size, height: size }}>
             <div
                 className="progress-ring"
                 style={{
                     width: size,
                     height: size,
-                    background: `conic-gradient(${color} ${currentPercent * 3.6}deg, rgba(255,255,255,0.06) 0deg)`,
+                    background: `conic-gradient(${color} ${currentPercent * 3.6}deg, rgba(255,255,255,0.04) 0deg)`,
                 }}
             >
                 <div className="progress-ring-inner">
@@ -60,11 +52,10 @@ function ProgressRing({ percent, size = 160, label, sublabel, color = '#38debb' 
     );
 }
 
-// Tilt effect hook for cards
 function useTilt(ref) {
     useEffect(() => {
         const el = ref.current;
-        if (!el) return;
+        if (!el || window.innerWidth < 768) return; // Disable on mobile viewports for performance
 
         const handleMouseMove = (e) => {
             const rect = el.getBoundingClientRect();
@@ -72,10 +63,10 @@ function useTilt(ref) {
             const y = e.clientY - rect.top;
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            const rotateX = (y - centerY) / 15;
-            const rotateY = (centerX - x) / 15;
+            const rotateX = (y - centerY) / 20;
+            const rotateY = (centerX - x) / 20;
 
-            el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            el.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.01, 1.02, 1.01)`;
         };
 
         const handleMouseLeave = () => {
@@ -102,9 +93,8 @@ const TiltCard = ({ children, className = '', style = {} }) => {
 };
 
 /* ────────────────────────────────────────────
-   Main Dashboard
+Main Dashboard Component
 ──────────────────────────────────────────── */
-
 const StudentDashboard = () => {
     const [visibleSections, setVisibleSections] = useState({});
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -122,7 +112,7 @@ const StudentDashboard = () => {
                     }
                 });
             },
-            { threshold: 0.1 }
+            { threshold: 0.05 }
         );
 
         sectionRefs.current.forEach((el) => el && observer.observe(el));
@@ -136,13 +126,13 @@ const StudentDashboard = () => {
         }
     };
 
-    const sectionClass = (key: string) =>
+    const sectionClass = (key) =>
         `dash-section ${visibleSections[key] ? 'dash-section-visible' : ''}`;
 
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     return (
-        <div className="dashboard-page dark-theme">
+        <div className="dashboard-page">
             {/* Ambient background glow blobs */}
             <div className="dash-bg-glow dash-bg-glow-1" />
             <div className="dash-bg-glow dash-bg-glow-2" />
@@ -156,7 +146,7 @@ const StudentDashboard = () => {
                     <div className="dash-sidebar-header">
                         <div className="dash-logo">
                             <h1 className="neon-text-teal">NexForge</h1>
-                            <p>V3.0 Premium</p>
+
                         </div>
                         <button className="dash-sidebar-close" onClick={toggleSidebar}>✕</button>
                     </div>
@@ -174,7 +164,7 @@ const StudentDashboard = () => {
                                 key={item.label}
                                 href="#"
                                 className={`dash-nav-item ${item.active ? 'dash-nav-active' : ''}`}
-                                style={{ animationDelay: `${i * 0.1}s` }}
+                                style={{ animationDelay: `${i * 0.05}s` }}
                             >
                                 <span className="dash-nav-icon floating-icon">{item.icon}</span>
                                 <span>{item.label}</span>
@@ -194,7 +184,7 @@ const StudentDashboard = () => {
                     </div>
                 </aside>
 
-                {/* ── MAIN ── */}
+                {/* ── MAIN AREA ── */}
                 <main className="dash-main">
                     <header className="dash-topbar glassmorphism">
                         <div className="dash-topbar-left">
@@ -216,9 +206,9 @@ const StudentDashboard = () => {
                             <div className="dash-profile glass-profile">
                                 <div className="dash-profile-text">
                                     <p>Student Developer</p>
-                                    <span className="neon-text-coral">LEVEL 42</span>
+
                                 </div>
-                                <div className="dash-avatar neon-border-teal">SD</div>
+                                <div className="dash-avatar">SD</div>
                             </div>
                         </div>
                     </header>
@@ -234,7 +224,7 @@ const StudentDashboard = () => {
                                         { label: 'Tasks Pending', value: 12, colorClass: 'dash-stat-error', hasPulse: true },
                                         { label: 'Skill Growth', value: '+28%', colorClass: 'dash-stat-teal', isGrowth: true },
                                     ].map((stat, i) => (
-                                        <div key={stat.label} className="dash-stat-box glass-inner staggered-item" style={{ animationDelay: `${i * 0.15}s` }}>
+                                        <div key={stat.label} className="dash-stat-box glass-inner staggered-item" style={{ animationDelay: `${i * 0.08}s` }}>
                                             <p className="dash-stat-label">{stat.label}</p>
                                             <h3 className={`dash-stat-value ${stat.colorClass}`}>
                                                 {typeof stat.value === 'number' ? <CountUp target={stat.value} /> : stat.value}
@@ -248,7 +238,7 @@ const StudentDashboard = () => {
                                             {stat.isGrowth && (
                                                 <div className="dash-mini-bars">
                                                     {[8, 16, 24, 20].map((h, j) => (
-                                                        <span key={j} style={{ height: `${h}px`, animationDelay: `${j * 0.1}s` }} className="bar-grow" />
+                                                        <span key={j} style={{ '--bar-h': `${h}px`, animationDelay: `${j * 0.05}s` }} className="bar-grow" />
                                                     ))}
                                                 </div>
                                             )}
@@ -256,9 +246,9 @@ const StudentDashboard = () => {
                                     ))}
                                 </div>
 
-                                <div className="dash-readiness-mini staggered-item" style={{ animationDelay: '0.6s' }}>
+                                <div className="dash-readiness-mini staggered-item" style={{ animationDelay: '0.35s' }}>
                                     <p className="dash-stat-label">Internship Readiness</p>
-                                    <ProgressRing percent={87} size={150} label="87" sublabel="/ 100" />
+                                    <ProgressRing percent={87} size={120} label="87" sublabel="/ 100" />
                                 </div>
                             </div>
                         </section>
@@ -275,7 +265,7 @@ const StudentDashboard = () => {
                                     { title: 'E-Commerce Platform', desc: 'Full-stack Marketplace Deployment', progress: 65, avatars: ['JK', 'RS', '+2'], color: 'teal', time: '4 Days left', status: 'STABLE' },
                                     { title: 'Neural Task Manager', desc: 'AI-driven Productivity Engine', progress: 12, avatars: ['ML', '+1'], color: 'coral', time: '12 Days left', status: 'BETA' },
                                 ].map((proj, i) => (
-                                    <TiltCard key={proj.title} className="dash-project-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.2}s` }}>
+                                    <TiltCard key={proj.title} className="dash-project-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.1}s` }}>
                                         <div className="dash-project-top">
                                             <div>
                                                 <h4 className="neon-text-teal">{proj.title}</h4>
@@ -317,7 +307,7 @@ const StudentDashboard = () => {
                                         { icon: '🔧', title: 'fix: resolved hydration error in layout', meta: 'COMMIT #a102bc • 45m ago' },
                                         { icon: '📦', title: 'build: updated dependencies', meta: 'COMMIT #d83e21 • 3h ago' },
                                     ].map((act, i) => (
-                                        <div key={i} className="dash-activity-item hover-lift" style={{ animationDelay: `${i * 0.1}s` }}>
+                                        <div key={i} className="dash-activity-item hover-lift" style={{ animationDelay: `${i * 0.05}s` }}>
                                             <div className="dash-activity-icon floating-icon">{act.icon}</div>
                                             <div className="dash-activity-text">
                                                 <p>{act.title}</p>
@@ -329,18 +319,18 @@ const StudentDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="staggered-item" style={{ animationDelay: '0.3s' }}>
+                            <div className="staggered-item" style={{ animationDelay: '0.15s' }}>
                                 <h2 className="dash-col-heading dash-col-heading-error">🔥 Live Changes</h2>
                                 <div className="dash-card dash-live-card glassmorphism">
                                     <div className="dash-live-item hover-lift">
                                         <div className="dash-live-avatar-wrap">
-                                            <div className="dash-avatar dash-avatar-error neon-border-coral">JD</div>
+                                            <div className="dash-avatar dash-avatar-error">JD</div>
                                             <span className="dash-pulse-dot dash-pulse-dot-corner pulse-animation" />
                                         </div>
                                         <div className="dash-live-text">
                                             <div className="dash-live-row">
                                                 <p>John Doe <span className="neon-text-coral">editing</span></p>
-                                                <span className="dash-live-badge dash-live-badge-error pulse-glow">LIVE</span>
+                                                <span className="dash-live-badge dash-live-badge-error">LIVE</span>
                                             </div>
                                             <p className="dash-live-file">/src/components/Header.tsx</p>
                                         </div>
@@ -348,8 +338,8 @@ const StudentDashboard = () => {
 
                                     <div className="dash-live-item hover-lift">
                                         <div className="dash-live-avatar-wrap">
-                                            <div className="dash-avatar dash-avatar-teal neon-border-teal">AS</div>
-                                            <span className="dash-status-dot pulse-animation" />
+                                            <div className="dash-avatar dash-avatar-teal">AS</div>
+                                            <span className="dash-status-dot" />
                                         </div>
                                         <div className="dash-live-text">
                                             <div className="dash-live-row">
@@ -375,7 +365,7 @@ const StudentDashboard = () => {
                                     { pct: '98%', icon: '🚀', title: 'Senior React Dev', company: 'Stripe • Remote • Full-time', tags: ['React', 'Node.js', 'AWS'] },
                                     { pct: '92%', icon: '🎨', title: 'UI/UX Designer', company: 'Figma • London • Hybrid', tags: ['Figma', 'Design Systems'] },
                                 ].map((match, i) => (
-                                    <TiltCard key={match.title} className="dash-match-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.2}s` }}>
+                                    <TiltCard key={match.title} className="dash-match-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.1}s` }}>
                                         <span className="dash-match-pct neon-text-teal">{match.pct} MATCH</span>
                                         <div className="dash-match-avatar floating-icon">{match.icon}</div>
                                         <h4 className="neon-text-teal">{match.title}</h4>
@@ -387,7 +377,7 @@ const StudentDashboard = () => {
                                     </TiltCard>
                                 ))}
 
-                                <div className="dash-card dash-match-empty glassmorphism staggered-item" style={{ animationDelay: '0.4s' }}>
+                                <div className="dash-card dash-match-empty glassmorphism staggered-item" style={{ animationDelay: '0.2s' }}>
                                     <div className="dash-match-empty-icon floating-icon">➕</div>
                                     <p>More matches loading based on your recent skill growth...</p>
                                 </div>
@@ -408,7 +398,7 @@ const StudentDashboard = () => {
                                     { icon: '🛠️', title: 'System Design', meta: 'Expertise: Intermediate', score: '610 / 1000', color: 'orange', badge: 'L3' },
                                     { icon: '☁️', title: 'Cloud Ops', meta: 'Expertise: Beginner', score: '420 / 1000', color: 'purple', badge: 'L2' },
                                 ].map((skill, i) => (
-                                    <TiltCard key={skill.title} className="dash-skill-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.1}s` }}>
+                                    <TiltCard key={skill.title} className="dash-skill-card glassmorphism staggered-item" style={{ animationDelay: `${i * 0.05}s` }}>
                                         <div className="dash-skill-top">
                                             <div className={`dash-skill-icon dash-skill-icon-${skill.color} floating-icon`}>{skill.icon}</div>
                                             <span className={`dash-badge dash-badge-${skill.badge === 'VERIFIED' ? 'verified' : 'level'} neon-text-${skill.color === 'blue' ? 'teal' : 'coral'}`}>{skill.badge}</span>
@@ -427,7 +417,7 @@ const StudentDashboard = () => {
                         <section ref={setRef('readiness')} className={sectionClass('readiness')}>
                             <div className="dash-card dash-readiness-detail glassmorphism staggered-item">
                                 <div className="dash-readiness-ring-wrap floating-icon">
-                                    <ProgressRing percent={87} size={180} label="87" sublabel="READY" />
+                                    <ProgressRing percent={87} size={150} label="87" sublabel="READY" color="#38debb" />
                                 </div>
                                 <div className="dash-readiness-breakdown">
                                     <h2 className="neon-text-teal">Internship Readiness Analysis</h2>
@@ -436,7 +426,7 @@ const StudentDashboard = () => {
                                         { label: 'Project Experience', val: '78%' },
                                         { label: 'Collaboration History', val: '85%' },
                                     ].map((item, i) => (
-                                        <div key={item.label} className="dash-breakdown-item staggered-item" style={{ animationDelay: `${i * 0.1}s` }}>
+                                        <div key={item.label} className="dash-breakdown-item staggered-item" style={{ animationDelay: `${i * 0.05}s` }}>
                                             <div className="dash-breakdown-row">
                                                 <span>{item.label}</span>
                                                 <span className="neon-text-teal">{item.val}</span>
@@ -446,7 +436,7 @@ const StudentDashboard = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    <button className="dash-btn-report neon-btn-coral staggered-item" style={{ animationDelay: '0.4s' }}>
+                                    <button className="dash-btn-report neon-btn-coral staggered-item" style={{ animationDelay: '0.2s' }}>
                                         <span>Download Full AI Readiness Report</span>
                                         <span className="floating-icon">📄</span>
                                     </button>
@@ -458,7 +448,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Floating Action Button */}
-            <button className="dash-fab pulse-animation">
+            <button className="dash-fab layout-fab-spring" aria-label="Create Project">
                 <span>+</span>
                 <div className="dash-fab-tooltip glassmorphism">New Project</div>
             </button>
