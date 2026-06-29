@@ -141,11 +141,29 @@ Dark Glassmorphism + Neon Accents + Premium Animations
     width: 100%;
 }
 
+.dash-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+/* Logo image — sized to sit comfortably beside the "NexForge" wordmark
+   inside the existing 250px sidebar without forcing the sidebar wider. */
+.dash-logo-img {
+    width: 65px;
+    height: 65px;
+    object-fit: contain;
+    flex-shrink: 0;
+    display: block;
+}
+
 .dash-logo h1 {
     font-family: 'Outfit', sans-serif;
     font-size: 22px;
     font-weight: 800;
     letter-spacing: -0.02em;
+    white-space: nowrap;
 }
 
 .dash-logo p {
@@ -1251,6 +1269,18 @@ Dark Glassmorphism + Neon Accents + Premium Animations
         display: none;
     }
 
+    /* Collapsed sidebar: shrink the logo slightly and let it
+       sit centered on its own since the wordmark is hidden. */
+    .dash-logo {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .dash-logo-img {
+        width: 28px;
+        height: 28px;
+    }
+
     .dash-main {
         margin-left: 72px;
     }
@@ -1288,6 +1318,18 @@ Dark Glassmorphism + Neon Accents + Premium Animations
     .dash-nav-item span:last-child,
     .dash-nav-bottom {
         display: flex;
+    }
+
+    /* Sidebar drawer is open and full width again here, so the logo
+       goes back to left-aligned next to the wordmark, full size. */
+    .dash-logo {
+        justify-content: flex-start;
+        width: auto;
+    }
+
+    .dash-logo-img {
+        width: 32px;
+        height: 32px;
     }
 
     .dash-nav-item {
@@ -1344,6 +1386,17 @@ Dark Glassmorphism + Neon Accents + Premium Animations
     .dash-icon-group {
         padding-right: 4px;
     }
+
+    /* Smallest phones: keep the logo crisp but compact so it never
+       crowds the close (✕) button in the open drawer header. */
+    .dash-logo-img {
+        width: 50px;
+        height: 50px;
+    }
+
+    .dash-logo h1 {
+        font-size: 19px;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1355,5 +1408,90 @@ Dark Glassmorphism + Neon Accents + Premium Animations
         animation: none !important;
         transition: none !important;
         transform: none !important;
+    }
+}
+
+.dash-notif-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ff4d6d;
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dash-notification-panel {
+    position: absolute;
+    top: 90px;
+    right: 30px;
+    width: 360px;
+    max-height: 450px;
+    overflow-y: auto;
+    z-index: 9999;
+    padding: 1rem;
+    border-radius: 18px;
+    backdrop-filter: blur(25px);
+    animation: slideDown .3s ease;
+}
+
+.dash-notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.dash-clear-btn {
+    background: transparent;
+    border: none;
+    color: #38debb;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.dash-notification-item {
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: .75rem;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .08);
+    transition: .3s;
+}
+
+.dash-notification-item:hover {
+    transform: translateY(-3px);
+}
+
+.dash-notification-content p {
+    margin: 0;
+    font-size: .95rem;
+}
+
+.dash-notification-content small {
+    opacity: .7;
+}
+
+.dash-empty-notification {
+    text-align: center;
+    padding: 2rem;
+    opacity: .7;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

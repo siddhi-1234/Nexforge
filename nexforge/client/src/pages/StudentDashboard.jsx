@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './dashboard.css';
+import nexforgeLogo from './logo.png';
+import socket from "../../socket/socket";
 
 /* ────────────────────────────────────────────
 Small reusable bits
@@ -22,6 +24,10 @@ function CountUp({ target, duration = 1200 }) {
 
     return <>{value.toLocaleString()}</>;
 }
+
+const [notifications, setNotifications] = useState([]);
+const [unreadCount, setUnreadCount] = useState(0);
+
 
 function ProgressRing({ percent, size = 130, label, sublabel, color = '#38debb' }) {
     const [currentPercent, setCurrentPercent] = useState(0);
@@ -98,7 +104,36 @@ Main Dashboard Component
 const StudentDashboard = () => {
     const [visibleSections, setVisibleSections] = useState({});
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    const [showNotifications, setShowNotifications] = useState(false);
+
     const sectionRefs = useRef([]);
+
+    useEffect(() => {
+
+        // Replace with logged in user ID later
+        const userId = "student123";
+
+        socket.emit("join-user-room", userId);
+
+        socket.on("new-notification", (notification) => {
+
+            setNotifications((prev) => [
+                notification,
+                ...prev
+            ]);
+
+            setUnreadCount((prev) => prev + 1);
+        });
+
+        return () => {
+            socket.off("new-notification");
+        };
+
+    }, []);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -145,6 +180,7 @@ const StudentDashboard = () => {
                 <aside className={`dash-sidebar ${isSidebarOpen ? 'dash-sidebar-open' : ''}`}>
                     <div className="dash-sidebar-header">
                         <div className="dash-logo">
+                            <img src={nexforgeLogo} alt="NexForge" className="dash-logo-img" />
                             <h1 className="neon-text-teal">NexForge</h1>
 
                         </div>
@@ -162,7 +198,7 @@ const StudentDashboard = () => {
                         ].map((item, i) => (
                             <a
                                 key={item.label}
-                                href="#"
+                                href="#/"
                                 className={`dash-nav-item ${item.active ? 'dash-nav-active' : ''}`}
                                 style={{ animationDelay: `${i * 0.05}s` }}
                             >
@@ -173,11 +209,11 @@ const StudentDashboard = () => {
                     </nav>
 
                     <div className="dash-nav-bottom">
-                        <a href="#" className="dash-nav-item">
+                        <a href="#/" className="dash-nav-item">
                             <span className="dash-nav-icon">⚙️</span>
                             <span>Settings</span>
                         </a>
-                        <a href="#" className="dash-nav-item">
+                        <a href="#/" className="dash-nav-item">
                             <span className="dash-nav-icon">💬</span>
                             <span>Support</span>
                         </a>
@@ -197,8 +233,20 @@ const StudentDashboard = () => {
 
                         <div className="dash-topbar-right">
                             <div className="dash-icon-group">
-                                <button className="dash-icon-btn pulse-hover">
-                                    🔔<span className="dash-notif-dot pulse-animation" />
+                                <button
+                                    className="dash-icon-btn pulse-hover"
+                                    onClick={() => {
+                                        setShowNotifications(!showNotifications);
+                                        setUnreadCount(0);
+                                    }}
+                                >
+                                    🔔
+
+                                    {unreadCount > 0 && (
+                                        <span className="dash-notif-count">
+                                            {unreadCount}
+                                        </span>
+                                    )}
                                 </button>
                                 <button className="dash-icon-btn pulse-hover">💬</button>
                             </div>
@@ -212,6 +260,44 @@ const StudentDashboard = () => {
                             </div>
                         </div>
                     </header>
+                    {showNotifications && (
+                        <div className="dash-notification-panel glassmorphism">
+
+                            <div className="dash-notification-header">
+                                <h4>Notifications</h4>
+
+                                <button
+                                    className="dash-clear-btn"
+                                    onClick={() => setNotifications([])}
+                                >
+                                    Clear All
+                                </button>
+                            </div>
+
+                            {notifications.length === 0 ? (
+
+                                <div className="dash-empty-notification">
+                                    No notifications yet 🚀
+                                </div>
+
+                            ) : (
+
+                                notifications.map((n) => (
+
+                                    <div
+                                        key={n._id}
+                                        className="dash-notification-item"
+                                    >
+                                        <div className="dash-notification-content">
+                                            <p>{n.message}</p>
+                                            <small>{n.time}</small>
+                                        </div>
+                                    </div>
+
+                                ))
+                            )}
+                        </div>
+                    )}
 
                     <div className="dash-content">
                         {/* ── HERO OVERVIEW ── */}

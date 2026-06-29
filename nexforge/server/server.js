@@ -1,5 +1,28 @@
 // MUST BE THE VERY FIRST LINE RUN ON YOUR SERVER APPLICATION CONTEXT
 require('dotenv').config();
+import { Server } from "socket.io";
+
+const io = new Server(server, {
+    cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"]
+    }
+});
+
+global.io = io;
+
+io.on("connection", (socket) => {
+
+    console.log("User Connected:", socket.id);
+
+    socket.on("join-user-room", (userId) => {
+        socket.join(userId);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("Disconnected");
+    });
+});
 
 const express = require('express');
 const mongoose = require('mongoose');
