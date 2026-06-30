@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import './dashboard.css';
 import nexforgeLogo from './logo.png';
-import socket from "../../socket/socket";
+import socket from "../socket/socket";
 
 /* ────────────────────────────────────────────
 Small reusable bits
@@ -25,8 +25,6 @@ function CountUp({ target, duration = 1200 }) {
     return <>{value.toLocaleString()}</>;
 }
 
-const [notifications, setNotifications] = useState([]);
-const [unreadCount, setUnreadCount] = useState(0);
 
 
 function ProgressRing({ percent, size = 130, label, sublabel, color = '#38debb' }) {
@@ -128,6 +126,22 @@ const StudentDashboard = () => {
 
             setUnreadCount((prev) => prev + 1);
         });
+
+        // TEMPORARY TEST
+        setTimeout(() => {
+
+            setNotifications(prev => [
+                {
+                    _id: Date.now(),
+                    message: "🚀 Welcome to NexForge!",
+                    time: "Just now"
+                },
+                ...prev
+            ]);
+
+            setUnreadCount(prev => prev + 1);
+
+        }, 3000);
 
         return () => {
             socket.off("new-notification");
@@ -233,76 +247,70 @@ const StudentDashboard = () => {
 
                         <div className="dash-topbar-right">
                             <div className="dash-icon-group">
-                                <button
-                                    className="dash-icon-btn pulse-hover"
-                                    onClick={() => {
-                                        setShowNotifications(!showNotifications);
-                                        setUnreadCount(0);
-                                    }}
-                                >
-                                    🔔
+                                <div className="dash-notif-container">
+                                    <button
+                                        className="dash-icon-btn pulse-hover"
+                                        onClick={() => {
+                                            setShowNotifications(!showNotifications);
+                                            setUnreadCount(0);
+                                        }}
+                                    >
+                                        🔔
 
-                                    {unreadCount > 0 && (
-                                        <span className="dash-notif-count">
-                                            {unreadCount}
-                                        </span>
+                                        {unreadCount > 0 && (
+                                            <span className="dash-notif-count">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {showNotifications && (
+                                        <div className="dash-notification-panel glassmorphism">
+                                            <div className="dash-notification-header">
+                                                <h4>Notifications</h4>
+                                                <button
+                                                    className="dash-clear-btn"
+                                                    onClick={() => setNotifications([])}
+                                                >
+                                                    Clear All
+                                                </button>
+                                            </div>
+
+                                            {notifications.length === 0 ? (
+                                                <div className="dash-empty-notification">
+                                                    No notifications yet 🚀
+                                                </div>
+                                            ) : (
+                                                notifications.map((n) => (
+                                                    <div
+                                                        key={n._id}
+                                                        className="dash-notification-item"
+                                                    >
+                                                        <div className="dash-notification-content">
+                                                            <p>{n.message}</p>
+                                                            <small>{n.time}</small>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
                                     )}
-                                </button>
+                                </div>
                                 <button className="dash-icon-btn pulse-hover">💬</button>
                             </div>
 
                             <div className="dash-profile glass-profile">
                                 <div className="dash-profile-text">
                                     <p>Student Developer</p>
-
                                 </div>
                                 <div className="dash-avatar">SD</div>
                             </div>
                         </div>
                     </header>
-                    {showNotifications && (
-                        <div className="dash-notification-panel glassmorphism">
-
-                            <div className="dash-notification-header">
-                                <h4>Notifications</h4>
-
-                                <button
-                                    className="dash-clear-btn"
-                                    onClick={() => setNotifications([])}
-                                >
-                                    Clear All
-                                </button>
-                            </div>
-
-                            {notifications.length === 0 ? (
-
-                                <div className="dash-empty-notification">
-                                    No notifications yet 🚀
-                                </div>
-
-                            ) : (
-
-                                notifications.map((n) => (
-
-                                    <div
-                                        key={n._id}
-                                        className="dash-notification-item"
-                                    >
-                                        <div className="dash-notification-content">
-                                            <p>{n.message}</p>
-                                            <small>{n.time}</small>
-                                        </div>
-                                    </div>
-
-                                ))
-                            )}
-                        </div>
-                    )}
 
                     <div className="dash-content">
                         {/* ── HERO OVERVIEW ── */}
                         <section ref={setRef('hero')} className={sectionClass('hero')}>
-                            <div className="dash-card dash-hero glassmorphism staggered-item">
+                            <div className="dash-card dash-hero glassmorphism staggered-item shine-card float-card">
                                 <div className="dash-hero-stats">
                                     {[
                                         { label: 'Contribution Score', value: 847, colorClass: 'dash-stat-teal', barWidth: '70%' },
@@ -310,7 +318,7 @@ const StudentDashboard = () => {
                                         { label: 'Tasks Pending', value: 12, colorClass: 'dash-stat-error', hasPulse: true },
                                         { label: 'Skill Growth', value: '+28%', colorClass: 'dash-stat-teal', isGrowth: true },
                                     ].map((stat, i) => (
-                                        <div key={stat.label} className="dash-stat-box glass-inner staggered-item" style={{ animationDelay: `${i * 0.08}s` }}>
+                                        <div key={stat.label} className="dash-stat-box glass-inner staggered-item hover-lift glow-hover" style={{ animationDelay: `${i * 0.08}s` }}>
                                             <p className="dash-stat-label">{stat.label}</p>
                                             <h3 className={`dash-stat-value ${stat.colorClass}`}>
                                                 {typeof stat.value === 'number' ? <CountUp target={stat.value} /> : stat.value}
