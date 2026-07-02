@@ -72,3 +72,7 @@ mongoose.connect(MONGO_URI)
     .catch((err) => {
         console.error("Database connection error:", err.message);
     });
+
+import notificationRoutes from "./routes/notificationRoutes.js";
+
+app.use("/api/notifications", notificationRoutes);

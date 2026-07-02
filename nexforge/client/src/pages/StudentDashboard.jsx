@@ -127,26 +127,34 @@ const StudentDashboard = () => {
             setUnreadCount((prev) => prev + 1);
         });
 
-        // TEMPORARY TEST
-        setTimeout(() => {
 
-            setNotifications(prev => [
-                {
-                    _id: Date.now(),
-                    message: "🚀 Welcome to NexForge!",
-                    time: "Just now"
-                },
-                ...prev
-            ]);
-
-            setUnreadCount(prev => prev + 1);
-
-        }, 3000);
 
         return () => {
             socket.off("new-notification");
         };
 
+    }, []);
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const res = await fetch(
+                    `http://localhost:5000/api/notifications/student123`
+                );
+
+                const data = await res.json();
+
+                setNotifications(data.notifications);
+
+                const unread = data.notifications.filter(n => !n.read).length;
+                setUnreadCount(unread);
+
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchNotifications();
     }, []);
 
     useEffect(() => {
