@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './dashboard.css';
 import nexforgeLogo from './logo.png';
 import socket from "../socket/socket";
+import { Link } from 'react-router-dom';
 
 /* ────────────────────────────────────────────
 Small reusable bits
@@ -211,22 +212,22 @@ const StudentDashboard = () => {
 
                     <nav className="dash-nav">
                         {[
-                            { icon: '🧭', label: 'Dashboard', active: true },
-                            { icon: '🚀', label: 'My Projects' },
-                            { icon: '🌐', label: 'Team Activity' },
-                            { icon: '⚡', label: 'Recommendations' },
-                            { icon: '🎓', label: 'Skills' },
-                            { icon: '💻', label: 'Internship Prep' },
+                            { icon: '🧭', label: 'Dashboard', active: true, path: '/dashboard/student' },
+                            { icon: '🚀', label: 'My Projects', path: '/dashboard/projects' },
+                            { icon: '🌐', label: 'Team Activity', path: '#/' },
+                            { icon: '⚡', label: 'Recommendations', path: '#/' },
+                            { icon: '🎓', label: 'Skills', path: '#/' },
+                            { icon: '💻', label: 'Internship Prep', path: '#/' },
                         ].map((item, i) => (
-                            <a
+                            <Link
                                 key={item.label}
-                                href="#/"
+                                to={item.path}
                                 className={`dash-nav-item ${item.active ? 'dash-nav-active' : ''}`}
                                 style={{ animationDelay: `${i * 0.05}s` }}
                             >
                                 <span className="dash-nav-icon floating-icon">{item.icon}</span>
                                 <span>{item.label}</span>
-                            </a>
+                            </Link>
                         ))}
                     </nav>
 

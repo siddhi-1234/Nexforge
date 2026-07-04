@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ForgotPassword from './pages/ForgotPassword';
 import StudentDashboard from './pages/StudentDashboard';
+import ProjectsPage from './pages/ProjectsPage';
 
 
 // import MentorDashboard from './pages/MentorDashboard';
@@ -20,6 +21,7 @@ function App() {
 
         {/* TODO: swap these placeholder elements for the real dashboard components above */}
         <Route path="/dashboard/student" element={<StudentDashboard />} />
+        <Route path="/dashboard/projects" element={<ProjectsPage />} />
         <Route path="/dashboard/mentor" element={<div>Mentor dashboard — build me next</div>} />
         <Route path="/dashboard/recruiter" element={<div>Recruiter dashboard — build me next</div>} />
         <Route path="/dashboard/admin" element={<div>Admin dashboard — build me next</div>} />
