@@ -1,6 +1,4 @@
-// MUST BE FIRST
-import dotenv from 'dotenv';
-dotenv.config();
+import 'dotenv/config';
 
 import express from 'express';
 import mongoose from 'mongoose';
@@ -18,7 +16,10 @@ const server = http.createServer(app);
 // Socket.io setup
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:5173",
+        origin: [
+            "http://localhost:3000",
+            "http://localhost:5173"
+        ],
         methods: ["GET", "POST"],
         credentials: true
     }
@@ -44,7 +45,10 @@ io.on("connection", (socket) => {
 
 // Middlewares
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: [
+        "http://localhost:3000",
+        "http://localhost:5173"
+    ],
     credentials: true
 }));
 

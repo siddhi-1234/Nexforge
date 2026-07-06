@@ -12,6 +12,7 @@
 /build
 
 .env
+src/config/firebase-service-account.json
 
 # misc
 .DS_Store

@@ -2,6 +2,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '../index.css';
+import {
+    GoogleAuthProvider,
+    signInWithPopup
+} from "firebase/auth";
+
+import { auth } from "../config/firebaseConfig";
+import axios from "axios";
 
 const ROLE_REDIRECTS = {
     student: '/dashboard/student',
@@ -346,6 +353,64 @@ void main() {
         };
     }, []);
 
+    const googleLogin = async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+
+            const result = await signInWithPopup(auth, provider);
+
+            const firebaseUser = result.user;
+            const token = await firebaseUser.getIdToken();
+
+            try {
+                const loginRes = await axios.post(
+                    "http://localhost:5000/api/auth/login",
+                    {},
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(loginRes.data.user)
+                );
+
+                localStorage.setItem("firebaseToken", token);
+
+                navigate("/dashboard/student");
+
+            } catch (err) {
+                console.error("Backend Login Error:", err);
+
+                // User doesn't exist in MongoDB yet
+                if (err.response && err.response.status === 404) {
+                    navigate("/complete-profile", {
+                        state: {
+                            firebaseUser,
+                            token,
+                        },
+                    });
+                    return;
+                }
+
+                // Backend returned another error
+                if (err.response) {
+                    alert(err.response.data.message || "Login failed.");
+                } else {
+                    // Network or CORS error
+                    alert("Cannot connect to the backend. Check CORS and server.");
+                }
+            }
+
+        } catch (err) {
+            console.error("Google Sign-In Error:", err);
+            alert(err.message);
+        }
+    };
+
     const handleSubmit = (e) => {
         e.preventDefault();
 
@@ -460,7 +525,7 @@ void main() {
 
                     {/* Bento Social Grid */}
                     <div className="bento-social field-enter" style={{ animationDelay: '0.25s' }}>
-                        <button className="social-btn col-span-2 flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 group">
+                        <button className="social-btn col-span-2 flex items-center justify-center gap-2.5 py-2.5 px-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all duration-200 group" onClick={googleLogin}>
                             <svg className="w-4 h-4" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
