@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import nexforgeLogo from './logo.png';
 import { Link, useNavigate } from 'react-router-dom';
+import './dashboard.css';
 
 /* ────────────────────────────────────────────────────────
    1. CUSTOM SPOTLIGHT & HOVER CARD COMPONENT (Animation #2)
@@ -176,8 +177,8 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
                   >
                     <div className="flex items-center space-x-2.5">
                       <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${task.completed
-                          ? 'bg-[#38debb] border-[#38debb] text-[#05070A]'
-                          : 'border-slate-600 bg-slate-900/60'
+                        ? 'bg-[#38debb] border-[#38debb] text-[#05070A]'
+                        : 'border-slate-600 bg-slate-900/60'
                         }`}>
                         {task.completed && <Check size={10} strokeWidth={3} />}
                       </div>
@@ -190,9 +191,9 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse-red" />
                       )}
                       <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${task.priority === 'urgent' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                          task.priority === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                            task.priority === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                              'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                        task.priority === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                          task.priority === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                            'bg-slate-500/10 text-slate-400 border-slate-500/20'
                         }`}>
                         {task.priority.toUpperCase()}
                       </span>
@@ -208,105 +209,7 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
   );
 }
 
-/* ────────────────────────────────────────────────────────
-   3.5 SIDEBAR CONTENT COMPONENT
-   ──────────────────────────────────────────────────────── */
-const SidebarContent = ({ onClose }) => (
-  <div className="flex flex-col h-full justify-between">
-    <div className="space-y-8">
-      {/* Logo */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <img src={nexforgeLogo} alt="NexForge" className="w-9 h-9 object-contain" />
-          <div>
-            <h1 className="text-lg font-bold font-display text-white tracking-wide leading-none">NexForge</h1>
-            <span className="text-[10px] text-slate-500 font-semibold tracking-wider font-display uppercase block mt-1">V3.0 Enterprise</span>
-          </div>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="md:hidden p-1.5 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
-      </div>
 
-      {/* Menu Links */}
-      <nav className="space-y-1">
-        <Link
-          to="/dashboard/student"
-          className="flex items-center space-x-3 px-3.5 py-3 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-[#11141D]/60 transition-all font-medium text-sm group"
-          onClick={onClose}
-        >
-          <Compass className="w-[18px] h-[18px] text-slate-500 group-hover:text-slate-300 transition-colors" />
-          <span>Dashboard</span>
-        </Link>
-
-        <Link
-          to="/dashboard/projects"
-          className="flex items-center space-x-3 px-3.5 py-3 text-[#38debb] rounded-xl bg-[#11141D]/80 border border-[#38debb]/10 shadow-[0_0_15px_rgba(56,222,187,0.06)] font-semibold text-sm transition-all relative overflow-hidden"
-          onClick={onClose}
-        >
-          {/* Active sidebar highlight border */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#38debb]" />
-          <Layers className="w-[18px] h-[18px]" />
-          <span>Projects</span>
-        </Link>
-
-        <a
-          href="#/"
-          className="flex items-center space-x-3 px-3.5 py-3 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-[#11141D]/60 transition-all font-medium text-sm group"
-          onClick={onClose}
-        >
-          <CheckSquare className="w-[18px] h-[18px] text-slate-500 group-hover:text-slate-300 transition-colors" />
-          <span>My Tasks</span>
-          <span className="ml-auto w-2 h-2 rounded-full bg-red-500 animate-pulse-red" />
-        </a>
-
-        <a
-          href="#/"
-          className="flex items-center space-x-3 px-3.5 py-3 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-[#11141D]/60 transition-all font-medium text-sm group"
-          onClick={onClose}
-        >
-          <Users className="w-[18px] h-[18px] text-slate-500 group-hover:text-slate-300 transition-colors" />
-          <span>Workspaces</span>
-        </a>
-      </nav>
-    </div>
-
-    {/* Bottom Sidebar */}
-    <div className="space-y-4 pt-6 border-t border-[#1E293B]/40">
-      <a
-        href="#/"
-        className="flex items-center space-x-3 px-3 py-2 text-slate-400 hover:text-slate-200 transition-all text-xs font-semibold"
-      >
-        <Settings className="w-4 h-4 text-slate-500" />
-        <span>Settings</span>
-      </a>
-
-      {/* Profile widget */}
-      <div className="relative p-3.5 rounded-xl bg-gradient-to-b from-[#11141D] to-[#0A0D14] border border-[#1E293B]/40 flex items-center space-x-3 overflow-hidden">
-        {/* Subtle background grid pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.03] pointer-events-none bg-repeat"
-          style={{
-            backgroundImage: `radial-gradient(circle, #fff 1px, transparent 1px)`,
-            backgroundSize: '8px 8px'
-          }}
-        />
-        <div className="relative w-8 h-8 rounded-full overflow-hidden border border-slate-700 bg-slate-800 flex items-center justify-center font-display font-bold text-xs text-[#38debb]">
-          AR
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-white truncate font-display tracking-wide">Alex Rivest</p>
-          <span className="text-[10px] font-semibold text-slate-500 block">Pro Plan</span>
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 /* ────────────────────────────────────────────────────────
    4. PROJECTS PAGE MAIN COMPONENT
@@ -318,65 +221,22 @@ const ProjectsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Standard Mock Projects
-  const [projects, setProjects] = useState([
-    {
-      id: 'prj-1',
-      code: 'PRJ-0842',
-      name: 'NeuralNexus Redesign',
-      priority: 'high',
-      tag: 'HIGH PRIORITY',
-      sprintStatus: 'Sprint 03',
-      progress: 75,
-      nextMilestone: {
-        title: 'AI Asset Generation Engine',
-        statusText: 'NEXT MILESTONE',
-        dueText: 'Due in 2 days'
-      },
-      milestones: [
-        { name: 'Phase 1: Discovery', status: 'completed' },
-        { name: 'Phase 2: Core UX', status: 'active' },
-        { name: 'Phase 3: Beta', status: 'upcoming' },
-        { name: 'Launch', status: 'upcoming' }
-      ],
-      tasks: [
-        { id: 't1-1', title: 'Implement WebGL shader library', priority: 'urgent', completed: true },
-        { id: 't1-2', title: 'Optimize asset loader pipeline', priority: 'high', completed: true },
-        { id: 't1-3', title: 'Refine vector search dashboard', priority: 'medium', completed: false },
-        { id: 't1-4', title: 'Conduct user validation feedback', priority: 'low', completed: false }
-      ],
-      members: ['JD', 'MC', 'SR'],
-      memberCount: 7,
-      lastActive: 'Last active 2h ago'
-    },
-    {
-      id: 'prj-2',
-      code: 'PRJ-2210',
-      name: 'Quantum CRM Shell',
-      priority: 'internal',
-      tag: 'INTERNAL',
-      sprintStatus: 'Sprint 01',
-      progress: 20,
-      nextMilestone: {
-        title: 'User Flow Archetypes',
-        statusText: 'UPCOMING',
-        dueText: 'Starts Monday'
-      },
-      milestones: [
-        { name: 'Phase 1: Planning', status: 'active' },
-        { name: 'Phase 2: Prototyping', status: 'upcoming' },
-        { name: 'Phase 3: QA', status: 'upcoming' },
-        { name: 'Relay', status: 'upcoming' }
-      ],
-      tasks: [
-        { id: 't2-1', title: 'Establish global design tokens', priority: 'medium', completed: true },
-        { id: 't2-2', title: 'Draft CRM shell user journey', priority: 'high', completed: false },
-        { id: 't2-3', title: 'Configure telemetry logger pipeline', priority: 'low', completed: false }
-      ],
-      members: ['MC', 'JD', 'SO'],
-      memberCount: 7,
-      lastActive: 'Last active 4h ago'
-    }
-  ]);
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5000/api/projects');
+        const data = await res.json();
+        if (data.projects) {
+          setProjects(data.projects);
+        }
+      } catch (err) {
+        console.error('Error fetching projects from MongoDB:', err);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Live activity timeline data
   const [activities, setActivities] = useState([
@@ -406,6 +266,8 @@ const ProjectsPage = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeProject, setActiveProject] = useState(null);
+  const [showTeamModal, setShowTeamModal] = useState(false);
+  const [newMember, setNewMember] = useState({ name: '', email: '' });
 
   // Form states
   const [newProject, setNewProject] = useState({
@@ -433,7 +295,8 @@ const ProjectsPage = () => {
   };
 
   const handleToggleTaskCompleted = (projId, taskId) => {
-    setProjects(projects.map(proj => {
+    let updatedProj = null;
+    const updatedProjects = projects.map(proj => {
       if (proj.id === projId) {
         const updatedTasks = proj.tasks.map(t => {
           if (t.id === taskId) {
@@ -447,14 +310,27 @@ const ProjectsPage = () => {
         const totalCount = updatedTasks.length;
         const computedProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-        return {
+        updatedProj = {
           ...proj,
           tasks: updatedTasks,
           progress: computedProgress
         };
+        return updatedProj;
       }
       return proj;
-    }));
+    });
+
+    setProjects(updatedProjects);
+
+    if (updatedProj) {
+      fetch(`http://127.0.0.1:5000/api/projects/${projId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedProj)
+      }).catch(err => console.error('Error updating project task in MongoDB:', err));
+    }
   };
 
   // Add Project CRUD triggers
@@ -479,6 +355,24 @@ const ProjectsPage = () => {
       }));
 
     const prjId = `prj-${Date.now()}`;
+    const initialMembers = newProject.membersText.split(',')
+      .map(m => m.trim().toUpperCase())
+      .filter(m => m !== '');
+
+    const namesMap = {
+      'JD': 'John Doe',
+      'MC': 'Marcus Chen',
+      'SR': 'Sarah Rogers',
+      'SO': 'Sophia Ortega',
+      'AR': 'Alex Rivest',
+    };
+
+    const teamList = initialMembers.map(initial => {
+      const name = namesMap[initial] || `Member ${initial}`;
+      const email = `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+      return { name, email, initials: initial };
+    });
+
     const formattedProject = {
       id: prjId,
       code: `PRJ-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -494,12 +388,24 @@ const ProjectsPage = () => {
       },
       milestones,
       tasks: tasksList,
-      members: newProject.membersText.split(',').map(m => m.trim().toUpperCase()),
-      memberCount: newProject.membersText.split(',').length + 3,
+      members: initialMembers,
+      memberCount: initialMembers.length,
+      team: teamList,
       lastActive: 'Just now'
     };
 
     setProjects([formattedProject, ...projects]);
+
+    fetch('http://127.0.0.1:5000/api/projects', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(formattedProject)
+    })
+      .then(res => res.json())
+      .then(data => console.log('Saved new project in MongoDB:', data))
+      .catch(err => console.error('Error saving project to MongoDB:', err));
 
     // Add activity log
     const newAct = {
@@ -591,6 +497,20 @@ const ProjectsPage = () => {
     setProjects(updatedProjects);
     setShowEditModal(false);
 
+    const updatedProj = updatedProjects.find(p => p.id === editProjectData.id);
+    if (updatedProj) {
+      fetch(`http://127.0.0.1:5000/api/projects/${editProjectData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedProj)
+      })
+        .then(res => res.json())
+        .then(data => console.log('Updated project in MongoDB:', data))
+        .catch(err => console.error('Error updating project in MongoDB:', err));
+    }
+
     // Add activity log
     const editAct = {
       id: `act-edit-${Date.now()}`,
@@ -614,6 +534,13 @@ const ProjectsPage = () => {
   const handleConfirmDelete = () => {
     if (!activeProject) return;
 
+    fetch(`http://127.0.0.1:5000/api/projects/${activeProject.id}`, {
+      method: 'DELETE'
+    })
+      .then(res => res.json())
+      .then(data => console.log('Deleted project from MongoDB:', data))
+      .catch(err => console.error('Error deleting project from MongoDB:', err));
+
     setProjects(projects.filter(p => p.id !== activeProject.id));
     setShowDeleteModal(false);
 
@@ -628,6 +555,113 @@ const ProjectsPage = () => {
     };
     setActivities([delAct, ...activities]);
     setActiveProject(null);
+  };
+
+  const handleAddMember = (e) => {
+    e.preventDefault();
+    if (!newMember.name.trim() || !newMember.email.trim()) return;
+
+    const nameParts = newMember.name.trim().split(/\s+/);
+    let initials = '';
+    if (nameParts.length > 1) {
+      initials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+    } else {
+      initials = nameParts[0].slice(0, 2).toUpperCase();
+    }
+
+    const updatedProjects = projects.map(proj => {
+      if (proj.id === activeProject.id) {
+        const updatedTeam = [...(proj.team || []), {
+          name: newMember.name.trim(),
+          email: newMember.email.trim(),
+          initials
+        }];
+        const updatedMembers = [...proj.members, initials];
+        return {
+          ...proj,
+          team: updatedTeam,
+          members: updatedMembers,
+          memberCount: updatedMembers.length
+        };
+      }
+      return proj;
+    });
+
+    setProjects(updatedProjects);
+    
+    const updatedActiveProj = updatedProjects.find(p => p.id === activeProject.id);
+    setActiveProject(updatedActiveProj);
+
+    if (updatedActiveProj) {
+      fetch(`http://127.0.0.1:5000/api/projects/${activeProject.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedActiveProj)
+      })
+        .then(res => res.json())
+        .then(data => console.log('Added team member in MongoDB:', data))
+        .catch(err => console.error('Error adding team member in MongoDB:', err));
+    }
+
+    const memberAct = {
+      id: `act-member-${Date.now()}`,
+      type: 'user',
+      userAvatar: 'AR',
+      userName: 'Alex Rivest',
+      message: ` added ${newMember.name.trim()} to `,
+      highlightProject: activeProject.name,
+      meta: `New member registered with email: ${newMember.email.trim()}`,
+      time: 'JUST NOW'
+    };
+    setActivities([memberAct, ...activities]);
+
+    setNewMember({ name: '', email: '' });
+  };
+
+  const handleRemoveMember = (memberEmail) => {
+    const updatedProjects = projects.map(proj => {
+      if (proj.id === activeProject.id) {
+        const updatedTeam = (proj.team || []).filter(m => m.email !== memberEmail);
+        const updatedMembers = updatedTeam.map(m => m.initials);
+        return {
+          ...proj,
+          team: updatedTeam,
+          members: updatedMembers,
+          memberCount: updatedMembers.length
+        };
+      }
+      return proj;
+    });
+
+    setProjects(updatedProjects);
+    
+    const updatedActiveProj = updatedProjects.find(p => p.id === activeProject.id);
+    setActiveProject(updatedActiveProj);
+
+    if (updatedActiveProj) {
+      fetch(`http://127.0.0.1:5000/api/projects/${activeProject.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedActiveProj)
+      })
+        .then(res => res.json())
+        .then(data => console.log('Removed team member from MongoDB:', data))
+        .catch(err => console.error('Error removing team member from MongoDB:', err));
+    }
+
+    const removeAct = {
+      id: `act-member-remove-${Date.now()}`,
+      type: 'system',
+      message: `Removed a member from project `,
+      highlightProject: activeProject.name,
+      meta: `Member email: ${memberEmail}`,
+      time: 'JUST NOW'
+    };
+    setActivities([removeAct, ...activities]);
   };
 
   // Filter projects based on query
@@ -709,30 +743,55 @@ const ProjectsPage = () => {
       <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-teal-500/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
 
-      <div className="flex min-h-screen">
+      <div className="dash-layout">
+        {isSidebarOpen && <div className="dash-sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
 
-        {/* ── SIDEBARS (Desktop & Mobile Drawer) ── */}
-        {/* Mobile sidebar backdrop overlay */}
-        {isSidebarOpen && (
-          <div
-            onClick={() => setIsSidebarOpen(false)}
-            className="fixed inset-0 bg-black/75 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
-          />
-        )}
+        {/* ── SIDEBAR ── */}
+        <aside className={`dash-sidebar ${isSidebarOpen ? 'dash-sidebar-open' : ''}`}>
+          <div className="dash-sidebar-header">
+            <div className="dash-logo">
+              <img src={nexforgeLogo} alt="NexForge" className="dash-logo-img" />
+              <h1 className="neon-text-teal">NexForge</h1>
+            </div>
+            <button className="dash-sidebar-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
+          </div>
 
-        {/* Mobile drawer sidebar */}
-        <aside className={`fixed inset-y-0 left-0 w-[245px] bg-[#07090F] border-r border-[#1E293B]/60 flex flex-col justify-between p-5 z-50 transition-transform duration-300 md:hidden ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}>
-          <SidebarContent onClose={() => setIsSidebarOpen(false)} />
-        </aside>
+          <nav className="dash-nav">
+            {[
+              { icon: '🧭', label: 'Dashboard', path: '/dashboard/student' },
+              { icon: '🚀', label: 'My Projects', active: true, path: '/dashboard/projects' },
+              { icon: '🌐', label: 'Team Activity', path: '#/' },
+              { icon: '⚡', label: 'Recommendations', path: '#/' },
+              { icon: '🎓', label: 'Skills', path: '#/' },
+              { icon: '💻', label: 'Internship Prep', path: '#/' },
+            ].map((item, i) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`dash-nav-item ${item.active ? 'dash-nav-active' : ''}`}
+                style={{ animationDelay: `${i * 0.05}s` }}
+                onClick={() => setIsSidebarOpen(false)}
+              >
+                <span className="dash-nav-icon floating-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </nav>
 
-        {/* Desktop permanent sidebar */}
-        <aside className="hidden md:flex w-[245px] shrink-0 border-r border-[#1E293B]/60 bg-[#07090F] flex-col justify-between p-5 z-20">
-          <SidebarContent />
+          <div className="dash-nav-bottom">
+            <a href="#/" className="dash-nav-item">
+              <span className="dash-nav-icon">⚙️</span>
+              <span>Settings</span>
+            </a>
+            <a href="#/" className="dash-nav-item">
+              <span className="dash-nav-icon">💬</span>
+              <span>Support</span>
+            </a>
+          </div>
         </aside>
 
         {/* ── MAIN CONTENT AREA ── */}
-        <main className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 overflow-y-auto max-w-[1280px] mx-auto w-full">
+        <main className="dash-main flex-1 flex flex-col p-4 sm:p-6 md:p-8 overflow-y-auto max-w-[1280px] mx-auto w-full">
 
           {/* TOP BAR */}
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-6 border-b border-[#1E293B]/60 mb-8">
@@ -740,9 +799,9 @@ const ProjectsPage = () => {
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => setIsSidebarOpen(true)}
-                  className="p-2 md:hidden rounded-xl bg-[#11141D]/80 border border-[#1E293B]/60 text-slate-400 hover:text-[#38debb] hover:border-[#38debb]/30 transition-all mr-1"
+                  className="dash-menu-btn mr-3"
                 >
-                  <Menu className="w-4 h-4" />
+                  ☰
                 </button>
                 <h2 className="text-xl font-bold font-display text-white tracking-wide">Projects</h2>
               </div>
@@ -752,8 +811,8 @@ const ProjectsPage = () => {
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'grid'
-                      ? 'bg-[#1E293B] text-[#38debb]'
-                      : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#1E293B] text-[#38debb]'
+                    : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                   Grid
@@ -761,8 +820,8 @@ const ProjectsPage = () => {
                 <button
                   onClick={() => setViewMode('list')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'list'
-                      ? 'bg-[#1E293B] text-[#38debb]'
-                      : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#1E293B] text-[#38debb]'
+                    : 'text-slate-400 hover:text-slate-200'
                     }`}
                 >
                   List
@@ -829,7 +888,7 @@ const ProjectsPage = () => {
                 WORKSPACE OVERVIEW
               </span>
               <h1 className="text-3xl font-extrabold font-display text-white tracking-tight leading-none mb-2">
-                Engineering Forge
+                Projects 🚀💻
               </h1>
               <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
                 <span>Active sprints:</span>
@@ -857,7 +916,7 @@ const ProjectsPage = () => {
 
           {/* GRID OF PROJECTS (Animation #1: Staggered Entrance) */}
           <motion.section
-            variants={viewMode === 'grid' ? {
+            variants={{
               hidden: { opacity: 0 },
               show: {
                 opacity: 1,
@@ -865,7 +924,7 @@ const ProjectsPage = () => {
                   staggerChildren: 0.15
                 }
               }
-            } : {}}
+            }}
             initial="hidden"
             animate="show"
             className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12" : "space-y-4 mb-12"}
@@ -898,15 +957,26 @@ const ProjectsPage = () => {
                       {/* Top Metadata Header inside card */}
                       <div className="flex items-center justify-between mb-4">
                         <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider ${proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                            proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                              'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                          proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+                            'bg-slate-500/10 text-slate-400 border border-slate-500/20'
                           }`}>
                           {proj.tag}
                         </span>
 
                         <div className="flex items-center space-x-2">
                           <span className="text-[10px] text-slate-500 font-bold font-display">{proj.code}</span>
-                          <div className="flex items-center space-x-1 border border-[#1E293B]/60 bg-[#1e293b]/30 rounded-lg p-0.5">
+                           <div className="flex items-center space-x-1 border border-[#1E293B]/60 bg-[#1e293b]/30 rounded-lg p-0.5">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setActiveProject(proj);
+                                setShowTeamModal(true);
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-blue-400 rounded-md hover:bg-slate-800 transition-colors"
+                              title="Project Members"
+                            >
+                               <Users className="w-3.5 h-3.5" />
+                            </button>
                             <button
                               onClick={(e) => handleEditClick(proj, e)}
                               className="p-1.5 text-slate-400 hover:text-[#38debb] rounded-md hover:bg-slate-800 transition-colors"
@@ -1023,6 +1093,18 @@ const ProjectsPage = () => {
                 return (
                   <motion.div
                     key={proj.id}
+                    variants={{
+                      hidden: { opacity: 0, y: 15 },
+                      show: {
+                        opacity: 1,
+                        y: 0,
+                        transition: {
+                          type: "spring",
+                          stiffness: 120,
+                          damping: 18
+                        }
+                      }
+                    }}
                     className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between p-4 bg-[#11141D] border border-slate-800/80 rounded-xl hover:border-slate-700/60 transition-all group"
                   >
                     <div className="flex items-center space-x-4 flex-1 min-w-0">
@@ -1036,8 +1118,8 @@ const ProjectsPage = () => {
                           </h4>
                           <span className="text-[9px] text-slate-500 font-bold">{proj.code}</span>
                           <span className={`text-[8px] px-1.5 py-0.2 rounded font-bold border ${proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                              proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                                'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                            proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                              'bg-slate-500/10 text-slate-400 border-slate-500/20'
                             }`}>
                             {proj.priority.toUpperCase()}
                           </span>
@@ -1056,14 +1138,27 @@ const ProjectsPage = () => {
 
                       <div className="flex items-center space-x-1">
                         <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveProject(proj);
+                            setShowTeamModal(true);
+                          }}
+                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-all"
+                          title="Project Members"
+                        >
+                          <Users className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={(e) => handleEditClick(proj, e)}
                           className="p-2 text-slate-400 hover:text-[#38debb] hover:bg-slate-800 rounded-lg transition-all"
+                          title="Edit Project"
                         >
                           <Edit3 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={(e) => handleDeleteClick(proj, e)}
                           className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
+                          title="Delete Project"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1308,8 +1403,8 @@ const ProjectsPage = () => {
                         key={idx}
                         onClick={() => setNewProject({ ...newProject, activePhaseIndex: idx })}
                         className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${newProject.activePhaseIndex === idx
-                            ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                          ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
+                          : 'bg-slate-900 border-slate-800 text-slate-400'
                           }`}
                       >
                         {ph}
@@ -1477,8 +1572,8 @@ const ProjectsPage = () => {
                         key={idx}
                         onClick={() => setEditProjectData({ ...editProjectData, activePhaseIndex: idx })}
                         className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${editProjectData.activePhaseIndex === idx
-                            ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                          ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
+                          : 'bg-slate-900 border-slate-800 text-slate-400'
                           }`}
                       >
                         {ph}
@@ -1564,6 +1659,118 @@ const ProjectsPage = () => {
                   Delete Project
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ────────────────────────────────────────────────────────
+         TEAM MEMBERS MODAL (Scale-in + Backdrop blur)
+         ──────────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {showTeamModal && activeProject && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Blurred Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowTeamModal(false)}
+              className="fixed inset-0 bg-black/75 backdrop-blur-md"
+            />
+
+            {/* Modal Box */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              className="relative w-full max-w-lg overflow-hidden border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl p-6"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowTeamModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <h3 className="text-base font-bold font-display text-slate-100 flex items-center space-x-2.5 mb-2">
+                <Users className="w-5 h-5 text-blue-400" />
+                <span>Project Team Members</span>
+              </h3>
+              <p className="text-xs text-[#38debb] font-semibold mb-6">
+                {activeProject.name} ({activeProject.code})
+              </p>
+
+              {/* Members List */}
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-1 mb-6">
+                <label className="block text-xs font-bold text-slate-400 tracking-wide uppercase mb-1">
+                  Current Members
+                </label>
+                {(activeProject.team || []).length === 0 ? (
+                  <div className="text-xs text-slate-500 py-2 italic font-medium">No members assigned to this project yet.</div>
+                ) : (
+                  (activeProject.team || []).map((member, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 text-xs"
+                    >
+                      <div className="flex items-center space-x-3 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-slate-800 text-[10px] font-bold text-[#38debb] border border-slate-700 flex items-center justify-center shrink-0">
+                          {member.initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-200 truncate">{member.name}</p>
+                          <p className="text-[10px] text-slate-500 truncate">{member.email}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveMember(member.email)}
+                        className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-slate-850 rounded-lg transition-colors shrink-0"
+                        title="Remove Member"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add New Member Form */}
+              <form onSubmit={handleAddMember} className="border-t border-slate-800/60 pt-4">
+                <label className="block text-xs font-bold text-slate-400 tracking-wide uppercase mb-3">
+                  Add New Member
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      value={newMember.name}
+                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={newMember.email}
+                      onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-xs font-bold text-[#05070A] bg-[#38debb] hover:bg-[#38debb]/90 rounded-xl transition-all shadow-lg shadow-teal-500/20 shrink-0"
+                  >
+                    Add Member
+                  </button>
+                </div>
+              </form>
             </motion.div>
           </div>
         )}
