@@ -28,6 +28,7 @@ import {
 import nexforgeLogo from './logo.png';
 import { Link, useNavigate } from 'react-router-dom';
 import './dashboard.css';
+import socket from '../socket/socket';
 
 /* ────────────────────────────────────────────────────────
    1. CUSTOM SPOTLIGHT & HOVER CARD COMPONENT (Animation #2)
@@ -208,7 +209,291 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
     </div>
   );
 }
+/* ────────────────────────────────────────────────────────
+   3.5. PROJECT CARD COMPONENT (Memoized for Project-based Rerenders)
+   ──────────────────────────────────────────────────────── */
+const ProjectCard = React.memo(({
+  proj,
+  isAccordionOpen,
+  onToggleAccordion,
+  onToggleTask,
+  onEditClick,
+  onDeleteClick,
+  onTeamClick,
+  viewMode
+}) => {
+  const sprint = proj.sprint || {
+    label: proj.sprintStatus || 'Sprint 01',
+    phase: 'active',
+    health: 'healthy'
+  };
 
+  if (viewMode === 'grid') {
+    return (
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: 25, scale: 0.97 },
+          show: {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            transition: {
+              type: "spring",
+              stiffness: 120,
+              damping: 18
+            }
+          }
+        }}
+      >
+        <SpotlightHoverCard className="p-6">
+          {/* Top Metadata Header inside card */}
+          <div className="flex items-center justify-between mb-4">
+            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider ${
+              proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
+              proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
+              'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+            }`}>
+              {proj.tag}
+            </span>
+
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] text-slate-500 font-bold font-display">{proj.code}</span>
+              <div className="flex items-center space-x-1 border border-[#1E293B]/60 bg-[#1e293b]/30 rounded-lg p-0.5">
+                <button
+                  onClick={onTeamClick}
+                  className="p-1.5 text-slate-400 hover:text-blue-400 rounded-md hover:bg-slate-800 transition-colors"
+                  title="Project Members"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => onEditClick(proj, e)}
+                  className="p-1.5 text-slate-400 hover:text-[#38debb] rounded-md hover:bg-slate-800 transition-colors"
+                  title="Edit Project"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={(e) => onDeleteClick(proj, e)}
+                  className="p-1.5 text-slate-400 hover:text-red-400 rounded-md hover:bg-slate-800 transition-colors"
+                  title="Delete Project"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Project Title */}
+          <h3 className="text-xl font-bold font-display text-white mb-4 group-hover:text-[#38debb] transition-colors truncate">
+            {proj.name}
+          </h3>
+
+          {/* Sprint Status Widget */}
+          <div className="flex items-center justify-between bg-[#181F2E]/40 border border-slate-800/60 p-3 rounded-xl mb-5 text-xs">
+            <div className="flex items-center space-x-2.5">
+              {/* Health Indicator Dot */}
+              <span className="relative flex h-2.5 w-2.5">
+                {sprint.phase === 'active' && (
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                    sprint.health === 'healthy' ? 'bg-[#38debb]' :
+                    sprint.health === 'at-risk' ? 'bg-amber-500' : 'bg-red-500'
+                  }`} />
+                )}
+                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                  sprint.health === 'healthy' ? 'bg-[#38debb]' :
+                  sprint.health === 'at-risk' ? 'bg-amber-500' : 'bg-red-500'
+                }`} />
+              </span>
+              <div>
+                <span className="text-slate-300 font-bold font-display">{sprint.label}</span>
+                <span className="text-[10px] text-slate-500 ml-1.5 capitalize font-medium">({sprint.phase})</span>
+              </div>
+            </div>
+            <div>
+              <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+                sprint.phase === 'active' ? 'bg-emerald-500/10 text-[#38debb] border border-emerald-500/20' :
+                sprint.phase === 'planning' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
+                sprint.phase === 'completed' ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20' :
+                'bg-red-500/10 text-red-400 border border-red-500/20' // blocked
+              }`}>
+                {sprint.phase}
+              </span>
+            </div>
+          </div>
+
+          {/* 4) Milestone Pulse Chain */}
+          <div className="mb-6 relative">
+            <div className="absolute left-2.5 right-2.5 top-[9px] h-0.5 bg-slate-800/80 z-0" />
+            <div className="flex justify-between items-center relative z-10">
+              {proj.milestones.map((ms, index) => {
+                const isActive = ms.status === 'active';
+                const isCompleted = ms.status === 'completed';
+
+                return (
+                  <div key={index} className="flex flex-col items-center">
+                    {/* Pulse Chain Dot */}
+                    <div className="relative flex items-center justify-center h-5 w-5">
+                      {isActive ? (
+                        <>
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-[#38debb]/30 animate-ping" />
+                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-[#38debb]/50 animate-pulse-teal" />
+                          <span className="relative h-2 w-2 rounded-full bg-[#38debb]" />
+                        </>
+                      ) : isCompleted ? (
+                        <span className="h-2 w-2 rounded-full bg-[#38debb]/80 border border-[#38debb]/20 shadow-[0_0_6px_rgba(56,222,187,0.3)]" />
+                      ) : (
+                        <span className="h-2.5 w-2.5 rounded-full bg-slate-800 border border-slate-700/80" />
+                      )}
+                    </div>
+                    <span className={`text-[8px] mt-1.5 font-semibold tracking-wider font-display uppercase ${isActive ? 'text-[#38debb] font-bold' : 'text-slate-500'
+                      }`}>
+                      {ms.name.split(': ')[1] || ms.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Next Milestone Sub-card with 3) Progress Ring Draw */}
+          <div className="flex items-center justify-between bg-[#161A26]/80 border border-slate-800/80 p-4 rounded-xl mb-6">
+            <div className="flex-1 min-w-0 pr-4">
+              <span className="text-[9px] font-bold text-slate-500 font-display tracking-widest block uppercase mb-1">
+                {proj.nextMilestone.statusText}
+              </span>
+              <h4 className="text-sm font-bold text-slate-100 truncate mb-1 leading-snug">
+                {proj.nextMilestone.title}
+              </h4>
+              <span className="flex items-center text-[10px] text-[#00b0ff] font-semibold">
+                <Clock className="w-3.5 h-3.5 mr-1" />
+                {proj.nextMilestone.dueText}
+              </span>
+            </div>
+
+            <div className="shrink-0">
+              <ProgressRing percent={proj.progress} size={64} strokeWidth={5} />
+            </div>
+          </div>
+
+          {/* Project Footer: Member stack & Activity timestamp */}
+          <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/50 pt-4">
+            <div className="flex items-center space-x-1.5">
+              <div className="flex -space-x-2 select-none">
+                {proj.members.map((initial, i) => (
+                  <div
+                    key={i}
+                    className="w-6 h-6 rounded-full border border-slate-900 bg-slate-800 text-[10px] font-bold text-white flex items-center justify-center hover:translate-y-[-2px] transition-transform cursor-pointer"
+                  >
+                    {initial}
+                  </div>
+                ))}
+                {proj.memberCount > proj.members.length && (
+                  <div className="w-6 h-6 rounded-full border border-slate-900 bg-[#1e293b] text-[9px] font-bold text-slate-300 flex items-center justify-center">
+                    +{proj.memberCount - proj.members.length}
+                  </div>
+                )}
+              </div>
+            </div>
+            <span className="text-[10px] font-medium text-slate-500 font-display">{proj.lastActive}</span>
+          </div>
+
+          {/* 5) Accordion expand with spring height */}
+          <TaskAccordion
+            tasks={proj.tasks}
+            isOpen={isAccordionOpen}
+            onToggle={onToggleAccordion}
+            onToggleTask={onToggleTask}
+          />
+        </SpotlightHoverCard>
+      </motion.div>
+    );
+  } else {
+    // LIST VIEW IMPLEMENTATION
+    return (
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: 15 },
+          show: {
+            opacity: 1,
+            y: 0,
+            transition: {
+              type: "spring",
+              stiffness: 120,
+              damping: 18
+            }
+          }
+        }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between p-4 bg-[#11141D] border border-slate-800/80 rounded-xl hover:border-slate-700/60 transition-all group"
+      >
+        <div className="flex items-center space-x-4 flex-1 min-w-0">
+          <div className="shrink-0">
+            <ProgressRing percent={proj.progress} size={48} strokeWidth={4} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+              <h4 className="text-sm font-bold text-white group-hover:text-[#38debb] transition-colors truncate">
+                {proj.name}
+              </h4>
+              <span className="text-[9px] text-slate-500 font-bold">{proj.code}</span>
+              <span className={`text-[8px] px-1.5 py-0.2 rounded font-bold border ${
+                proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
+                'bg-slate-500/10 text-slate-400 border-slate-500/20'
+              }`}>
+                {proj.priority.toUpperCase()}
+              </span>
+              <span className={`w-2 h-2 rounded-full ${
+                sprint.health === 'healthy' ? 'bg-[#38debb]' :
+                sprint.health === 'at-risk' ? 'bg-amber-500' : 'bg-red-500'
+              } ${sprint.phase === 'active' ? 'animate-pulse-teal' : ''}`} />
+            </div>
+            <p className="text-xs text-slate-400 mt-1 truncate">
+              Next: <span className="font-semibold text-slate-300">{proj.nextMilestone.title}</span> • {proj.nextMilestone.dueText}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between sm:justify-end sm:space-x-6 w-full sm:w-auto border-t border-slate-800/40 pt-3 sm:border-0 sm:pt-0 shrink-0">
+          <div className="flex flex-col items-end">
+            <span className="text-xs text-slate-300 font-bold">{sprint.label} <span className="text-[10px] text-slate-500 capitalize">({sprint.phase})</span></span>
+            <span className="text-[10px] text-slate-500 mt-0.5">{proj.lastActive}</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={onTeamClick}
+              className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-all"
+              title="Project Members"
+            >
+              <Users className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => onEditClick(proj, e)}
+              className="p-2 text-slate-400 hover:text-[#38debb] hover:bg-slate-800 rounded-lg transition-all"
+              title="Edit Project"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => onDeleteClick(proj, e)}
+              className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
+              title="Delete Project"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.proj === nextProps.proj &&
+    prevProps.isAccordionOpen === nextProps.isAccordionOpen &&
+    prevProps.viewMode === nextProps.viewMode
+  );
+});
 
 
 /* ────────────────────────────────────────────────────────
@@ -236,6 +521,49 @@ const ProjectsPage = () => {
       }
     };
     fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    const handleCreated = (newProj) => {
+      setProjects((prev) => {
+        if (prev.some((p) => p.id === newProj.id)) return prev;
+        return [newProj, ...prev];
+      });
+    };
+
+    const handleUpdated = (updatedProj) => {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === updatedProj.id ? updatedProj : p))
+      );
+    };
+
+    const handleDeleted = (deletedId) => {
+      setProjects((prev) => prev.filter((p) => p.id !== deletedId));
+    };
+
+    const handleArchived = (archivedId) => {
+      setProjects((prev) => prev.filter((p) => p.id !== archivedId));
+    };
+
+    const handleSprintChanged = ({ projectId, sprint }) => {
+      setProjects((prev) =>
+        prev.map((p) => (p.id === projectId ? { ...p, sprint } : p))
+      );
+    };
+
+    socket.on('project-created', handleCreated);
+    socket.on('project-updated', handleUpdated);
+    socket.on('project-deleted', handleDeleted);
+    socket.on('project-archived', handleArchived);
+    socket.on('sprint-changed', handleSprintChanged);
+
+    return () => {
+      socket.off('project-created', handleCreated);
+      socket.off('project-updated', handleUpdated);
+      socket.off('project-deleted', handleDeleted);
+      socket.off('project-archived', handleArchived);
+      socket.off('sprint-changed', handleSprintChanged);
+    };
   }, []);
 
   // Live activity timeline data
@@ -274,6 +602,8 @@ const ProjectsPage = () => {
     name: '',
     priority: 'high',
     sprintStatus: 'Sprint 01',
+    sprintPhase: 'planning',
+    sprintHealth: 'healthy',
     progress: 0,
     nextMilestoneTitle: '',
     nextMilestoneStatus: 'UPCOMING',
@@ -380,6 +710,11 @@ const ProjectsPage = () => {
       priority: newProject.priority,
       tag: newProject.priority.toUpperCase(),
       sprintStatus: newProject.sprintStatus,
+      sprint: {
+        label: newProject.sprintStatus,
+        phase: newProject.sprintPhase,
+        health: newProject.sprintHealth
+      },
       progress: parseInt(newProject.progress) || 0,
       nextMilestone: {
         title: newProject.nextMilestoneTitle || 'Kickoff Workshop',
@@ -423,6 +758,8 @@ const ProjectsPage = () => {
       name: '',
       priority: 'high',
       sprintStatus: 'Sprint 01',
+      sprintPhase: 'planning',
+      sprintHealth: 'healthy',
       progress: 0,
       nextMilestoneTitle: '',
       nextMilestoneStatus: 'UPCOMING',
@@ -442,7 +779,9 @@ const ProjectsPage = () => {
       nextMilestoneStatus: proj.nextMilestone.statusText,
       nextMilestoneDue: proj.nextMilestone.dueText,
       tasksText: proj.tasks.map(t => t.title).join('\n'),
-      activePhaseIndex: proj.milestones.findIndex(m => m.status === 'active') === -1 ? 0 : proj.milestones.findIndex(m => m.status === 'active')
+      activePhaseIndex: proj.milestones.findIndex(m => m.status === 'active') === -1 ? 0 : proj.milestones.findIndex(m => m.status === 'active'),
+      sprintPhase: proj.sprint ? proj.sprint.phase : 'planning',
+      sprintHealth: proj.sprint ? proj.sprint.health : 'healthy'
     });
     setShowEditModal(true);
   };
@@ -480,6 +819,11 @@ const ProjectsPage = () => {
           priority: editProjectData.priority,
           tag: editProjectData.priority.toUpperCase(),
           sprintStatus: editProjectData.sprintStatus,
+          sprint: {
+            label: editProjectData.sprintStatus,
+            phase: editProjectData.sprintPhase,
+            health: editProjectData.sprintHealth
+          },
           progress: parseInt(editProjectData.progress) || 0,
           nextMilestone: {
             title: editProjectData.nextMilestoneTitle,
@@ -929,245 +1273,22 @@ const ProjectsPage = () => {
             animate="show"
             className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12" : "space-y-4 mb-12"}
           >
-            {filteredProjects.map((proj) => {
-              const isAccordionOpen = openAccordionId === proj.id;
-
-              if (viewMode === 'grid') {
-                return (
-                  /* 1) Staggered entrance variant */
-                  <motion.div
-                    key={proj.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 25, scale: 0.97 },
-                      show: {
-                        opacity: 1,
-                        y: 0,
-                        scale: 1,
-                        transition: {
-                          type: "spring",
-                          stiffness: 120,
-                          damping: 18
-                        }
-                      }
-                    }}
-                  >
-                    {/* 2) Spotlight Hover Card wrapper */}
-                    <SpotlightHoverCard className="p-6">
-
-                      {/* Top Metadata Header inside card */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider ${proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-                          proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                            'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                          }`}>
-                          {proj.tag}
-                        </span>
-
-                        <div className="flex items-center space-x-2">
-                          <span className="text-[10px] text-slate-500 font-bold font-display">{proj.code}</span>
-                           <div className="flex items-center space-x-1 border border-[#1E293B]/60 bg-[#1e293b]/30 rounded-lg p-0.5">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setActiveProject(proj);
-                                setShowTeamModal(true);
-                              }}
-                              className="p-1.5 text-slate-400 hover:text-blue-400 rounded-md hover:bg-slate-800 transition-colors"
-                              title="Project Members"
-                            >
-                               <Users className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={(e) => handleEditClick(proj, e)}
-                              className="p-1.5 text-slate-400 hover:text-[#38debb] rounded-md hover:bg-slate-800 transition-colors"
-                              title="Edit Project"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={(e) => handleDeleteClick(proj, e)}
-                              className="p-1.5 text-slate-400 hover:text-red-400 rounded-md hover:bg-slate-800 transition-colors"
-                              title="Delete Project"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Project Title */}
-                      <h3 className="text-xl font-bold font-display text-white mb-6 group-hover:text-[#38debb] transition-colors truncate">
-                        {proj.name}
-                      </h3>
-
-                      {/* 4) Milestone Pulse Chain */}
-                      <div className="mb-6 relative">
-                        <div className="absolute left-2.5 right-2.5 top-[9px] h-0.5 bg-slate-800/80 z-0" />
-                        <div className="flex justify-between items-center relative z-10">
-                          {proj.milestones.map((ms, index) => {
-                            const isActive = ms.status === 'active';
-                            const isCompleted = ms.status === 'completed';
-
-                            return (
-                              <div key={index} className="flex flex-col items-center">
-                                {/* Pulse Chain Dot */}
-                                <div className="relative flex items-center justify-center h-5 w-5">
-                                  {isActive ? (
-                                    <>
-                                      {/* Glowing outward rings */}
-                                      <span className="absolute inline-flex h-full w-full rounded-full bg-[#38debb]/30 animate-ping" />
-                                      <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-[#38debb]/50 animate-pulse-teal" />
-                                      <span className="relative h-2 w-2 rounded-full bg-[#38debb]" />
-                                    </>
-                                  ) : isCompleted ? (
-                                    <span className="h-2 w-2 rounded-full bg-[#38debb]/80 border border-[#38debb]/20 shadow-[0_0_6px_rgba(56,222,187,0.3)]" />
-                                  ) : (
-                                    <span className="h-2.5 w-2.5 rounded-full bg-slate-800 border border-slate-700/80" />
-                                  )}
-                                </div>
-                                <span className={`text-[8px] mt-1.5 font-semibold tracking-wider font-display uppercase ${isActive ? 'text-[#38debb] font-bold' : 'text-slate-500'
-                                  }`}>
-                                  {ms.name.split(': ')[1] || ms.name}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Next Milestone Sub-card with 3) Progress Ring Draw */}
-                      <div className="flex items-center justify-between bg-[#161A26]/80 border border-slate-800/80 p-4 rounded-xl mb-6">
-                        <div className="flex-1 min-w-0 pr-4">
-                          <span className="text-[9px] font-bold text-slate-500 font-display tracking-widest block uppercase mb-1">
-                            {proj.nextMilestone.statusText}
-                          </span>
-                          <h4 className="text-sm font-bold text-slate-100 truncate mb-1 leading-snug">
-                            {proj.nextMilestone.title}
-                          </h4>
-                          <span className="flex items-center text-[10px] text-[#00b0ff] font-semibold">
-                            <Clock className="w-3.5 h-3.5 mr-1" />
-                            {proj.nextMilestone.dueText}
-                          </span>
-                        </div>
-
-                        {/* Progress ring drawn in stroke-draw animation */}
-                        <div className="shrink-0">
-                          <ProgressRing percent={proj.progress} size={64} strokeWidth={5} />
-                        </div>
-                      </div>
-
-                      {/* Project Footer: Member stack & Activity timestamp */}
-                      <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/50 pt-4">
-                        <div className="flex items-center space-x-1.5">
-                          <div className="flex -space-x-2 select-none">
-                            {proj.members.map((initial, i) => (
-                              <div
-                                key={i}
-                                className="w-6 h-6 rounded-full border border-slate-900 bg-slate-800 text-[10px] font-bold text-white flex items-center justify-center hover:translate-y-[-2px] transition-transform cursor-pointer"
-                              >
-                                {initial}
-                              </div>
-                            ))}
-                            {proj.memberCount > proj.members.length && (
-                              <div className="w-6 h-6 rounded-full border border-slate-900 bg-[#1e293b] text-[9px] font-bold text-slate-300 flex items-center justify-center">
-                                +{proj.memberCount - proj.members.length}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-medium text-slate-500 font-display">{proj.lastActive}</span>
-                      </div>
-
-                      {/* 5) Accordion expand with spring height */}
-                      <TaskAccordion
-                        tasks={proj.tasks}
-                        isOpen={isAccordionOpen}
-                        onToggle={() => handleToggleAccordion(proj.id)}
-                        onToggleTask={(taskId) => handleToggleTaskCompleted(proj.id, taskId)}
-                      />
-                    </SpotlightHoverCard>
-                  </motion.div>
-                );
-              } else {
-                // LIST VIEW IMPLEMENTATION
-                return (
-                  <motion.div
-                    key={proj.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 15 },
-                      show: {
-                        opacity: 1,
-                        y: 0,
-                        transition: {
-                          type: "spring",
-                          stiffness: 120,
-                          damping: 18
-                        }
-                      }
-                    }}
-                    className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between p-4 bg-[#11141D] border border-slate-800/80 rounded-xl hover:border-slate-700/60 transition-all group"
-                  >
-                    <div className="flex items-center space-x-4 flex-1 min-w-0">
-                      <div className="shrink-0">
-                        <ProgressRing percent={proj.progress} size={48} strokeWidth={4} />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                          <h4 className="text-sm font-bold text-white group-hover:text-[#38debb] transition-colors truncate">
-                            {proj.name}
-                          </h4>
-                          <span className="text-[9px] text-slate-500 font-bold">{proj.code}</span>
-                          <span className={`text-[8px] px-1.5 py-0.2 rounded font-bold border ${proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                            proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                              'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                            }`}>
-                            {proj.priority.toUpperCase()}
-                          </span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-1 truncate">
-                          Next: <span className="font-semibold text-slate-300">{proj.nextMilestone.title}</span> • {proj.nextMilestone.dueText}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between sm:justify-end sm:space-x-6 w-full sm:w-auto border-t border-slate-800/40 pt-3 sm:border-0 sm:pt-0 shrink-0">
-                      <div className="flex flex-col items-end">
-                        <span className="text-xs text-slate-300 font-bold">{proj.sprintStatus}</span>
-                        <span className="text-[10px] text-slate-500 mt-0.5">{proj.lastActive}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveProject(proj);
-                            setShowTeamModal(true);
-                          }}
-                          className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-all"
-                          title="Project Members"
-                        >
-                          <Users className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => handleEditClick(proj, e)}
-                          className="p-2 text-slate-400 hover:text-[#38debb] hover:bg-slate-800 rounded-lg transition-all"
-                          title="Edit Project"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteClick(proj, e)}
-                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
-                          title="Delete Project"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              }
-            })}
+            {filteredProjects.map((proj) => (
+              <ProjectCard
+                key={proj.id}
+                proj={proj}
+                isAccordionOpen={openAccordionId === proj.id}
+                onToggleAccordion={() => handleToggleAccordion(proj.id)}
+                onToggleTask={(taskId) => handleToggleTaskCompleted(proj.id, taskId)}
+                onEditClick={handleEditClick}
+                onDeleteClick={handleDeleteClick}
+                onTeamClick={() => {
+                  setActiveProject(proj);
+                  setShowTeamModal(true);
+                }}
+                viewMode={viewMode}
+              />
+            ))}
 
             {filteredProjects.length === 0 && (
               <div className="col-span-full border border-dashed border-slate-800/80 rounded-2xl p-12 text-center bg-[#11141D]/30">
@@ -1333,30 +1454,6 @@ const ProjectsPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Active Sprint</label>
-                    <input
-                      type="text"
-                      value={newProject.sprintStatus}
-                      onChange={(e) => setNewProject({ ...newProject, sprintStatus: e.target.value })}
-                      placeholder="e.g. Sprint 01"
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={newProject.nextMilestoneTitle}
-                      onChange={(e) => setNewProject({ ...newProject, nextMilestoneTitle: e.target.value })}
-                      placeholder="e.g. API Gateway Integration"
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Milestone Progress (%)</label>
                     <input
                       type="number"
@@ -1367,6 +1464,56 @@ const ProjectsPage = () => {
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                    <input
+                      type="text"
+                      value={newProject.sprintStatus}
+                      onChange={(e) => setNewProject({ ...newProject, sprintStatus: e.target.value })}
+                      placeholder="e.g. Sprint 01"
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
+                    <select
+                      value={newProject.sprintPhase}
+                      onChange={(e) => setNewProject({ ...newProject, sprintPhase: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                    >
+                      <option value="planning">Planning</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
+                    <select
+                      value={newProject.sprintHealth}
+                      onChange={(e) => setNewProject({ ...newProject, sprintHealth: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                    >
+                      <option value="healthy">Healthy</option>
+                      <option value="at-risk">At Risk</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProject.nextMilestoneTitle}
+                    onChange={(e) => setNewProject({ ...newProject, nextMilestoneTitle: e.target.value })}
+                    placeholder="e.g. API Gateway Integration"
+                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1505,28 +1652,6 @@ const ProjectsPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Active Sprint</label>
-                    <input
-                      type="text"
-                      value={editProjectData.sprintStatus}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintStatus: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
-                    <input
-                      type="text"
-                      required
-                      value={editProjectData.nextMilestoneTitle}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneTitle: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                  <div>
                     <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Progress (%)</label>
                     <input
                       type="number"
@@ -1537,6 +1662,54 @@ const ProjectsPage = () => {
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
                   </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                    <input
+                      type="text"
+                      value={editProjectData.sprintStatus}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintStatus: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
+                    <select
+                      value={editProjectData.sprintPhase}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintPhase: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                    >
+                      <option value="planning">Planning</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
+                    <select
+                      value={editProjectData.sprintHealth}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintHealth: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                    >
+                      <option value="healthy">Healthy</option>
+                      <option value="at-risk">At Risk</option>
+                      <option value="blocked">Blocked</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={editProjectData.nextMilestoneTitle}
+                    onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneTitle: e.target.value })}
+                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

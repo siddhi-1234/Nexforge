@@ -48,6 +48,11 @@ const ProjectSchema = new mongoose.Schema({
     type: String,
     default: 'Sprint 01'
   },
+  sprint: {
+    label: { type: String, default: 'Sprint 01' },
+    phase: { type: String, enum: ['planning', 'active', 'completed', 'blocked'], default: 'planning' },
+    health: { type: String, enum: ['healthy', 'at-risk', 'blocked'], default: 'healthy' }
+  },
   progress: {
     type: Number,
     default: 0

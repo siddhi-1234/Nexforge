@@ -9,6 +9,11 @@ const SEED_PROJECTS = [
     priority: 'high',
     tag: 'HIGH PRIORITY',
     sprintStatus: 'Sprint 03',
+    sprint: {
+      label: 'Sprint 03',
+      phase: 'active',
+      health: 'healthy'
+    },
     progress: 75,
     nextMilestone: {
       title: 'AI Asset Generation Engine',
@@ -43,6 +48,11 @@ const SEED_PROJECTS = [
     priority: 'internal',
     tag: 'INTERNAL',
     sprintStatus: 'Sprint 01',
+    sprint: {
+      label: 'Sprint 01',
+      phase: 'planning',
+      health: 'healthy'
+    },
     progress: 20,
     nextMilestone: {
       title: 'User Flow Archetypes',
@@ -90,6 +100,9 @@ exports.createProject = async (req, res) => {
     const projectData = req.body;
     const newProject = new Project(projectData);
     await newProject.save();
+    if (global.io) {
+      global.io.emit('project-created', newProject);
+    }
     res.status(201).json({ message: 'Project successfully created in MongoDB', project: newProject });
   } catch (err) {
     res.status(500).json({ message: 'Error creating project', error: err.message });
@@ -102,6 +115,9 @@ exports.updateProject = async (req, res) => {
     const updatedProject = await Project.findOneAndUpdate({ id }, req.body, { new: true });
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project not found' });
+    }
+    if (global.io) {
+      global.io.emit('project-updated', updatedProject);
     }
     res.status(200).json({ message: 'Project successfully updated in MongoDB', project: updatedProject });
   } catch (err) {
@@ -116,8 +132,34 @@ exports.deleteProject = async (req, res) => {
     if (!deletedProject) {
       return res.status(404).json({ message: 'Project not found' });
     }
+    if (global.io) {
+      global.io.emit('project-deleted', id);
+      global.io.emit('project-archived', id);
+    }
     res.status(200).json({ message: 'Project successfully deleted from MongoDB' });
   } catch (err) {
     res.status(500).json({ message: 'Error deleting project', error: err.message });
+  }
+};
+
+exports.updateProjectSprint = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { sprint } = req.body;
+    const updatedProject = await Project.findOneAndUpdate(
+      { id },
+      { sprint, sprintStatus: sprint.label },
+      { new: true }
+    );
+    if (!updatedProject) {
+      return res.status(404).json({ message: 'Project not found' });
+    }
+    if (global.io) {
+      global.io.emit('sprint-changed', { projectId: id, sprint: updatedProject.sprint });
+      global.io.emit('project-updated', updatedProject);
+    }
+    res.status(200).json({ message: 'Sprint successfully updated', project: updatedProject });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating sprint', error: err.message });
   }
 };

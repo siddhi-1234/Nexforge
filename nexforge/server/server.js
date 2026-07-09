@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 
 import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import Project from './models/Project.js';
 
 const app = express();
 
@@ -39,6 +40,22 @@ io.on("connection", (socket) => {
     socket.on("join-user-room", (userId) => {
         socket.join(userId);
         console.log(`User ${userId} joined room`);
+    });
+
+    socket.on("update-project-sprint", async ({ projectId, sprint }) => {
+        try {
+            const updatedProject = await Project.findOneAndUpdate(
+                { id: projectId },
+                { sprint, sprintStatus: sprint.label },
+                { new: true }
+            );
+            if (updatedProject) {
+                io.emit("sprint-changed", { projectId, sprint: updatedProject.sprint });
+                io.emit("project-updated", updatedProject);
+            }
+        } catch (err) {
+            console.error("Error updating sprint via socket:", err.message);
+        }
     });
 
     socket.on("disconnect", () => {
