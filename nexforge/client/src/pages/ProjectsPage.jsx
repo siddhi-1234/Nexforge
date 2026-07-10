@@ -325,29 +325,123 @@ const ProjectCard = React.memo(({
           {/* 4) Milestone Pulse Chain */}
           <div className="mb-6 relative">
             <div className="absolute left-2.5 right-2.5 top-[9px] h-0.5 bg-slate-800/80 z-0" />
+            {(() => {
+              const milestones = proj.milestones || [];
+              const activeIndex = milestones.findIndex(m => m.status === 'active');
+              const lastCompletedIndex = milestones.reduce((acc, m, idx) => m.status === 'completed' ? idx : acc, -1);
+              const targetIndex = activeIndex !== -1 ? activeIndex : (lastCompletedIndex !== -1 ? lastCompletedIndex : 0);
+              const fillPercentage = milestones.length > 1 ? (targetIndex / (milestones.length - 1)) * 100 : 0;
+              
+              let barColor = 'bg-[#38debb]';
+              const activeMilestone = activeIndex !== -1 ? milestones[activeIndex] : null;
+              if (activeMilestone) {
+                if (activeMilestone.riskStatus === 'delayed') {
+                  barColor = 'bg-red-500 animate-pulse';
+                } else if (activeMilestone.riskStatus === 'at-risk') {
+                  barColor = 'bg-amber-500 animate-pulse';
+                }
+              }
+
+              return (
+                <div 
+                  className={`absolute left-2.5 top-[9px] h-0.5 ${barColor} z-0 transition-all duration-700 ease-out`} 
+                  style={{ width: `calc(${fillPercentage}% - 5px)` }} 
+                />
+              );
+            })()}
             <div className="flex justify-between items-center relative z-10">
-              {proj.milestones.map((ms, index) => {
+              {(proj.milestones || []).map((ms, index) => {
                 const isActive = ms.status === 'active';
                 const isCompleted = ms.status === 'completed';
+                const isAtRisk = ms.riskStatus === 'at-risk';
+                const isDelayed = ms.riskStatus === 'delayed';
+
+                let dotColorClass = '';
+                let labelColorClass = 'text-slate-500';
+                let pulseRing = null;
+
+                if (isActive) {
+                  if (isDelayed) {
+                    dotColorClass = 'bg-red-500';
+                    labelColorClass = 'text-red-400 font-bold';
+                    pulseRing = (
+                      <>
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-red-500/30 animate-ping" />
+                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-red-500/50 animate-shake-red" />
+                      </>
+                    );
+                  } else if (isAtRisk) {
+                    dotColorClass = 'bg-amber-500';
+                    labelColorClass = 'text-amber-400 font-bold';
+                    pulseRing = (
+                      <>
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500/30 animate-ping" />
+                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-amber-500/50 animate-pulse-amber" />
+                      </>
+                    );
+                  } else {
+                    dotColorClass = 'bg-[#38debb]';
+                    labelColorClass = 'text-[#38debb] font-bold';
+                    pulseRing = (
+                      <>
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-[#38debb]/30 animate-ping" />
+                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-[#38debb]/50 animate-pulse-teal" />
+                      </>
+                    );
+                  }
+                } else if (isCompleted) {
+                  if (isDelayed) {
+                    dotColorClass = 'bg-red-500/80 border border-red-500/20 shadow-[0_0_6px_rgba(239,68,68,0.3)]';
+                    labelColorClass = 'text-red-400/80 font-medium';
+                  } else if (isAtRisk) {
+                    dotColorClass = 'bg-amber-500/80 border border-amber-500/20 shadow-[0_0_6px_rgba(245,158,11,0.3)]';
+                    labelColorClass = 'text-amber-400/80 font-medium';
+                  } else {
+                    dotColorClass = 'bg-[#38debb]/80 border border-[#38debb]/20 shadow-[0_0_6px_rgba(56,222,187,0.3)]';
+                    labelColorClass = 'text-[#38debb]/80 font-medium';
+                  }
+                } else {
+                  // Upcoming
+                  if (isDelayed) {
+                    dotColorClass = 'bg-red-950/80 border border-red-800/40 animate-pulse';
+                    labelColorClass = 'text-red-500/50';
+                  } else if (isAtRisk) {
+                    dotColorClass = 'bg-amber-950/80 border border-amber-800/40 animate-pulse';
+                    labelColorClass = 'text-amber-500/50';
+                  } else {
+                    dotColorClass = 'bg-slate-800 border border-slate-700/80';
+                    labelColorClass = 'text-slate-500';
+                  }
+                }
 
                 return (
-                  <div key={index} className="flex flex-col items-center">
+                  <div key={index} className="flex flex-col items-center group/ms relative cursor-help">
+                    {/* Hover Tooltip */}
+                    <div className="absolute bottom-full mb-2 hidden group-hover/ms:flex flex-col items-center z-30 transition-all duration-300">
+                      <div className="bg-[#11141D] border border-slate-800 px-2.5 py-1.5 rounded-lg shadow-xl text-[9px] text-center whitespace-nowrap">
+                        <p className="font-bold text-white">{ms.name}</p>
+                        <p className="text-slate-400 mt-0.5">{ms.dueDate || 'No due date'}</p>
+                        <p className={`mt-0.5 uppercase tracking-wider font-extrabold ${
+                          isDelayed ? 'text-red-400' : isAtRisk ? 'text-amber-400' : 'text-[#38debb]'
+                        }`}>{ms.riskStatus || 'on-track'}</p>
+                      </div>
+                      <div className="w-1.5 h-1.5 bg-[#11141D] border-r border-b border-slate-800 rotate-45 -mt-1" />
+                    </div>
+
                     {/* Pulse Chain Dot */}
                     <div className="relative flex items-center justify-center h-5 w-5">
                       {isActive ? (
                         <>
-                          <span className="absolute inline-flex h-full w-full rounded-full bg-[#38debb]/30 animate-ping" />
-                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-[#38debb]/50 animate-pulse-teal" />
-                          <span className="relative h-2 w-2 rounded-full bg-[#38debb]" />
+                          {pulseRing}
+                          <span className={`relative h-2 w-2 rounded-full ${dotColorClass}`} />
                         </>
                       ) : isCompleted ? (
-                        <span className="h-2 w-2 rounded-full bg-[#38debb]/80 border border-[#38debb]/20 shadow-[0_0_6px_rgba(56,222,187,0.3)]" />
+                        <span className={`h-2 w-2 rounded-full ${dotColorClass}`} />
                       ) : (
-                        <span className="h-2.5 w-2.5 rounded-full bg-slate-800 border border-slate-700/80" />
+                        <span className={`h-2.5 w-2.5 rounded-full ${dotColorClass}`} />
                       )}
                     </div>
-                    <span className={`text-[8px] mt-1.5 font-semibold tracking-wider font-display uppercase ${isActive ? 'text-[#38debb] font-bold' : 'text-slate-500'
-                      }`}>
+                    <span className={`text-[8px] mt-1.5 font-semibold tracking-wider font-display uppercase transition-colors duration-300 ${labelColorClass}`}>
                       {ms.name.split(': ')[1] || ms.name}
                     </span>
                   </div>
@@ -524,40 +618,77 @@ const ProjectsPage = () => {
   }, []);
 
   useEffect(() => {
+    const onConnect = () => {
+      console.log('Socket.io connected successfully to NexForge server, socket ID:', socket.id);
+    };
+
+    const onConnectError = (err) => {
+      console.error('Socket.io connection error:', err);
+    };
+
+    const onDisconnect = (reason) => {
+      console.warn('Socket.io disconnected:', reason);
+    };
+
     const handleCreated = (newProj) => {
+      console.log('Socket project-created event received:', newProj);
       setProjects((prev) => {
-        if (prev.some((p) => p.id === newProj.id)) return prev;
+        if (prev.some((p) => p.id === newProj.id || (p._id && newProj._id && p._id === newProj._id))) return prev;
         return [newProj, ...prev];
       });
     };
 
     const handleUpdated = (updatedProj) => {
+      console.log('Socket project-updated event received:', updatedProj);
       setProjects((prev) =>
-        prev.map((p) => (p.id === updatedProj.id ? updatedProj : p))
+        prev.map((p) => (p.id === updatedProj.id || (p._id && updatedProj._id && p._id === updatedProj._id) ? updatedProj : p))
       );
     };
 
     const handleDeleted = (deletedId) => {
-      setProjects((prev) => prev.filter((p) => p.id !== deletedId));
+      console.log('Socket project-deleted event received for ID:', deletedId);
+      setProjects((prev) => prev.filter((p) => p.id !== deletedId && p._id !== deletedId));
     };
 
     const handleArchived = (archivedId) => {
-      setProjects((prev) => prev.filter((p) => p.id !== archivedId));
+      console.log('Socket project-archived event received for ID:', archivedId);
+      setProjects((prev) => prev.filter((p) => p.id !== archivedId && p._id !== archivedId));
     };
 
     const handleSprintChanged = ({ projectId, sprint }) => {
+      console.log('Socket sprint-changed event received:', projectId, sprint);
       setProjects((prev) =>
-        prev.map((p) => (p.id === projectId ? { ...p, sprint } : p))
+        prev.map((p) => {
+          if (p.id === projectId || p._id === projectId) {
+            const updatedProject = { ...p, sprint };
+            if (sprint && sprint.phase === 'completed') {
+              updatedProject.progress = 100;
+              updatedProject.milestones = p.milestones.map(m => ({ ...m, status: 'completed' }));
+            }
+            return updatedProject;
+          }
+          return p;
+        })
       );
     };
 
+    socket.on('connect', onConnect);
+    socket.on('connect_error', onConnectError);
+    socket.on('disconnect', onDisconnect);
     socket.on('project-created', handleCreated);
     socket.on('project-updated', handleUpdated);
     socket.on('project-deleted', handleDeleted);
     socket.on('project-archived', handleArchived);
     socket.on('sprint-changed', handleSprintChanged);
 
+    if (socket.connected) {
+      onConnect();
+    }
+
     return () => {
+      socket.off('connect', onConnect);
+      socket.off('connect_error', onConnectError);
+      socket.off('disconnect', onDisconnect);
       socket.off('project-created', handleCreated);
       socket.off('project-updated', handleUpdated);
       socket.off('project-deleted', handleDeleted);
@@ -668,11 +799,12 @@ const ProjectsPage = () => {
     e.preventDefault();
     if (!newProject.name.trim()) return;
 
+    const isCompleted = newProject.sprintPhase === 'completed';
     const milestones = [
-      { name: 'Phase 1: Planning', status: newProject.activePhaseIndex === 0 ? 'active' : (newProject.activePhaseIndex > 0 ? 'completed' : 'upcoming') },
-      { name: 'Phase 2: Development', status: newProject.activePhaseIndex === 1 ? 'active' : (newProject.activePhaseIndex > 1 ? 'completed' : 'upcoming') },
-      { name: 'Phase 3: QA', status: newProject.activePhaseIndex === 2 ? 'active' : (newProject.activePhaseIndex > 2 ? 'completed' : 'upcoming') },
-      { name: 'Release', status: newProject.activePhaseIndex === 3 ? 'active' : 'upcoming' }
+      { name: 'Phase 1: Planning', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 0 ? 'active' : (newProject.activePhaseIndex > 0 ? 'completed' : 'upcoming')), dueDate: 'Due in 10 days', riskStatus: 'on-track' },
+      { name: 'Phase 2: Development', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 1 ? 'active' : (newProject.activePhaseIndex > 1 ? 'completed' : 'upcoming')), dueDate: 'Due in 25 days', riskStatus: 'on-track' },
+      { name: 'Phase 3: QA', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 2 ? 'active' : (newProject.activePhaseIndex > 2 ? 'completed' : 'upcoming')), dueDate: 'Due in 40 days', riskStatus: 'on-track' },
+      { name: 'Release', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 3 ? 'active' : 'upcoming'), dueDate: 'Due in 55 days', riskStatus: 'on-track' }
     ];
 
     const tasksList = newProject.tasksText.split('\n')
@@ -715,7 +847,7 @@ const ProjectsPage = () => {
         phase: newProject.sprintPhase,
         health: newProject.sprintHealth
       },
-      progress: parseInt(newProject.progress) || 0,
+      progress: newProject.sprintPhase === 'completed' ? 100 : (parseInt(newProject.progress) || 0),
       nextMilestone: {
         title: newProject.nextMilestoneTitle || 'Kickoff Workshop',
         statusText: newProject.nextMilestoneStatus,
@@ -781,7 +913,18 @@ const ProjectsPage = () => {
       tasksText: proj.tasks.map(t => t.title).join('\n'),
       activePhaseIndex: proj.milestones.findIndex(m => m.status === 'active') === -1 ? 0 : proj.milestones.findIndex(m => m.status === 'active'),
       sprintPhase: proj.sprint ? proj.sprint.phase : 'planning',
-      sprintHealth: proj.sprint ? proj.sprint.health : 'healthy'
+      sprintHealth: proj.sprint ? proj.sprint.health : 'healthy',
+      milestones: proj.milestones && proj.milestones.length > 0 ? proj.milestones.map(m => ({
+        name: m.name,
+        status: m.status || 'upcoming',
+        dueDate: m.dueDate || '',
+        riskStatus: m.riskStatus || 'on-track'
+      })) : [
+        { name: 'Phase 1: Planning', status: 'active', dueDate: 'Due in 10 days', riskStatus: 'on-track' },
+        { name: 'Phase 2: Development', status: 'upcoming', dueDate: 'Due in 25 days', riskStatus: 'on-track' },
+        { name: 'Phase 3: QA', status: 'upcoming', dueDate: 'Due in 40 days', riskStatus: 'on-track' },
+        { name: 'Release', status: 'upcoming', dueDate: 'Due in 50 days', riskStatus: 'on-track' }
+      ]
     });
     setShowEditModal(true);
   };
@@ -790,12 +933,19 @@ const ProjectsPage = () => {
     e.preventDefault();
     if (!editProjectData.name.trim()) return;
 
-    const milestones = [
-      { name: 'Phase 1: Planning', status: editProjectData.activePhaseIndex === 0 ? 'active' : (editProjectData.activePhaseIndex > 0 ? 'completed' : 'upcoming') },
-      { name: 'Phase 2: Development', status: editProjectData.activePhaseIndex === 1 ? 'active' : (editProjectData.activePhaseIndex > 1 ? 'completed' : 'upcoming') },
-      { name: 'Phase 3: QA', status: editProjectData.activePhaseIndex === 2 ? 'active' : (editProjectData.activePhaseIndex > 2 ? 'completed' : 'upcoming') },
-      { name: 'Release', status: editProjectData.activePhaseIndex === 3 ? 'active' : 'upcoming' }
-    ];
+    const isCompleted = editProjectData.sprintPhase === 'completed';
+    const milestones = (editProjectData.milestones || []).map(m => {
+      let status = m.status;
+      if (isCompleted) {
+        status = 'completed';
+      }
+      return {
+        name: m.name,
+        dueDate: m.dueDate || '',
+        status: status,
+        riskStatus: m.riskStatus || 'on-track'
+      };
+    });
 
     const currentTasks = editProjectData.tasks;
     const lines = editProjectData.tasksText.split('\n').filter(t => t.trim() !== '');
@@ -824,7 +974,7 @@ const ProjectsPage = () => {
             phase: editProjectData.sprintPhase,
             health: editProjectData.sprintHealth
           },
-          progress: parseInt(editProjectData.progress) || 0,
+          progress: editProjectData.sprintPhase === 'completed' ? 100 : (parseInt(editProjectData.progress) || 0),
           nextMilestone: {
             title: editProjectData.nextMilestoneTitle,
             statusText: editProjectData.nextMilestoneStatus,
@@ -1065,6 +1215,38 @@ const ProjectsPage = () => {
         }
         .animate-pulse-blue {
           animation: gentle-pulse-blue 2s infinite ease-in-out;
+        }
+        @keyframes gentle-pulse-amber {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.8;
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+          }
+          50% {
+            transform: scale(1.2);
+            opacity: 1;
+            box-shadow: 0 0 10px 4px rgba(245, 158, 11, 0.55);
+          }
+        }
+        @keyframes rapid-shake-red {
+          0%, 100% {
+            transform: translateX(0) scale(1);
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+          }
+          10%, 30%, 50%, 70%, 90% {
+            transform: translateX(-1px) scale(1.15);
+            box-shadow: 0 0 6px 2px rgba(239, 68, 68, 0.55);
+          }
+          20%, 40%, 60%, 80% {
+            transform: translateX(1px) scale(1.15);
+            box-shadow: 0 0 6px 2px rgba(239, 68, 68, 0.55);
+          }
+        }
+        .animate-pulse-amber {
+          animation: gentle-pulse-amber 2s infinite ease-in-out;
+        }
+        .animate-shake-red {
+          animation: rapid-shake-red 0.5s infinite ease-in-out;
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
@@ -1414,9 +1596,9 @@ const ProjectsPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", stiffness: 280, damping: 25 }}
-              className="relative w-full max-w-lg overflow-hidden border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl p-6"
+              className="relative w-full max-w-lg max-h-[90vh] flex flex-col border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl overflow-hidden"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+              <div className="flex items-center justify-between p-6 pb-3 border-b border-slate-800">
                 <h3 className="text-lg font-bold font-display text-white">Create New Project</h3>
                 <button
                   onClick={() => setShowCreateModal(false)}
@@ -1426,152 +1608,162 @@ const ProjectsPage = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateProject} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProject.name}
-                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                    placeholder="e.g. Hyperion Storage Layer"
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleCreateProject} className="flex flex-col flex-1 overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4 pr-3 min-h-0 scrollbar-thin">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Priority</label>
-                    <select
-                      value={newProject.priority}
-                      onChange={(e) => setNewProject({ ...newProject, priority: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="high">High Priority</option>
-                      <option value="internal">Internal</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low Priority</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Milestone Progress (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={newProject.progress}
-                      onChange={(e) => setNewProject({ ...newProject, progress: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project Name</label>
                     <input
                       type="text"
-                      value={newProject.sprintStatus}
-                      onChange={(e) => setNewProject({ ...newProject, sprintStatus: e.target.value })}
-                      placeholder="e.g. Sprint 01"
+                      required
+                      value={newProject.name}
+                      onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                      placeholder="e.g. Hyperion Storage Layer"
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
-                    <select
-                      value={newProject.sprintPhase}
-                      onChange={(e) => setNewProject({ ...newProject, sprintPhase: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="planning">Planning</option>
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                      <option value="blocked">Blocked</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
-                    <select
-                      value={newProject.sprintHealth}
-                      onChange={(e) => setNewProject({ ...newProject, sprintHealth: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="healthy">Healthy</option>
-                      <option value="at-risk">At Risk</option>
-                      <option value="blocked">Blocked</option>
-                    </select>
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProject.nextMilestoneTitle}
-                    onChange={(e) => setNewProject({ ...newProject, nextMilestoneTitle: e.target.value })}
-                    placeholder="e.g. API Gateway Integration"
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Label</label>
-                    <select
-                      value={newProject.nextMilestoneStatus}
-                      onChange={(e) => setNewProject({ ...newProject, nextMilestoneStatus: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="UPCOMING">UPCOMING</option>
-                      <option value="NEXT MILESTONE">NEXT MILESTONE</option>
-                      <option value="IN PROGRESS">IN PROGRESS</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Due date text</label>
-                    <input
-                      type="text"
-                      value={newProject.nextMilestoneDue}
-                      onChange={(e) => setNewProject({ ...newProject, nextMilestoneDue: e.target.value })}
-                      placeholder="e.g. Due in 5 days"
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Roadmap Active Phase</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'].map((ph, idx) => (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => setNewProject({ ...newProject, activePhaseIndex: idx })}
-                        className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${newProject.activePhaseIndex === idx
-                          ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
-                          : 'bg-slate-900 border-slate-800 text-slate-400'
-                          }`}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Priority</label>
+                      <select
+                        value={newProject.priority}
+                        onChange={(e) => setNewProject({ ...newProject, priority: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
-                        {ph}
-                      </button>
-                    ))}
+                        <option value="high">High Priority</option>
+                        <option value="internal">Internal</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low Priority</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Milestone Progress (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newProject.progress}
+                        onChange={(e) => setNewProject({ ...newProject, progress: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                      <input
+                        type="text"
+                        value={newProject.sprintStatus}
+                        onChange={(e) => setNewProject({ ...newProject, sprintStatus: e.target.value })}
+                        placeholder="e.g. Sprint 01"
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
+                      <select
+                        value={newProject.sprintPhase}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const updates = { sprintPhase: val };
+                          if (val === 'completed') {
+                            updates.progress = 100;
+                            updates.activePhaseIndex = 3;
+                          }
+                          setNewProject({ ...newProject, ...updates });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                      >
+                        <option value="planning">Planning</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="blocked">Blocked</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
+                      <select
+                        value={newProject.sprintHealth}
+                        onChange={(e) => setNewProject({ ...newProject, sprintHealth: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                      >
+                        <option value="healthy">Healthy</option>
+                        <option value="at-risk">At Risk</option>
+                        <option value="blocked">Blocked</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProject.nextMilestoneTitle}
+                      onChange={(e) => setNewProject({ ...newProject, nextMilestoneTitle: e.target.value })}
+                      placeholder="e.g. API Gateway Integration"
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Label</label>
+                      <select
+                        value={newProject.nextMilestoneStatus}
+                        onChange={(e) => setNewProject({ ...newProject, nextMilestoneStatus: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                      >
+                        <option value="UPCOMING">UPCOMING</option>
+                        <option value="NEXT MILESTONE">NEXT MILESTONE</option>
+                        <option value="IN PROGRESS">IN PROGRESS</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Due date text</label>
+                      <input
+                        type="text"
+                        value={newProject.nextMilestoneDue}
+                        onChange={(e) => setNewProject({ ...newProject, nextMilestoneDue: e.target.value })}
+                        placeholder="e.g. Due in 5 days"
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Roadmap Active Phase</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'].map((ph, idx) => (
+                        <button
+                          type="button"
+                          key={idx}
+                          onClick={() => setNewProject({ ...newProject, activePhaseIndex: idx })}
+                          className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${newProject.activePhaseIndex === idx
+                            ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
+                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                            }`}
+                        >
+                          {ph}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Initial tasks (One per line)</label>
+                    <textarea
+                      rows="3"
+                      value={newProject.tasksText}
+                      onChange={(e) => setNewProject({ ...newProject, tasksText: e.target.value })}
+                      placeholder="Implement auth logic&#10;Write unit tests"
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all resize-none"
+                    />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Initial tasks (One per line)</label>
-                  <textarea
-                    rows="3"
-                    value={newProject.tasksText}
-                    onChange={(e) => setNewProject({ ...newProject, tasksText: e.target.value })}
-                    placeholder="Implement auth logic&#10;Write unit tests"
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all resize-none"
-                  />
-                </div>
-
-                <div className="pt-3 flex justify-end space-x-3">
+                <div className="p-6 pt-3 border-t border-slate-800/60 bg-[#11141D]/90 backdrop-blur-sm flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
@@ -1613,9 +1805,9 @@ const ProjectsPage = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", stiffness: 280, damping: 25 }}
-              className="relative w-full max-w-lg overflow-hidden border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl p-6"
+              className="relative w-full max-w-lg max-h-[90vh] flex flex-col border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl overflow-hidden"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+              <div className="flex items-center justify-between p-6 pb-3 border-b border-slate-800">
                 <h3 className="text-lg font-bold font-display text-white">Edit Project Details</h3>
                 <button
                   onClick={() => setShowEditModal(false)}
@@ -1625,147 +1817,218 @@ const ProjectsPage = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateProject} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={editProjectData.name}
-                    onChange={(e) => setEditProjectData({ ...editProjectData, name: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleUpdateProject} className="flex flex-col flex-1 overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4 pr-3 min-h-0 scrollbar-thin">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Priority</label>
-                    <select
-                      value={editProjectData.priority}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, priority: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="high">High Priority</option>
-                      <option value="internal">Internal</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low Priority</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Progress (%)</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={editProjectData.progress}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, progress: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project Name</label>
                     <input
                       type="text"
-                      value={editProjectData.sprintStatus}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintStatus: e.target.value })}
+                      required
+                      value={editProjectData.name}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, name: e.target.value })}
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
-                    <select
-                      value={editProjectData.sprintPhase}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintPhase: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="planning">Planning</option>
-                      <option value="active">Active</option>
-                      <option value="completed">Completed</option>
-                      <option value="blocked">Blocked</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
-                    <select
-                      value={editProjectData.sprintHealth}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, sprintHealth: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="healthy">Healthy</option>
-                      <option value="at-risk">At Risk</option>
-                      <option value="blocked">Blocked</option>
-                    </select>
-                  </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
-                  <input
-                    type="text"
-                    required
-                    value={editProjectData.nextMilestoneTitle}
-                    onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneTitle: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Label</label>
-                    <select
-                      value={editProjectData.nextMilestoneStatus}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneStatus: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
-                    >
-                      <option value="UPCOMING">UPCOMING</option>
-                      <option value="NEXT MILESTONE">NEXT MILESTONE</option>
-                      <option value="IN PROGRESS">IN PROGRESS</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Due date text</label>
-                    <input
-                      type="text"
-                      value={editProjectData.nextMilestoneDue}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneDue: e.target.value })}
-                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Roadmap Active Phase</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'].map((ph, idx) => (
-                      <button
-                        type="button"
-                        key={idx}
-                        onClick={() => setEditProjectData({ ...editProjectData, activePhaseIndex: idx })}
-                        className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${editProjectData.activePhaseIndex === idx
-                          ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
-                          : 'bg-slate-900 border-slate-800 text-slate-400'
-                          }`}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Priority</label>
+                      <select
+                        value={editProjectData.priority}
+                        onChange={(e) => setEditProjectData({ ...editProjectData, priority: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
-                        {ph}
-                      </button>
-                    ))}
+                        <option value="high">High Priority</option>
+                        <option value="internal">Internal</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low Priority</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Progress (%)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editProjectData.progress}
+                        onChange={(e) => setEditProjectData({ ...editProjectData, progress: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                      <input
+                        type="text"
+                        value={editProjectData.sprintStatus}
+                        onChange={(e) => setEditProjectData({ ...editProjectData, sprintStatus: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
+                      <select
+                        value={editProjectData.sprintPhase}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const updates = { sprintPhase: val };
+                          if (val === 'completed') {
+                            updates.progress = 100;
+                            updates.activePhaseIndex = 3;
+                          }
+                          setEditProjectData({ ...editProjectData, ...updates });
+                        }}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                      >
+                        <option value="planning">Planning</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="blocked">Blocked</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
+                      <select
+                        value={editProjectData.sprintHealth}
+                        onChange={(e) => setEditProjectData({ ...editProjectData, sprintHealth: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                      >
+                        <option value="healthy">Healthy</option>
+                        <option value="at-risk">At Risk</option>
+                        <option value="blocked">Blocked</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
+                    <input
+                      type="text"
+                      required
+                      value={editProjectData.nextMilestoneTitle}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneTitle: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Label</label>
+                      <select
+                        value={editProjectData.nextMilestoneStatus}
+                        onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneStatus: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                      >
+                        <option value="UPCOMING">UPCOMING</option>
+                        <option value="NEXT MILESTONE">NEXT MILESTONE</option>
+                        <option value="IN PROGRESS">IN PROGRESS</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Due date text</label>
+                      <input
+                        type="text"
+                        value={editProjectData.nextMilestoneDue}
+                        onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneDue: e.target.value })}
+                        className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-2 tracking-wide uppercase">Project Milestones (Checkpoints)</label>
+                    <div className="space-y-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
+                      {(editProjectData.milestones || []).map((ms, idx) => (
+                        <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center pb-2 border-b border-slate-800/60 last:border-b-0 last:pb-0">
+                          {/* Name Input */}
+                          <div className="col-span-1 sm:col-span-1">
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Name</span>
+                            <input
+                              type="text"
+                              value={ms.name}
+                              onChange={(e) => {
+                                const updatedMilestones = [...editProjectData.milestones];
+                                updatedMilestones[idx].name = e.target.value;
+                                setEditProjectData({ ...editProjectData, milestones: updatedMilestones });
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all"
+                            />
+                          </div>
+                          {/* Due Date Input */}
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Due Date</span>
+                            <input
+                              type="text"
+                              value={ms.dueDate || ''}
+                              onChange={(e) => {
+                                const updatedMilestones = [...editProjectData.milestones];
+                                updatedMilestones[idx].dueDate = e.target.value;
+                                setEditProjectData({ ...editProjectData, milestones: updatedMilestones });
+                              }}
+                              placeholder="e.g. Due July 20"
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-700 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all"
+                            />
+                          </div>
+                          {/* Completion Status Select */}
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Status</span>
+                            <select
+                              value={ms.status}
+                              onChange={(e) => {
+                                const updatedMilestones = [...editProjectData.milestones];
+                                updatedMilestones[idx].status = e.target.value;
+                                
+                                // Automatically update activePhaseIndex for backwards compatibility
+                                const activeIdx = updatedMilestones.findIndex(m => m.status === 'active');
+                                setEditProjectData({ 
+                                  ...editProjectData, 
+                                  milestones: updatedMilestones,
+                                  activePhaseIndex: activeIdx !== -1 ? activeIdx : editProjectData.activePhaseIndex
+                                });
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                            >
+                              <option value="upcoming">Upcoming</option>
+                              <option value="active">Active</option>
+                              <option value="completed">Completed</option>
+                            </select>
+                          </div>
+                          {/* Risk Status Select */}
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Risk Status</span>
+                            <select
+                              value={ms.riskStatus || 'on-track'}
+                              onChange={(e) => {
+                                const updatedMilestones = [...editProjectData.milestones];
+                                updatedMilestones[idx].riskStatus = e.target.value;
+                                setEditProjectData({ ...editProjectData, milestones: updatedMilestones });
+                              }}
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all cursor-pointer"
+                            >
+                              <option value="on-track">On Track</option>
+                              <option value="at-risk">At Risk</option>
+                              <option value="delayed">Delayed</option>
+                            </select>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project tasks (One per line)</label>
+                    <textarea
+                      rows="3"
+                      value={editProjectData.tasksText}
+                      onChange={(e) => setEditProjectData({ ...editProjectData, tasksText: e.target.value })}
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all resize-none"
+                    />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project tasks (One per line)</label>
-                  <textarea
-                    rows="3"
-                    value={editProjectData.tasksText}
-                    onChange={(e) => setEditProjectData({ ...editProjectData, tasksText: e.target.value })}
-                    className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all resize-none"
-                  />
-                </div>
-
-                <div className="pt-3 flex justify-end space-x-3">
+                <div className="p-6 pt-3 border-t border-slate-800/60 bg-[#11141D]/90 backdrop-blur-sm flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}

@@ -44,12 +44,17 @@ io.on("connection", (socket) => {
 
     socket.on("update-project-sprint", async ({ projectId, sprint }) => {
         try {
-            const updatedProject = await Project.findOneAndUpdate(
-                { id: projectId },
-                { sprint, sprintStatus: sprint.label },
-                { new: true }
-            );
-            if (updatedProject) {
+            const project = await Project.findOne({ id: projectId });
+            if (project) {
+                project.sprint = sprint;
+                project.sprintStatus = sprint.label;
+                if (sprint && sprint.phase === 'completed') {
+                    project.progress = 100;
+                    project.milestones.forEach(m => {
+                        m.status = 'completed';
+                    });
+                }
+                const updatedProject = await project.save();
                 io.emit("sprint-changed", { projectId, sprint: updatedProject.sprint });
                 io.emit("project-updated", updatedProject);
             }

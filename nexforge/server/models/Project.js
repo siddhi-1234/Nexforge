@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 
 const MilestoneSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  status: { type: String, enum: ['completed', 'active', 'upcoming'], default: 'upcoming' }
+  status: { type: String, enum: ['completed', 'active', 'upcoming'], default: 'upcoming' },
+  dueDate: { type: String, default: '' },
+  riskStatus: { type: String, enum: ['on-track', 'delayed', 'at-risk'], default: 'on-track' }
 });
 
 const TaskSchema = new mongoose.Schema({

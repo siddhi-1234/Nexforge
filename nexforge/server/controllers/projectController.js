@@ -21,10 +21,10 @@ const SEED_PROJECTS = [
       dueText: 'Due in 2 days'
     },
     milestones: [
-      { name: 'Phase 1: Discovery', status: 'completed' },
-      { name: 'Phase 2: Core UX', status: 'active' },
-      { name: 'Phase 3: Beta', status: 'upcoming' },
-      { name: 'Launch', status: 'upcoming' }
+      { name: 'Phase 1: Discovery', status: 'completed', dueDate: 'Completed May 15', riskStatus: 'on-track' },
+      { name: 'Phase 2: Core UX', status: 'active', dueDate: 'Due July 20', riskStatus: 'on-track' },
+      { name: 'Phase 3: Beta', status: 'upcoming', dueDate: 'Due Aug 15', riskStatus: 'on-track' },
+      { name: 'Launch', status: 'upcoming', dueDate: 'Due Sept 30', riskStatus: 'on-track' }
     ],
     tasks: [
       { id: 't1-1', title: 'Implement WebGL shader library', priority: 'urgent', completed: true },
@@ -60,10 +60,10 @@ const SEED_PROJECTS = [
       dueText: 'Starts Monday'
     },
     milestones: [
-      { name: 'Phase 1: Planning', status: 'active' },
-      { name: 'Phase 2: Prototyping', status: 'upcoming' },
-      { name: 'Phase 3: QA', status: 'upcoming' },
-      { name: 'Relay', status: 'upcoming' }
+      { name: 'Phase 1: Planning', status: 'active', dueDate: 'Due July 22', riskStatus: 'on-track' },
+      { name: 'Phase 2: Prototyping', status: 'upcoming', dueDate: 'Due Aug 20', riskStatus: 'on-track' },
+      { name: 'Phase 3: QA', status: 'upcoming', dueDate: 'Due Sept 15', riskStatus: 'on-track' },
+      { name: 'Relay', status: 'upcoming', dueDate: 'Due Oct 10', riskStatus: 'on-track' }
     ],
     tasks: [
       { id: 't2-1', title: 'Establish global design tokens', priority: 'medium', completed: true },
@@ -84,8 +84,15 @@ const SEED_PROJECTS = [
 exports.getProjects = async (req, res) => {
   try {
     let projects = await Project.find();
-    if (projects.length === 0) {
-      // Seed with initial projects
+    
+    // Auto-reseed if the loaded milestones are missing the dueDate property (schema change)
+    const needsReseed = projects.some(p => p.milestones && p.milestones.length > 0 && p.milestones[0].dueDate === undefined);
+    
+    if (projects.length === 0 || needsReseed) {
+      if (needsReseed) {
+        await Project.deleteMany({});
+        console.log('Cleared out-of-date seed projects from MongoDB');
+      }
       projects = await Project.insertMany(SEED_PROJECTS);
       console.log('Seeded projects into MongoDB successfully');
     }
@@ -112,11 +119,22 @@ exports.createProject = async (req, res) => {
 exports.updateProject = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedProject = await Project.findOneAndUpdate({ id }, req.body, { new: true });
+    const updateData = req.body;
+    if (updateData.sprint && updateData.sprint.phase === 'completed') {
+      updateData.progress = 100;
+      if (updateData.milestones && updateData.milestones.length > 0) {
+        updateData.milestones = updateData.milestones.map(m => ({
+          ...m,
+          status: 'completed'
+        }));
+      }
+    }
+    const updatedProject = await Project.findOneAndUpdate({ id }, updateData, { new: true });
     if (!updatedProject) {
       return res.status(404).json({ message: 'Project not found' });
     }
     if (global.io) {
+      console.log(`[Socket] Broadcasting project-updated for project ID: ${id}`);
       global.io.emit('project-updated', updatedProject);
     }
     res.status(200).json({ message: 'Project successfully updated in MongoDB', project: updatedProject });
@@ -146,15 +164,25 @@ exports.updateProjectSprint = async (req, res) => {
   try {
     const { id } = req.params;
     const { sprint } = req.body;
-    const updatedProject = await Project.findOneAndUpdate(
-      { id },
-      { sprint, sprintStatus: sprint.label },
-      { new: true }
-    );
-    if (!updatedProject) {
+    
+    const project = await Project.findOne({ id });
+    if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
+    
+    project.sprint = sprint;
+    project.sprintStatus = sprint.label;
+    if (sprint && sprint.phase === 'completed') {
+      project.progress = 100;
+      project.milestones.forEach(m => {
+        m.status = 'completed';
+      });
+    }
+    
+    const updatedProject = await project.save();
+    
     if (global.io) {
+      console.log(`[Socket] Broadcasting sprint-changed and project-updated for project ID: ${id}`);
       global.io.emit('sprint-changed', { projectId: id, sprint: updatedProject.sprint });
       global.io.emit('project-updated', updatedProject);
     }
