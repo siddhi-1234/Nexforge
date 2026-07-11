@@ -1,21 +1,21 @@
-import Notification from "../models/Notification.js";
+const Notification = require("../models/Notification");
 
-export async function getUnreadCount(userId) {
-
+async function getUnreadCount(userId) {
     return await Notification.countDocuments({
         userId,
         read: false
     });
-
 }
 
-export async function emitUnreadCount(io, userId) {
-
+async function emitUnreadCount(io, userId) {
     const unreadCount = await getUnreadCount(userId);
-
     io.to(userId).emit(
         "notification-unread-count",
         unreadCount
     );
-
 }
+
+module.exports = {
+    getUnreadCount,
+    emitUnreadCount
+};

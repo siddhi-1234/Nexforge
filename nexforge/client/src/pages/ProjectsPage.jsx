@@ -605,7 +605,10 @@ const ProjectsPage = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/projects');
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        const emailQuery = user && user.email ? `?email=${encodeURIComponent(user.email)}` : '';
+        const res = await fetch(`http://127.0.0.1:5000/api/projects${emailQuery}`);
         const data = await res.json();
         if (data.projects) {
           setProjects(data.projects);
@@ -834,6 +837,23 @@ const ProjectsPage = () => {
       const email = `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
       return { name, email, initials: initial };
     });
+
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (user && user.email) {
+      const userEmailLower = user.email.toLowerCase();
+      if (!teamList.some(member => member.email.toLowerCase() === userEmailLower)) {
+        const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'ME';
+        teamList.push({
+          name: user.name || 'Project Creator',
+          email: user.email,
+          initials: initials
+        });
+        if (!initialMembers.includes(initials)) {
+          initialMembers.push(initials);
+        }
+      }
+    }
 
     const formattedProject = {
       id: prjId,
@@ -1158,12 +1178,22 @@ const ProjectsPage = () => {
     setActivities([removeAct, ...activities]);
   };
 
-  // Filter projects based on query
-  const filteredProjects = projects.filter(proj =>
-    proj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    proj.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    proj.sprintStatus.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filter projects based on query and user membership
+  const filteredProjects = projects.filter(proj => {
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userEmail = user && user.email ? user.email.toLowerCase() : '';
+    
+    // Check if user is a member of the project team
+    const isMember = proj.team && proj.team.some(member => member.email && member.email.toLowerCase() === userEmail);
+    if (!isMember) return false;
+
+    return (
+      proj.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      proj.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      proj.sprintStatus.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   return (
     <div className="relative min-h-screen bg-[#05070A] text-slate-100 overflow-x-hidden font-sans select-none pb-12">

@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../index.css';
 import {
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    signInWithEmailAndPassword
 } from "firebase/auth";
 
 import { auth } from "../config/firebaseConfig";
@@ -411,21 +412,39 @@ void main() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        try {
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const token = await userCredential.user.getIdToken();
+            
+            const loginRes = await axios.post(
+                "http://localhost:5000/api/auth/login",
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
-        // TODO: replace with real API call — POST /api/auth/login { email, password }
-        // The backend returns { token, user: { role, ... } }
-        console.log('Login:', { email, password });
+            localStorage.setItem(
+                "user",
+                JSON.stringify(loginRes.data.user)
+            );
 
-        // TODO: store the real token + user from the API response
-        // localStorage.setItem('token', token);
-        // localStorage.setItem('user', JSON.stringify(user));
+            localStorage.setItem("firebaseToken", token);
 
-        // TODO: replace this stub role with user.role from the API response
-        const role = 'student';
-
-        navigate(ROLE_REDIRECTS[role] || '/dashboard/student');
+            const role = loginRes.data.user.role || 'student';
+            navigate(ROLE_REDIRECTS[role] || '/dashboard/student');
+        } catch (err) {
+            console.error("Email Login Error:", err);
+            if (err.response) {
+                alert(err.response.data.message || "Login failed.");
+            } else {
+                alert(err.message || "Cannot connect to the backend. Check CORS and server.");
+            }
+        }
     };
 
     return (

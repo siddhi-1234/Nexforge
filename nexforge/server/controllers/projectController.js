@@ -96,6 +96,15 @@ exports.getProjects = async (req, res) => {
       projects = await Project.insertMany(SEED_PROJECTS);
       console.log('Seeded projects into MongoDB successfully');
     }
+
+    // Filter by email if query parameter is provided
+    const { email } = req.query;
+    if (email) {
+      projects = projects.filter(proj => 
+        proj.team && proj.team.some(member => member.email.toLowerCase() === email.toLowerCase())
+      );
+    }
+
     res.status(200).json({ projects });
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving projects', error: err.message });

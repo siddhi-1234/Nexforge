@@ -292,11 +292,13 @@ const StudentDashboard = () => {
                                                 notifications.map((n) => (
                                                     <div
                                                         key={n._id}
-                                                        className="dash-notification-item"
+                                                        className={`dash-notification-item ${n.type || 'general'}`}
                                                     >
                                                         <div className="dash-notification-content">
                                                             <p>{n.message}</p>
-                                                            <small>{n.time}</small>
+                                                            <small>
+                                                                {n.createdAt ? new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : n.time}
+                                                            </small>
                                                         </div>
                                                     </div>
                                                 ))

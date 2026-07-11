@@ -1552,6 +1552,23 @@ Dark Glassmorphism + Neon Accents + Premium Animations
     transform: translateY(-3px);
 }
 
+.dash-notification-item.warning {
+    border-color: rgba(255, 126, 121, 0.35);
+    background: rgba(255, 126, 121, 0.06);
+    box-shadow: 0 0 10px rgba(255, 126, 121, 0.04);
+}
+
+.dash-notification-item.warning:hover {
+    border-color: rgba(255, 126, 121, 0.55);
+    background: rgba(255, 126, 121, 0.1);
+    box-shadow: 0 0 15px rgba(255, 126, 121, 0.08);
+}
+
+.dash-notification-item.warning p {
+    color: var(--neon-coral);
+    font-weight: 500;
+}
+
 .dash-notification-content p {
     margin: 0;
     font-size: .95rem;
