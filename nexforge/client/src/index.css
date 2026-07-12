@@ -42,11 +42,6 @@ body {
   background-clip: padding-box;
   position: relative;
   overflow: hidden;
-  /* Allow the card to size to content; only cap height on short viewports */
-  max-height: 100vh;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(56, 222, 187, 0.4) transparent;
 }
 
 .glass-card::-webkit-scrollbar {
@@ -230,17 +225,7 @@ body {
 /* ───────────────────────────────────────────
    RESPONSIVE — MOBILE FIXES
 ─────────────────────────────────────────── */
-@media (max-width: 480px) {
-  .glass-card {
-    max-height: 100vh;
-  }
-}
-
-@media (max-height: 750px) {
-  .glass-card {
-    max-height: calc(100vh - 16px);
-  }
-}
+/* Mobile glass-card height override removed */
 
 @media (prefers-reduced-motion: reduce) {
 
@@ -868,22 +853,12 @@ body {
 }
 
 @media (max-width: 480px) {
-  .glass-card {
-    max-height: 100vh;
-  }
-
   .sd-sidebar {
     padding: 18px;
   }
 
   .sd-content {
     padding: 12px;
-  }
-}
-
-@media (max-height: 750px) {
-  .glass-card {
-    max-height: calc(100vh - 16px);
   }
 }
 

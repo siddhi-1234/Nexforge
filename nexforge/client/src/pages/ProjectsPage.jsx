@@ -744,7 +744,7 @@ const ProjectsPage = () => {
     nextMilestoneDue: '',
     activePhaseIndex: 0,
     tasksText: '',
-    membersText: 'JD, MC'
+    membersText: ''
   });
 
   const [editProjectData, setEditProjectData] = useState(null);
@@ -918,7 +918,7 @@ const ProjectsPage = () => {
       nextMilestoneDue: '',
       activePhaseIndex: 0,
       tasksText: '',
-      membersText: 'JD, MC'
+      membersText: ''
     });
     setShowCreateModal(false);
   };
