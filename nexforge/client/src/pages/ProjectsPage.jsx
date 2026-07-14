@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
   Search,
@@ -23,12 +23,12 @@ import {
   PlusCircle,
   Clock,
   Check,
-  Menu
-} from 'lucide-react';
-import nexforgeLogo from './logo.png';
-import { Link, useNavigate } from 'react-router-dom';
-import './dashboard.css';
-import socket from '../socket/socket';
+  Menu,
+} from "lucide-react";
+import nexforgeLogo from "./logo.png";
+import { Link, useNavigate } from "react-router-dom";
+import "./dashboard.css";
+import socket from "../socket/socket";
 
 /* ────────────────────────────────────────────────────────
    1. CUSTOM SPOTLIGHT & HOVER CARD COMPONENT (Animation #2)
@@ -69,17 +69,14 @@ function SpotlightHoverCard({ children, className = "", style = {} }) {
           className="absolute pointer-events-none inset-0 transition-opacity duration-300"
           style={{
             background: `radial-gradient(350px circle at ${coords.x}px ${coords.y}px, rgba(56, 222, 187, 0.12), transparent 80%)`,
-            zIndex: 1
+            zIndex: 1,
           }}
         />
       )}
-      <div className="relative z-10 h-full w-full">
-        {children}
-      </div>
+      <div className="relative z-10 h-full w-full">{children}</div>
     </div>
   );
 }
-
 
 /* ────────────────────────────────────────────────────────
    2. PROGRESS RING COMPONENT (Animation #3)
@@ -100,7 +97,10 @@ function ProgressRing({ percent, size = 68, strokeWidth = 5 }) {
   }, [percent, circumference]);
 
   return (
-    <div className="relative flex items-center justify-center select-none" style={{ width: size, height: size }}>
+    <div
+      className="relative flex items-center justify-center select-none"
+      style={{ width: size, height: size }}
+    >
       <svg className="w-full h-full transform -rotate-90">
         {/* Track circle */}
         <circle
@@ -126,7 +126,9 @@ function ProgressRing({ percent, size = 68, strokeWidth = 5 }) {
           cy={size / 2}
         />
       </svg>
-      <span className="absolute text-sm font-bold text-white font-display">{percent}%</span>
+      <span className="absolute text-sm font-bold text-white font-display">
+        {percent}%
+      </span>
     </div>
   );
 }
@@ -168,7 +170,9 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
           >
             <div className="mt-3 space-y-2 pl-2 pr-1 pb-1">
               {tasks.length === 0 ? (
-                <div className="text-xs text-slate-500 py-2">No tasks added to this project yet.</div>
+                <div className="text-xs text-slate-500 py-2">
+                  No tasks added to this project yet.
+                </div>
               ) : (
                 tasks.map((task) => (
                   <div
@@ -177,25 +181,36 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
                     onClick={() => onToggleTask(task.id)}
                   >
                     <div className="flex items-center space-x-2.5">
-                      <div className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${task.completed
-                        ? 'bg-[#38debb] border-[#38debb] text-[#05070A]'
-                        : 'border-slate-600 bg-slate-900/60'
-                        }`}>
+                      <div
+                        className={`w-4 h-4 rounded border flex items-center justify-center transition-all ${
+                          task.completed
+                            ? "bg-[#38debb] border-[#38debb] text-[#05070A]"
+                            : "border-slate-600 bg-slate-900/60"
+                        }`}
+                      >
                         {task.completed && <Check size={10} strokeWidth={3} />}
                       </div>
-                      <span className={`transition-all ${task.completed ? "line-through text-slate-500" : "text-slate-300"}`}>
+                      <span
+                        className={`transition-all ${task.completed ? "line-through text-slate-500" : "text-slate-300"}`}
+                      >
                         {task.title}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      {task.priority === 'urgent' && (
+                      {task.priority === "urgent" && (
                         <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse-red" />
                       )}
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${task.priority === 'urgent' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                        task.priority === 'high' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                          task.priority === 'medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                            'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                        }`}>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.5 rounded font-semibold border ${
+                          task.priority === "urgent"
+                            ? "bg-red-500/10 text-red-400 border-red-500/20"
+                            : task.priority === "high"
+                              ? "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                              : task.priority === "medium"
+                                ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                        }`}
+                      >
                         {task.priority.toUpperCase()}
                       </span>
                     </div>
@@ -212,392 +227,490 @@ function TaskAccordion({ tasks, isOpen, onToggle, onToggleTask }) {
 /* ────────────────────────────────────────────────────────
    3.5. PROJECT CARD COMPONENT (Memoized for Project-based Rerenders)
    ──────────────────────────────────────────────────────── */
-const ProjectCard = React.memo(({
-  proj,
-  isAccordionOpen,
-  onToggleAccordion,
-  onToggleTask,
-  onEditClick,
-  onDeleteClick,
-  onTeamClick,
-  viewMode
-}) => {
-  const sprint = proj.sprint || {
-    label: proj.sprintStatus || 'Sprint 01',
-    phase: 'active',
-    health: 'healthy'
-  };
+const ProjectCard = React.memo(
+  ({
+    proj,
+    isAccordionOpen,
+    onToggleAccordion,
+    onToggleTask,
+    onEditClick,
+    onDeleteClick,
+    onTeamClick,
+    viewMode,
+  }) => {
+    const sprint = proj.sprint || {
+      label: proj.sprintStatus || "Sprint 01",
+      phase: "active",
+      health: "healthy",
+    };
 
-  if (viewMode === 'grid') {
-    return (
-      <motion.div
-        variants={{
-          hidden: { opacity: 0, y: 25, scale: 0.97 },
-          show: {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            transition: {
-              type: "spring",
-              stiffness: 120,
-              damping: 18
-            }
-          }
-        }}
-      >
-        <SpotlightHoverCard className="p-6">
-          {/* Top Metadata Header inside card */}
-          <div className="flex items-center justify-between mb-4">
-            <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider ${
-              proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border border-red-500/20' :
-              proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-              'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-            }`}>
-              {proj.tag}
-            </span>
+    if (viewMode === "grid") {
+      return (
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 25, scale: 0.97 },
+            show: {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              transition: {
+                type: "spring",
+                stiffness: 120,
+                damping: 18,
+              },
+            },
+          }}
+        >
+          <SpotlightHoverCard className="p-6">
+            {/* Top Metadata Header inside card */}
+            <div className="flex items-center justify-between mb-4">
+              <span
+                className={`text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider ${
+                  proj.priority === "high"
+                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                    : proj.priority === "internal"
+                      ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                      : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                }`}
+              >
+                {proj.tag}
+              </span>
 
-            <div className="flex items-center space-x-2">
-              <span className="text-[10px] text-slate-500 font-bold font-display">{proj.code}</span>
-              <div className="flex items-center space-x-1 border border-[#1E293B]/60 bg-[#1e293b]/30 rounded-lg p-0.5">
-                <button
-                  onClick={onTeamClick}
-                  className="p-1.5 text-slate-400 hover:text-blue-400 rounded-md hover:bg-slate-800 transition-colors"
-                  title="Project Members"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={(e) => onEditClick(proj, e)}
-                  className="p-1.5 text-slate-400 hover:text-[#38debb] rounded-md hover:bg-slate-800 transition-colors"
-                  title="Edit Project"
-                >
-                  <Edit3 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={(e) => onDeleteClick(proj, e)}
-                  className="p-1.5 text-slate-400 hover:text-red-400 rounded-md hover:bg-slate-800 transition-colors"
-                  title="Delete Project"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] text-slate-500 font-bold font-display">
+                  {proj.code}
+                </span>
+                <div className="flex items-center space-x-1 border border-[#1E293B]/60 bg-[#1e293b]/30 rounded-lg p-0.5">
+                  <button
+                    onClick={onTeamClick}
+                    className="p-1.5 text-slate-400 hover:text-blue-400 rounded-md hover:bg-slate-800 transition-colors"
+                    title="Project Members"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => onEditClick(proj, e)}
+                    className="p-1.5 text-slate-400 hover:text-[#38debb] rounded-md hover:bg-slate-800 transition-colors"
+                    title="Edit Project"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={(e) => onDeleteClick(proj, e)}
+                    className="p-1.5 text-slate-400 hover:text-red-400 rounded-md hover:bg-slate-800 transition-colors"
+                    title="Delete Project"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Project Title */}
-          <h3 className="text-xl font-bold font-display text-white mb-4 group-hover:text-[#38debb] transition-colors truncate">
-            {proj.name}
-          </h3>
+            {/* Project Title */}
+            <h3 className="text-xl font-bold font-display text-white mb-4 group-hover:text-[#38debb] transition-colors truncate">
+              {proj.name}
+            </h3>
 
-          {/* Sprint Status Widget */}
-          <div className="flex items-center justify-between bg-[#181F2E]/40 border border-slate-800/60 p-3 rounded-xl mb-5 text-xs">
-            <div className="flex items-center space-x-2.5">
-              {/* Health Indicator Dot */}
-              <span className="relative flex h-2.5 w-2.5">
-                {sprint.phase === 'active' && (
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    sprint.health === 'healthy' ? 'bg-[#38debb]' :
-                    sprint.health === 'at-risk' ? 'bg-amber-500' : 'bg-red-500'
-                  }`} />
-                )}
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-                  sprint.health === 'healthy' ? 'bg-[#38debb]' :
-                  sprint.health === 'at-risk' ? 'bg-amber-500' : 'bg-red-500'
-                }`} />
-              </span>
+            {/* Sprint Status Widget */}
+            <div className="flex items-center justify-between bg-[#181F2E]/40 border border-slate-800/60 p-3 rounded-xl mb-5 text-xs">
+              <div className="flex items-center space-x-2.5">
+                {/* Health Indicator Dot */}
+                <span className="relative flex h-2.5 w-2.5">
+                  {sprint.phase === "active" && (
+                    <span
+                      className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                        sprint.health === "healthy"
+                          ? "bg-[#38debb]"
+                          : sprint.health === "at-risk"
+                            ? "bg-amber-500"
+                            : "bg-red-500"
+                      }`}
+                    />
+                  )}
+                  <span
+                    className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                      sprint.health === "healthy"
+                        ? "bg-[#38debb]"
+                        : sprint.health === "at-risk"
+                          ? "bg-amber-500"
+                          : "bg-red-500"
+                    }`}
+                  />
+                </span>
+                <div>
+                  <span className="text-slate-300 font-bold font-display">
+                    {sprint.label}
+                  </span>
+                  <span className="text-[10px] text-slate-500 ml-1.5 capitalize font-medium">
+                    ({sprint.phase})
+                  </span>
+                </div>
+              </div>
               <div>
-                <span className="text-slate-300 font-bold font-display">{sprint.label}</span>
-                <span className="text-[10px] text-slate-500 ml-1.5 capitalize font-medium">({sprint.phase})</span>
+                <span
+                  className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
+                    sprint.phase === "active"
+                      ? "bg-emerald-500/10 text-[#38debb] border border-emerald-500/20"
+                      : sprint.phase === "planning"
+                        ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                        : sprint.phase === "completed"
+                          ? "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                          : "bg-red-500/10 text-red-400 border border-red-500/20" // blocked
+                  }`}
+                >
+                  {sprint.phase}
+                </span>
               </div>
             </div>
-            <div>
-              <span className={`text-[9px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
-                sprint.phase === 'active' ? 'bg-emerald-500/10 text-[#38debb] border border-emerald-500/20' :
-                sprint.phase === 'planning' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                sprint.phase === 'completed' ? 'bg-slate-500/10 text-slate-400 border border-slate-500/20' :
-                'bg-red-500/10 text-red-400 border border-red-500/20' // blocked
-              }`}>
-                {sprint.phase}
-              </span>
-            </div>
-          </div>
 
-          {/* 4) Milestone Pulse Chain */}
-          <div className="mb-6 relative">
-            <div className="absolute left-2.5 right-2.5 top-[9px] h-0.5 bg-slate-800/80 z-0" />
-            {(() => {
-              const milestones = proj.milestones || [];
-              const activeIndex = milestones.findIndex(m => m.status === 'active');
-              const lastCompletedIndex = milestones.reduce((acc, m, idx) => m.status === 'completed' ? idx : acc, -1);
-              const targetIndex = activeIndex !== -1 ? activeIndex : (lastCompletedIndex !== -1 ? lastCompletedIndex : 0);
-              const fillPercentage = milestones.length > 1 ? (targetIndex / (milestones.length - 1)) * 100 : 0;
-              
-              let barColor = 'bg-[#38debb]';
-              const activeMilestone = activeIndex !== -1 ? milestones[activeIndex] : null;
-              if (activeMilestone) {
-                if (activeMilestone.riskStatus === 'delayed') {
-                  barColor = 'bg-red-500 animate-pulse';
-                } else if (activeMilestone.riskStatus === 'at-risk') {
-                  barColor = 'bg-amber-500 animate-pulse';
-                }
-              }
+            {/* 4) Milestone Pulse Chain */}
+            <div className="mb-6 relative">
+              <div className="absolute left-2.5 right-2.5 top-[9px] h-0.5 bg-slate-800/80 z-0" />
+              {(() => {
+                const milestones = proj.milestones || [];
+                const activeIndex = milestones.findIndex(
+                  (m) => m.status === "active",
+                );
+                const lastCompletedIndex = milestones.reduce(
+                  (acc, m, idx) => (m.status === "completed" ? idx : acc),
+                  -1,
+                );
+                const targetIndex =
+                  activeIndex !== -1
+                    ? activeIndex
+                    : lastCompletedIndex !== -1
+                      ? lastCompletedIndex
+                      : 0;
+                const fillPercentage =
+                  milestones.length > 1
+                    ? (targetIndex / (milestones.length - 1)) * 100
+                    : 0;
 
-              return (
-                <div 
-                  className={`absolute left-2.5 top-[9px] h-0.5 ${barColor} z-0 transition-all duration-700 ease-out`} 
-                  style={{ width: `calc(${fillPercentage}% - 5px)` }} 
-                />
-              );
-            })()}
-            <div className="flex justify-between items-center relative z-10">
-              {(proj.milestones || []).map((ms, index) => {
-                const isActive = ms.status === 'active';
-                const isCompleted = ms.status === 'completed';
-                const isAtRisk = ms.riskStatus === 'at-risk';
-                const isDelayed = ms.riskStatus === 'delayed';
-
-                let dotColorClass = '';
-                let labelColorClass = 'text-slate-500';
-                let pulseRing = null;
-
-                if (isActive) {
-                  if (isDelayed) {
-                    dotColorClass = 'bg-red-500';
-                    labelColorClass = 'text-red-400 font-bold';
-                    pulseRing = (
-                      <>
-                        <span className="absolute inline-flex h-full w-full rounded-full bg-red-500/30 animate-ping" />
-                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-red-500/50 animate-shake-red" />
-                      </>
-                    );
-                  } else if (isAtRisk) {
-                    dotColorClass = 'bg-amber-500';
-                    labelColorClass = 'text-amber-400 font-bold';
-                    pulseRing = (
-                      <>
-                        <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500/30 animate-ping" />
-                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-amber-500/50 animate-pulse-amber" />
-                      </>
-                    );
-                  } else {
-                    dotColorClass = 'bg-[#38debb]';
-                    labelColorClass = 'text-[#38debb] font-bold';
-                    pulseRing = (
-                      <>
-                        <span className="absolute inline-flex h-full w-full rounded-full bg-[#38debb]/30 animate-ping" />
-                        <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-[#38debb]/50 animate-pulse-teal" />
-                      </>
-                    );
-                  }
-                } else if (isCompleted) {
-                  if (isDelayed) {
-                    dotColorClass = 'bg-red-500/80 border border-red-500/20 shadow-[0_0_6px_rgba(239,68,68,0.3)]';
-                    labelColorClass = 'text-red-400/80 font-medium';
-                  } else if (isAtRisk) {
-                    dotColorClass = 'bg-amber-500/80 border border-amber-500/20 shadow-[0_0_6px_rgba(245,158,11,0.3)]';
-                    labelColorClass = 'text-amber-400/80 font-medium';
-                  } else {
-                    dotColorClass = 'bg-[#38debb]/80 border border-[#38debb]/20 shadow-[0_0_6px_rgba(56,222,187,0.3)]';
-                    labelColorClass = 'text-[#38debb]/80 font-medium';
-                  }
-                } else {
-                  // Upcoming
-                  if (isDelayed) {
-                    dotColorClass = 'bg-red-950/80 border border-red-800/40 animate-pulse';
-                    labelColorClass = 'text-red-500/50';
-                  } else if (isAtRisk) {
-                    dotColorClass = 'bg-amber-950/80 border border-amber-800/40 animate-pulse';
-                    labelColorClass = 'text-amber-500/50';
-                  } else {
-                    dotColorClass = 'bg-slate-800 border border-slate-700/80';
-                    labelColorClass = 'text-slate-500';
+                let barColor = "bg-[#38debb]";
+                const activeMilestone =
+                  activeIndex !== -1 ? milestones[activeIndex] : null;
+                if (activeMilestone) {
+                  if (activeMilestone.riskStatus === "delayed") {
+                    barColor = "bg-red-500 animate-pulse";
+                  } else if (activeMilestone.riskStatus === "at-risk") {
+                    barColor = "bg-amber-500 animate-pulse";
                   }
                 }
 
                 return (
-                  <div key={index} className="flex flex-col items-center group/ms relative cursor-help">
-                    {/* Hover Tooltip */}
-                    <div className="absolute bottom-full mb-2 hidden group-hover/ms:flex flex-col items-center z-30 transition-all duration-300">
-                      <div className="bg-[#11141D] border border-slate-800 px-2.5 py-1.5 rounded-lg shadow-xl text-[9px] text-center whitespace-nowrap">
-                        <p className="font-bold text-white">{ms.name}</p>
-                        <p className="text-slate-400 mt-0.5">{ms.dueDate || 'No due date'}</p>
-                        <p className={`mt-0.5 uppercase tracking-wider font-extrabold ${
-                          isDelayed ? 'text-red-400' : isAtRisk ? 'text-amber-400' : 'text-[#38debb]'
-                        }`}>{ms.riskStatus || 'on-track'}</p>
-                      </div>
-                      <div className="w-1.5 h-1.5 bg-[#11141D] border-r border-b border-slate-800 rotate-45 -mt-1" />
-                    </div>
-
-                    {/* Pulse Chain Dot */}
-                    <div className="relative flex items-center justify-center h-5 w-5">
-                      {isActive ? (
-                        <>
-                          {pulseRing}
-                          <span className={`relative h-2 w-2 rounded-full ${dotColorClass}`} />
-                        </>
-                      ) : isCompleted ? (
-                        <span className={`h-2 w-2 rounded-full ${dotColorClass}`} />
-                      ) : (
-                        <span className={`h-2.5 w-2.5 rounded-full ${dotColorClass}`} />
-                      )}
-                    </div>
-                    <span className={`text-[8px] mt-1.5 font-semibold tracking-wider font-display uppercase transition-colors duration-300 ${labelColorClass}`}>
-                      {ms.name.split(': ')[1] || ms.name}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Next Milestone Sub-card with 3) Progress Ring Draw */}
-          <div className="flex items-center justify-between bg-[#161A26]/80 border border-slate-800/80 p-4 rounded-xl mb-6">
-            <div className="flex-1 min-w-0 pr-4">
-              <span className="text-[9px] font-bold text-slate-500 font-display tracking-widest block uppercase mb-1">
-                {proj.nextMilestone.statusText}
-              </span>
-              <h4 className="text-sm font-bold text-slate-100 truncate mb-1 leading-snug">
-                {proj.nextMilestone.title}
-              </h4>
-              <span className="flex items-center text-[10px] text-[#00b0ff] font-semibold">
-                <Clock className="w-3.5 h-3.5 mr-1" />
-                {proj.nextMilestone.dueText}
-              </span>
-            </div>
-
-            <div className="shrink-0">
-              <ProgressRing percent={proj.progress} size={64} strokeWidth={5} />
-            </div>
-          </div>
-
-          {/* Project Footer: Member stack & Activity timestamp */}
-          <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/50 pt-4">
-            <div className="flex items-center space-x-1.5">
-              <div className="flex -space-x-2 select-none">
-                {proj.members.map((initial, i) => (
                   <div
-                    key={i}
-                    className="w-6 h-6 rounded-full border border-slate-900 bg-slate-800 text-[10px] font-bold text-white flex items-center justify-center hover:translate-y-[-2px] transition-transform cursor-pointer"
-                  >
-                    {initial}
-                  </div>
-                ))}
-                {proj.memberCount > proj.members.length && (
-                  <div className="w-6 h-6 rounded-full border border-slate-900 bg-[#1e293b] text-[9px] font-bold text-slate-300 flex items-center justify-center">
-                    +{proj.memberCount - proj.members.length}
-                  </div>
-                )}
+                    className={`absolute left-2.5 top-[9px] h-0.5 ${barColor} z-0 transition-all duration-700 ease-out`}
+                    style={{ width: `calc(${fillPercentage}% - 5px)` }}
+                  />
+                );
+              })()}
+              <div className="flex justify-between items-center relative z-10">
+                {(proj.milestones || []).map((ms, index) => {
+                  const isActive = ms.status === "active";
+                  const isCompleted = ms.status === "completed";
+                  const isAtRisk = ms.riskStatus === "at-risk";
+                  const isDelayed = ms.riskStatus === "delayed";
+
+                  let dotColorClass = "";
+                  let labelColorClass = "text-slate-500";
+                  let pulseRing = null;
+
+                  if (isActive) {
+                    if (isDelayed) {
+                      dotColorClass = "bg-red-500";
+                      labelColorClass = "text-red-400 font-bold";
+                      pulseRing = (
+                        <>
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-red-500/30 animate-ping" />
+                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-red-500/50 animate-shake-red" />
+                        </>
+                      );
+                    } else if (isAtRisk) {
+                      dotColorClass = "bg-amber-500";
+                      labelColorClass = "text-amber-400 font-bold";
+                      pulseRing = (
+                        <>
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500/30 animate-ping" />
+                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-amber-500/50 animate-pulse-amber" />
+                        </>
+                      );
+                    } else {
+                      dotColorClass = "bg-[#38debb]";
+                      labelColorClass = "text-[#38debb] font-bold";
+                      pulseRing = (
+                        <>
+                          <span className="absolute inline-flex h-full w-full rounded-full bg-[#38debb]/30 animate-ping" />
+                          <span className="absolute inline-flex h-3.5 w-3.5 rounded-full bg-[#38debb]/50 animate-pulse-teal" />
+                        </>
+                      );
+                    }
+                  } else if (isCompleted) {
+                    if (isDelayed) {
+                      dotColorClass =
+                        "bg-red-500/80 border border-red-500/20 shadow-[0_0_6px_rgba(239,68,68,0.3)]";
+                      labelColorClass = "text-red-400/80 font-medium";
+                    } else if (isAtRisk) {
+                      dotColorClass =
+                        "bg-amber-500/80 border border-amber-500/20 shadow-[0_0_6px_rgba(245,158,11,0.3)]";
+                      labelColorClass = "text-amber-400/80 font-medium";
+                    } else {
+                      dotColorClass =
+                        "bg-[#38debb]/80 border border-[#38debb]/20 shadow-[0_0_6px_rgba(56,222,187,0.3)]";
+                      labelColorClass = "text-[#38debb]/80 font-medium";
+                    }
+                  } else {
+                    // Upcoming
+                    if (isDelayed) {
+                      dotColorClass =
+                        "bg-red-950/80 border border-red-800/40 animate-pulse";
+                      labelColorClass = "text-red-500/50";
+                    } else if (isAtRisk) {
+                      dotColorClass =
+                        "bg-amber-950/80 border border-amber-800/40 animate-pulse";
+                      labelColorClass = "text-amber-500/50";
+                    } else {
+                      dotColorClass = "bg-slate-800 border border-slate-700/80";
+                      labelColorClass = "text-slate-500";
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex flex-col items-center group/ms relative cursor-help"
+                    >
+                      {/* Hover Tooltip */}
+                      <div className="absolute bottom-full mb-2 hidden group-hover/ms:flex flex-col items-center z-30 transition-all duration-300">
+                        <div className="bg-[#11141D] border border-slate-800 px-2.5 py-1.5 rounded-lg shadow-xl text-[9px] text-center whitespace-nowrap">
+                          <p className="font-bold text-white">{ms.name}</p>
+                          <p className="text-slate-400 mt-0.5">
+                            {ms.dueDate || "No due date"}
+                          </p>
+                          <p
+                            className={`mt-0.5 uppercase tracking-wider font-extrabold ${
+                              isDelayed
+                                ? "text-red-400"
+                                : isAtRisk
+                                  ? "text-amber-400"
+                                  : "text-[#38debb]"
+                            }`}
+                          >
+                            {ms.riskStatus || "on-track"}
+                          </p>
+                        </div>
+                        <div className="w-1.5 h-1.5 bg-[#11141D] border-r border-b border-slate-800 rotate-45 -mt-1" />
+                      </div>
+
+                      {/* Pulse Chain Dot */}
+                      <div className="relative flex items-center justify-center h-5 w-5">
+                        {isActive ? (
+                          <>
+                            {pulseRing}
+                            <span
+                              className={`relative h-2 w-2 rounded-full ${dotColorClass}`}
+                            />
+                          </>
+                        ) : isCompleted ? (
+                          <span
+                            className={`h-2 w-2 rounded-full ${dotColorClass}`}
+                          />
+                        ) : (
+                          <span
+                            className={`h-2.5 w-2.5 rounded-full ${dotColorClass}`}
+                          />
+                        )}
+                      </div>
+                      <span
+                        className={`text-[8px] mt-1.5 font-semibold tracking-wider font-display uppercase transition-colors duration-300 ${labelColorClass}`}
+                      >
+                        {ms.name.split(": ")[1] || ms.name}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
-            <span className="text-[10px] font-medium text-slate-500 font-display">{proj.lastActive}</span>
-          </div>
 
-          {/* 5) Accordion expand with spring height */}
-          <TaskAccordion
-            tasks={proj.tasks}
-            isOpen={isAccordionOpen}
-            onToggle={onToggleAccordion}
-            onToggleTask={onToggleTask}
-          />
-        </SpotlightHoverCard>
-      </motion.div>
-    );
-  } else {
-    // LIST VIEW IMPLEMENTATION
-    return (
-      <motion.div
-        variants={{
-          hidden: { opacity: 0, y: 15 },
-          show: {
-            opacity: 1,
-            y: 0,
-            transition: {
-              type: "spring",
-              stiffness: 120,
-              damping: 18
-            }
-          }
-        }}
-        className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between p-4 bg-[#11141D] border border-slate-800/80 rounded-xl hover:border-slate-700/60 transition-all group"
-      >
-        <div className="flex items-center space-x-4 flex-1 min-w-0">
-          <div className="shrink-0">
-            <ProgressRing percent={proj.progress} size={48} strokeWidth={4} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-              <h4 className="text-sm font-bold text-white group-hover:text-[#38debb] transition-colors truncate">
-                {proj.name}
-              </h4>
-              <span className="text-[9px] text-slate-500 font-bold">{proj.code}</span>
-              <span className={`text-[8px] px-1.5 py-0.2 rounded font-bold border ${
-                proj.priority === 'high' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
-                proj.priority === 'internal' ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' :
-                'bg-slate-500/10 text-slate-400 border-slate-500/20'
-              }`}>
-                {proj.priority.toUpperCase()}
-              </span>
-              <span className={`w-2 h-2 rounded-full ${
-                sprint.health === 'healthy' ? 'bg-[#38debb]' :
-                sprint.health === 'at-risk' ? 'bg-amber-500' : 'bg-red-500'
-              } ${sprint.phase === 'active' ? 'animate-pulse-teal' : ''}`} />
+            {/* Next Milestone Sub-card with 3) Progress Ring Draw */}
+            <div className="flex items-center justify-between bg-[#161A26]/80 border border-slate-800/80 p-4 rounded-xl mb-6">
+              <div className="flex-1 min-w-0 pr-4">
+                <span className="text-[9px] font-bold text-slate-500 font-display tracking-widest block uppercase mb-1">
+                  {proj.nextMilestone.statusText}
+                </span>
+                <h4 className="text-sm font-bold text-slate-100 truncate mb-1 leading-snug">
+                  {proj.nextMilestone.title}
+                </h4>
+                <span className="flex items-center text-[10px] text-[#00b0ff] font-semibold">
+                  <Clock className="w-3.5 h-3.5 mr-1" />
+                  {proj.nextMilestone.dueText}
+                </span>
+              </div>
+
+              <div className="shrink-0">
+                <ProgressRing
+                  percent={proj.progress}
+                  size={64}
+                  strokeWidth={5}
+                />
+              </div>
             </div>
-            <p className="text-xs text-slate-400 mt-1 truncate">
-              Next: <span className="font-semibold text-slate-300">{proj.nextMilestone.title}</span> • {proj.nextMilestone.dueText}
-            </p>
-          </div>
-        </div>
 
-        <div className="flex items-center justify-between sm:justify-end sm:space-x-6 w-full sm:w-auto border-t border-slate-800/40 pt-3 sm:border-0 sm:pt-0 shrink-0">
-          <div className="flex flex-col items-end">
-            <span className="text-xs text-slate-300 font-bold">{sprint.label} <span className="text-[10px] text-slate-500 capitalize">({sprint.phase})</span></span>
-            <span className="text-[10px] text-slate-500 mt-0.5">{proj.lastActive}</span>
+            {/* Project Footer: Member stack & Activity timestamp */}
+            <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-800/50 pt-4">
+              <div className="flex items-center space-x-1.5">
+                <div className="flex -space-x-2 select-none">
+                  {proj.members.map((initial, i) => (
+                    <div
+                      key={i}
+                      className="w-6 h-6 rounded-full border border-slate-900 bg-slate-800 text-[10px] font-bold text-white flex items-center justify-center hover:translate-y-[-2px] transition-transform cursor-pointer"
+                    >
+                      {initial}
+                    </div>
+                  ))}
+                  {proj.memberCount > proj.members.length && (
+                    <div className="w-6 h-6 rounded-full border border-slate-900 bg-[#1e293b] text-[9px] font-bold text-slate-300 flex items-center justify-center">
+                      +{proj.memberCount - proj.members.length}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <span className="text-[10px] font-medium text-slate-500 font-display">
+                {proj.lastActive}
+              </span>
+            </div>
+
+            {/* 5) Accordion expand with spring height */}
+            <TaskAccordion
+              tasks={proj.tasks}
+              isOpen={isAccordionOpen}
+              onToggle={onToggleAccordion}
+              onToggleTask={onToggleTask}
+            />
+          </SpotlightHoverCard>
+        </motion.div>
+      );
+    } else {
+      // LIST VIEW IMPLEMENTATION
+      return (
+        <motion.div
+          variants={{
+            hidden: { opacity: 0, y: 15 },
+            show: {
+              opacity: 1,
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 120,
+                damping: 18,
+              },
+            },
+          }}
+          className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between p-4 bg-[#11141D] border border-slate-800/80 rounded-xl hover:border-slate-700/60 transition-all group"
+        >
+          <div className="flex items-center space-x-4 flex-1 min-w-0">
+            <div className="shrink-0">
+              <ProgressRing percent={proj.progress} size={48} strokeWidth={4} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <h4 className="text-sm font-bold text-white group-hover:text-[#38debb] transition-colors truncate">
+                  {proj.name}
+                </h4>
+                <span className="text-[9px] text-slate-500 font-bold">
+                  {proj.code}
+                </span>
+                <span
+                  className={`text-[8px] px-1.5 py-0.2 rounded font-bold border ${
+                    proj.priority === "high"
+                      ? "bg-red-500/10 text-red-400 border-red-500/20"
+                      : proj.priority === "internal"
+                        ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
+                        : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                  }`}
+                >
+                  {proj.priority.toUpperCase()}
+                </span>
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    sprint.health === "healthy"
+                      ? "bg-[#38debb]"
+                      : sprint.health === "at-risk"
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+                  } ${sprint.phase === "active" ? "animate-pulse-teal" : ""}`}
+                />
+              </div>
+              <p className="text-xs text-slate-400 mt-1 truncate">
+                Next:{" "}
+                <span className="font-semibold text-slate-300">
+                  {proj.nextMilestone.title}
+                </span>{" "}
+                • {proj.nextMilestone.dueText}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={onTeamClick}
-              className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-all"
-              title="Project Members"
-            >
-              <Users className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => onEditClick(proj, e)}
-              className="p-2 text-slate-400 hover:text-[#38debb] hover:bg-slate-800 rounded-lg transition-all"
-              title="Edit Project"
-            >
-              <Edit3 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => onDeleteClick(proj, e)}
-              className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
-              title="Delete Project"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+          <div className="flex items-center justify-between sm:justify-end sm:space-x-6 w-full sm:w-auto border-t border-slate-800/40 pt-3 sm:border-0 sm:pt-0 shrink-0">
+            <div className="flex flex-col items-end">
+              <span className="text-xs text-slate-300 font-bold">
+                {sprint.label}{" "}
+                <span className="text-[10px] text-slate-500 capitalize">
+                  ({sprint.phase})
+                </span>
+              </span>
+              <span className="text-[10px] text-slate-500 mt-0.5">
+                {proj.lastActive}
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={onTeamClick}
+                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-all"
+                title="Project Members"
+              >
+                <Users className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => onEditClick(proj, e)}
+                className="p-2 text-slate-400 hover:text-[#38debb] hover:bg-slate-800 rounded-lg transition-all"
+                title="Edit Project"
+              >
+                <Edit3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={(e) => onDeleteClick(proj, e)}
+                className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded-lg transition-all"
+                title="Delete Project"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      );
+    }
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.proj === nextProps.proj &&
+      prevProps.isAccordionOpen === nextProps.isAccordionOpen &&
+      prevProps.viewMode === nextProps.viewMode
     );
-  }
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.proj === nextProps.proj &&
-    prevProps.isAccordionOpen === nextProps.isAccordionOpen &&
-    prevProps.viewMode === nextProps.viewMode
-  );
-});
-
+  },
+);
 
 /* ────────────────────────────────────────────────────────
    4. PROJECTS PAGE MAIN COMPONENT
    ──────────────────────────────────────────────────────── */
 const ProjectsPage = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState("grid"); // 'grid' or 'list'
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
 
   // Standard Mock Projects
   const [projects, setProjects] = useState([]);
@@ -607,177 +720,300 @@ const ProjectsPage = () => {
       try {
         const userStr = localStorage.getItem("user");
         const user = userStr ? JSON.parse(userStr) : null;
-        const emailQuery = user && user.email ? `?email=${encodeURIComponent(user.email)}` : '';
-        const res = await fetch(`http://127.0.0.1:5000/api/projects${emailQuery}`);
+        const emailQuery =
+          user && user.email ? `?email=${encodeURIComponent(user.email)}` : "";
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/projects${emailQuery}`,
+        );
         const data = await res.json();
         if (data.projects) {
           setProjects(data.projects);
         }
       } catch (err) {
-        console.error('Error fetching projects from MongoDB:', err);
+        console.error("Error fetching projects from MongoDB:", err);
       }
     };
     fetchProjects();
   }, []);
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user) return;
+        const emailQuery = user.email
+          ? `?email=${encodeURIComponent(user.email)}`
+          : "";
+        const res = await fetch(
+          `http://127.0.0.1:5000/api/notifications/${user.firebaseUid}${emailQuery}`,
+        );
+        const data = await res.json();
+        if (data.notifications) {
+          setNotifications(data.notifications);
+          setUnreadNotifications(
+            data.notifications.filter((n) => !n.read).length,
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+      }
+    };
+    fetchNotifications();
+  }, []);
+
+  useEffect(() => {
     const onConnect = () => {
-      console.log('Socket.io connected successfully to NexForge server, socket ID:', socket.id);
+      console.log(
+        "Socket.io connected successfully to NexForge server, socket ID:",
+        socket.id,
+      );
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (user) {
+        socket.emit("join-user-room", user.firebaseUid);
+        if (user.email) {
+          socket.emit("join-user-room", user.email.toLowerCase());
+        }
+      }
     };
 
     const onConnectError = (err) => {
-      console.error('Socket.io connection error:', err);
+      console.error("Socket.io connection error:", err);
     };
 
     const onDisconnect = (reason) => {
-      console.warn('Socket.io disconnected:', reason);
+      console.warn("Socket.io disconnected:", reason);
     };
 
     const handleCreated = (newProj) => {
-      console.log('Socket project-created event received:', newProj);
+      console.log("Socket project-created event received:", newProj);
       setProjects((prev) => {
-        if (prev.some((p) => p.id === newProj.id || (p._id && newProj._id && p._id === newProj._id))) return prev;
+        if (
+          prev.some(
+            (p) =>
+              p.id === newProj.id ||
+              (p._id && newProj._id && p._id === newProj._id),
+          )
+        )
+          return prev;
         return [newProj, ...prev];
       });
     };
 
     const handleUpdated = (updatedProj) => {
-      console.log('Socket project-updated event received:', updatedProj);
+      console.log("Socket project-updated event received:", updatedProj);
       setProjects((prev) =>
-        prev.map((p) => (p.id === updatedProj.id || (p._id && updatedProj._id && p._id === updatedProj._id) ? updatedProj : p))
+        prev.map((p) =>
+          p.id === updatedProj.id ||
+          (p._id && updatedProj._id && p._id === updatedProj._id)
+            ? updatedProj
+            : p,
+        ),
       );
     };
 
     const handleDeleted = (deletedId) => {
-      console.log('Socket project-deleted event received for ID:', deletedId);
-      setProjects((prev) => prev.filter((p) => p.id !== deletedId && p._id !== deletedId));
+      console.log("Socket project-deleted event received for ID:", deletedId);
+      setProjects((prev) =>
+        prev.filter((p) => p.id !== deletedId && p._id !== deletedId),
+      );
     };
 
     const handleArchived = (archivedId) => {
-      console.log('Socket project-archived event received for ID:', archivedId);
-      setProjects((prev) => prev.filter((p) => p.id !== archivedId && p._id !== archivedId));
+      console.log("Socket project-archived event received for ID:", archivedId);
+      setProjects((prev) =>
+        prev.filter((p) => p.id !== archivedId && p._id !== archivedId),
+      );
     };
 
     const handleSprintChanged = ({ projectId, sprint }) => {
-      console.log('Socket sprint-changed event received:', projectId, sprint);
+      console.log("Socket sprint-changed event received:", projectId, sprint);
       setProjects((prev) =>
         prev.map((p) => {
           if (p.id === projectId || p._id === projectId) {
             const updatedProject = { ...p, sprint };
-            if (sprint && sprint.phase === 'completed') {
+            if (sprint && sprint.phase === "completed") {
               updatedProject.progress = 100;
-              updatedProject.milestones = p.milestones.map(m => ({ ...m, status: 'completed' }));
+              updatedProject.milestones = p.milestones.map((m) => ({
+                ...m,
+                status: "completed",
+              }));
             }
             return updatedProject;
           }
           return p;
-        })
+        }),
       );
     };
 
-    socket.on('connect', onConnect);
-    socket.on('connect_error', onConnectError);
-    socket.on('disconnect', onDisconnect);
-    socket.on('project-created', handleCreated);
-    socket.on('project-updated', handleUpdated);
-    socket.on('project-deleted', handleDeleted);
-    socket.on('project-archived', handleArchived);
-    socket.on('sprint-changed', handleSprintChanged);
+    const handleNewNotification = (notif) => {
+      console.log("Socket new-notification event received:", notif);
+      setNotifications((prev) => {
+        if (prev.some((n) => n._id === notif._id)) return prev;
+        return [notif, ...prev];
+      });
+    };
+
+    const handleUnreadCount = (count) => {
+      console.log("Socket notification-unread-count event received:", count);
+      setUnreadNotifications(count);
+    };
+
+    socket.on("connect", onConnect);
+    socket.on("connect_error", onConnectError);
+    socket.on("disconnect", onDisconnect);
+    socket.on("project-created", handleCreated);
+    socket.on("project-updated", handleUpdated);
+    socket.on("project-deleted", handleDeleted);
+    socket.on("project-archived", handleArchived);
+    socket.on("sprint-changed", handleSprintChanged);
+    socket.on("new-notification", handleNewNotification);
+    socket.on("notification-unread-count", handleUnreadCount);
 
     if (socket.connected) {
       onConnect();
     }
 
     return () => {
-      socket.off('connect', onConnect);
-      socket.off('connect_error', onConnectError);
-      socket.off('disconnect', onDisconnect);
-      socket.off('project-created', handleCreated);
-      socket.off('project-updated', handleUpdated);
-      socket.off('project-deleted', handleDeleted);
-      socket.off('project-archived', handleArchived);
-      socket.off('sprint-changed', handleSprintChanged);
+      socket.off("connect", onConnect);
+      socket.off("connect_error", onConnectError);
+      socket.off("disconnect", onDisconnect);
+      socket.off("project-created", handleCreated);
+      socket.off("project-updated", handleUpdated);
+      socket.off("project-deleted", handleDeleted);
+      socket.off("project-archived", handleArchived);
+      socket.off("sprint-changed", handleSprintChanged);
+      socket.off("new-notification", handleNewNotification);
+      socket.off("notification-unread-count", handleUnreadCount);
     };
   }, []);
 
   // Live activity timeline data
   const [activities, setActivities] = useState([
     {
-      id: 'act-1',
-      type: 'system',
-      message: 'System automatically synchronized 14 assets for ',
-      highlightProject: 'NeuralNexus',
-      meta: 'Deployment successful • Build #429',
-      time: 'JUST NOW'
+      id: "act-1",
+      type: "system",
+      message: "System automatically synchronized 14 assets for ",
+      highlightProject: "NeuralNexus",
+      meta: "Deployment successful • Build #429",
+      time: "JUST NOW",
     },
     {
-      id: 'act-2',
-      type: 'user',
-      userAvatar: 'MC',
-      userName: 'Marcus Chen',
-      message: ' pushed 4 new style definitions to the ',
-      highlightProject: 'Forge Vault',
-      meta: 'Updated global design tokens for Enterprise clients',
-      time: '2H AGO'
-    }
+      id: "act-2",
+      type: "user",
+      userAvatar: "MC",
+      userName: "Marcus Chen",
+      message: " pushed 4 new style definitions to the ",
+      highlightProject: "Forge Vault",
+      meta: "Updated global design tokens for Enterprise clients",
+      time: "2H AGO",
+    },
   ]);
 
   // UI State management
-  const [openAccordionId, setOpenAccordionId] = useState('prj-1');
+  const [openAccordionId, setOpenAccordionId] = useState("prj-1");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [activeProject, setActiveProject] = useState(null);
   const [showTeamModal, setShowTeamModal] = useState(false);
-  const [newMember, setNewMember] = useState({ name: '', email: '' });
+  const [newMember, setNewMember] = useState({ name: "", email: "" });
 
   // Form states
   const [newProject, setNewProject] = useState({
-    name: '',
-    priority: 'high',
-    sprintStatus: 'Sprint 01',
-    sprintPhase: 'planning',
-    sprintHealth: 'healthy',
+    name: "",
+    priority: "high",
+    sprintStatus: "Sprint 01",
+    sprintPhase: "planning",
+    sprintHealth: "healthy",
     progress: 0,
-    nextMilestoneTitle: '',
-    nextMilestoneStatus: 'UPCOMING',
-    nextMilestoneDue: '',
+    nextMilestoneTitle: "",
+    nextMilestoneStatus: "UPCOMING",
+    nextMilestoneDue: "",
     activePhaseIndex: 0,
-    tasksText: '',
-    membersText: ''
+    tasksText: "",
+    membersText: "",
   });
 
   const [editProjectData, setEditProjectData] = useState(null);
 
   // Notifications State
-  const [unreadNotifications, setUnreadNotifications] = useState(3);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
+  const [notifProjectFilter, setNotifProjectFilter] = useState("all");
 
-  // Trigger local project animations on create/delete
-  const handleToggleAccordion = (id) => {
-    setOpenAccordionId(openAccordionId === id ? null : id);
+  const handleMarkRead = async (notifId) => {
+    try {
+      await fetch(`http://127.0.0.1:5000/api/notifications/${notifId}/read`, {
+        method: "PUT",
+      });
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notifId ? { ...n, read: true } : n)),
+      );
+      setUnreadNotifications((prev) => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error("Error marking read:", err);
+    }
   };
 
-  const handleToggleTaskCompleted = (projId, taskId) => {
+  const handleMarkAllRead = async () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (!user) return;
+      const emailQuery = user.email
+        ? `?email=${encodeURIComponent(user.email)}`
+        : "";
+      await fetch(
+        `http://127.0.0.1:5000/api/notifications/user/${user.firebaseUid}/read${emailQuery}`,
+        { method: "PUT" },
+      );
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadNotifications(0);
+    } catch (err) {
+      console.error("Error marking all read:", err);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      if (!user) return;
+      const emailQuery = user.email
+        ? `?email=${encodeURIComponent(user.email)}`
+        : "";
+      await fetch(
+        `http://127.0.0.1:5000/api/notifications/user/${user.firebaseUid}${emailQuery}`,
+        { method: "DELETE" },
+      );
+      setNotifications([]);
+      setUnreadNotifications(0);
+    } catch (err) {
+      console.error("Error clearing notifications:", err);
+    }
+  };
+
+  const handleAssignTask = (projId, taskId, assigneeInitials) => {
     let updatedProj = null;
-    const updatedProjects = projects.map(proj => {
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    const updatedProjects = projects.map((proj) => {
       if (proj.id === projId) {
-        const updatedTasks = proj.tasks.map(t => {
+        const updatedTasks = proj.tasks.map((t) => {
           if (t.id === taskId) {
-            return { ...t, completed: !t.completed };
+            return { ...t, assignee: assigneeInitials };
           }
           return t;
         });
 
-        // Recalculate progress based on task completion
-        const completedCount = updatedTasks.filter(t => t.completed).length;
-        const totalCount = updatedTasks.length;
-        const computedProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-
         updatedProj = {
           ...proj,
           tasks: updatedTasks,
-          progress: computedProgress
+          lastActive: "Task reassigned",
         };
         return updatedProj;
       }
@@ -788,12 +1024,122 @@ const ProjectsPage = () => {
 
     if (updatedProj) {
       fetch(`http://127.0.0.1:5000/api/projects/${projId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedProj)
-      }).catch(err => console.error('Error updating project task in MongoDB:', err));
+        body: JSON.stringify({
+          ...updatedProj,
+          initiatorEmail: user ? user.email : "",
+        }),
+      }).catch((err) =>
+        console.error("Error assigning project task in MongoDB:", err),
+      );
+    }
+  };
+
+  const handleAddComment = (projId, text) => {
+    let updatedProj = null;
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    if (!user) return;
+
+    const initials = user.name
+      ? user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+      : "ME";
+
+    const updatedProjects = projects.map((proj) => {
+      if (proj.id === projId) {
+        const newComment = {
+          author: user.name || "Anonymous",
+          initials: initials,
+          text: text,
+          createdAt: new Date(),
+        };
+        const updatedComments = [...(proj.comments || []), newComment];
+
+        updatedProj = {
+          ...proj,
+          comments: updatedComments,
+          lastActive: "New comment added",
+        };
+        return updatedProj;
+      }
+      return proj;
+    });
+
+    setProjects(updatedProjects);
+
+    if (updatedProj) {
+      fetch(`http://127.0.0.1:5000/api/projects/${projId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...updatedProj,
+          initiatorEmail: user.email,
+        }),
+      }).catch((err) =>
+        console.error("Error adding project comment in MongoDB:", err),
+      );
+    }
+  };
+
+  // Trigger local project animations on create/delete
+  const handleToggleAccordion = (id) => {
+    setOpenAccordionId(openAccordionId === id ? null : id);
+  };
+
+  const handleToggleTaskCompleted = (projId, taskId) => {
+    let updatedProj = null;
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+
+    const updatedProjects = projects.map((proj) => {
+      if (proj.id === projId) {
+        const updatedTasks = proj.tasks.map((t) => {
+          if (t.id === taskId) {
+            return { ...t, completed: !t.completed };
+          }
+          return t;
+        });
+
+        // Recalculate progress based on task completion
+        const completedCount = updatedTasks.filter((t) => t.completed).length;
+        const totalCount = updatedTasks.length;
+        const computedProgress =
+          totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+        updatedProj = {
+          ...proj,
+          tasks: updatedTasks,
+          progress: computedProgress,
+        };
+        return updatedProj;
+      }
+      return proj;
+    });
+
+    setProjects(updatedProjects);
+
+    if (updatedProj) {
+      fetch(`http://127.0.0.1:5000/api/projects/${projId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...updatedProj,
+          initiatorEmail: user ? user.email : "",
+        }),
+      }).catch((err) =>
+        console.error("Error updating project task in MongoDB:", err),
+      );
     }
   };
 
@@ -802,39 +1148,83 @@ const ProjectsPage = () => {
     e.preventDefault();
     if (!newProject.name.trim()) return;
 
-    const isCompleted = newProject.sprintPhase === 'completed';
+    const isCompleted = newProject.sprintPhase === "completed";
     const milestones = [
-      { name: 'Phase 1: Planning', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 0 ? 'active' : (newProject.activePhaseIndex > 0 ? 'completed' : 'upcoming')), dueDate: 'Due in 10 days', riskStatus: 'on-track' },
-      { name: 'Phase 2: Development', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 1 ? 'active' : (newProject.activePhaseIndex > 1 ? 'completed' : 'upcoming')), dueDate: 'Due in 25 days', riskStatus: 'on-track' },
-      { name: 'Phase 3: QA', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 2 ? 'active' : (newProject.activePhaseIndex > 2 ? 'completed' : 'upcoming')), dueDate: 'Due in 40 days', riskStatus: 'on-track' },
-      { name: 'Release', status: isCompleted ? 'completed' : (newProject.activePhaseIndex === 3 ? 'active' : 'upcoming'), dueDate: 'Due in 55 days', riskStatus: 'on-track' }
+      {
+        name: "Phase 1: Planning",
+        status: isCompleted
+          ? "completed"
+          : newProject.activePhaseIndex === 0
+            ? "active"
+            : newProject.activePhaseIndex > 0
+              ? "completed"
+              : "upcoming",
+        dueDate: "Due in 10 days",
+        riskStatus: "on-track",
+      },
+      {
+        name: "Phase 2: Development",
+        status: isCompleted
+          ? "completed"
+          : newProject.activePhaseIndex === 1
+            ? "active"
+            : newProject.activePhaseIndex > 1
+              ? "completed"
+              : "upcoming",
+        dueDate: "Due in 25 days",
+        riskStatus: "on-track",
+      },
+      {
+        name: "Phase 3: QA",
+        status: isCompleted
+          ? "completed"
+          : newProject.activePhaseIndex === 2
+            ? "active"
+            : newProject.activePhaseIndex > 2
+              ? "completed"
+              : "upcoming",
+        dueDate: "Due in 40 days",
+        riskStatus: "on-track",
+      },
+      {
+        name: "Release",
+        status: isCompleted
+          ? "completed"
+          : newProject.activePhaseIndex === 3
+            ? "active"
+            : "upcoming",
+        dueDate: "Due in 55 days",
+        riskStatus: "on-track",
+      },
     ];
 
-    const tasksList = newProject.tasksText.split('\n')
-      .filter(t => t.trim() !== '')
+    const tasksList = newProject.tasksText
+      .split("\n")
+      .filter((t) => t.trim() !== "")
       .map((t, idx) => ({
         id: `t-new-${Date.now()}-${idx}`,
         title: t.trim(),
-        priority: 'high',
-        completed: false
+        priority: "high",
+        completed: false,
       }));
 
     const prjId = `prj-${Date.now()}`;
-    const initialMembers = newProject.membersText.split(',')
-      .map(m => m.trim().toUpperCase())
-      .filter(m => m !== '');
+    const initialMembers = newProject.membersText
+      .split(",")
+      .map((m) => m.trim().toUpperCase())
+      .filter((m) => m !== "");
 
     const namesMap = {
-      'JD': 'John Doe',
-      'MC': 'Marcus Chen',
-      'SR': 'Sarah Rogers',
-      'SO': 'Sophia Ortega',
-      'AR': 'Alex Rivest',
+      JD: "John Doe",
+      MC: "Marcus Chen",
+      SR: "Sarah Rogers",
+      SO: "Sophia Ortega",
+      AR: "Alex Rivest",
     };
 
-    const teamList = initialMembers.map(initial => {
+    const teamList = initialMembers.map((initial) => {
       const name = namesMap[initial] || `Member ${initial}`;
-      const email = `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`;
+      const email = `${name.toLowerCase().replace(/\s+/g, ".")}@example.com`;
       return { name, email, initials: initial };
     });
 
@@ -842,12 +1232,22 @@ const ProjectsPage = () => {
     const user = userStr ? JSON.parse(userStr) : null;
     if (user && user.email) {
       const userEmailLower = user.email.toLowerCase();
-      if (!teamList.some(member => member.email.toLowerCase() === userEmailLower)) {
-        const initials = user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'ME';
+      if (
+        !teamList.some(
+          (member) => member.email.toLowerCase() === userEmailLower,
+        )
+      ) {
+        const initials = user.name
+          ? user.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
+          : "ME";
         teamList.push({
-          name: user.name || 'Project Creator',
+          name: user.name || "Project Creator",
           email: user.email,
-          initials: initials
+          initials: initials,
         });
         if (!initialMembers.includes(initials)) {
           initialMembers.push(initials);
@@ -865,60 +1265,64 @@ const ProjectsPage = () => {
       sprint: {
         label: newProject.sprintStatus,
         phase: newProject.sprintPhase,
-        health: newProject.sprintHealth
+        health: newProject.sprintHealth,
       },
-      progress: newProject.sprintPhase === 'completed' ? 100 : (parseInt(newProject.progress) || 0),
+      progress:
+        newProject.sprintPhase === "completed"
+          ? 100
+          : parseInt(newProject.progress) || 0,
       nextMilestone: {
-        title: newProject.nextMilestoneTitle || 'Kickoff Workshop',
+        title: newProject.nextMilestoneTitle || "Kickoff Workshop",
         statusText: newProject.nextMilestoneStatus,
-        dueText: newProject.nextMilestoneDue || 'Due in 5 days'
+        dueText: newProject.nextMilestoneDue || "Due in 5 days",
       },
       milestones,
       tasks: tasksList,
       members: initialMembers,
       memberCount: initialMembers.length,
       team: teamList,
-      lastActive: 'Just now'
+      createdByEmail: user && user.email ? user.email : "",
+      lastActive: "Just now",
     };
 
     setProjects([formattedProject, ...projects]);
 
-    fetch('http://127.0.0.1:5000/api/projects', {
-      method: 'POST',
+    fetch("http://127.0.0.1:5000/api/projects", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(formattedProject)
+      body: JSON.stringify(formattedProject),
     })
-      .then(res => res.json())
-      .then(data => console.log('Saved new project in MongoDB:', data))
-      .catch(err => console.error('Error saving project to MongoDB:', err));
+      .then((res) => res.json())
+      .then((data) => console.log("Saved new project in MongoDB:", data))
+      .catch((err) => console.error("Error saving project to MongoDB:", err));
 
     // Add activity log
     const newAct = {
       id: `act-new-${Date.now()}`,
-      type: 'system',
+      type: "system",
       message: `Project ${formattedProject.name} was created by team administrator. `,
       highlightProject: formattedProject.code,
-      meta: 'Database record initialized successfully',
-      time: 'JUST NOW'
+      meta: "Database record initialized successfully",
+      time: "JUST NOW",
     };
     setActivities([newAct, ...activities]);
 
     // Reset create fields
     setNewProject({
-      name: '',
-      priority: 'high',
-      sprintStatus: 'Sprint 01',
-      sprintPhase: 'planning',
-      sprintHealth: 'healthy',
+      name: "",
+      priority: "high",
+      sprintStatus: "Sprint 01",
+      sprintPhase: "planning",
+      sprintHealth: "healthy",
       progress: 0,
-      nextMilestoneTitle: '',
-      nextMilestoneStatus: 'UPCOMING',
-      nextMilestoneDue: '',
+      nextMilestoneTitle: "",
+      nextMilestoneStatus: "UPCOMING",
+      nextMilestoneDue: "",
       activePhaseIndex: 0,
-      tasksText: '',
-      membersText: ''
+      tasksText: "",
+      membersText: "",
     });
     setShowCreateModal(false);
   };
@@ -930,21 +1334,47 @@ const ProjectsPage = () => {
       nextMilestoneTitle: proj.nextMilestone.title,
       nextMilestoneStatus: proj.nextMilestone.statusText,
       nextMilestoneDue: proj.nextMilestone.dueText,
-      tasksText: proj.tasks.map(t => t.title).join('\n'),
-      activePhaseIndex: proj.milestones.findIndex(m => m.status === 'active') === -1 ? 0 : proj.milestones.findIndex(m => m.status === 'active'),
-      sprintPhase: proj.sprint ? proj.sprint.phase : 'planning',
-      sprintHealth: proj.sprint ? proj.sprint.health : 'healthy',
-      milestones: proj.milestones && proj.milestones.length > 0 ? proj.milestones.map(m => ({
-        name: m.name,
-        status: m.status || 'upcoming',
-        dueDate: m.dueDate || '',
-        riskStatus: m.riskStatus || 'on-track'
-      })) : [
-        { name: 'Phase 1: Planning', status: 'active', dueDate: 'Due in 10 days', riskStatus: 'on-track' },
-        { name: 'Phase 2: Development', status: 'upcoming', dueDate: 'Due in 25 days', riskStatus: 'on-track' },
-        { name: 'Phase 3: QA', status: 'upcoming', dueDate: 'Due in 40 days', riskStatus: 'on-track' },
-        { name: 'Release', status: 'upcoming', dueDate: 'Due in 50 days', riskStatus: 'on-track' }
-      ]
+      tasksText: proj.tasks.map((t) => t.title).join("\n"),
+      activePhaseIndex:
+        proj.milestones.findIndex((m) => m.status === "active") === -1
+          ? 0
+          : proj.milestones.findIndex((m) => m.status === "active"),
+      sprintPhase: proj.sprint ? proj.sprint.phase : "planning",
+      sprintHealth: proj.sprint ? proj.sprint.health : "healthy",
+      milestones:
+        proj.milestones && proj.milestones.length > 0
+          ? proj.milestones.map((m) => ({
+              name: m.name,
+              status: m.status || "upcoming",
+              dueDate: m.dueDate || "",
+              riskStatus: m.riskStatus || "on-track",
+            }))
+          : [
+              {
+                name: "Phase 1: Planning",
+                status: "active",
+                dueDate: "Due in 10 days",
+                riskStatus: "on-track",
+              },
+              {
+                name: "Phase 2: Development",
+                status: "upcoming",
+                dueDate: "Due in 25 days",
+                riskStatus: "on-track",
+              },
+              {
+                name: "Phase 3: QA",
+                status: "upcoming",
+                dueDate: "Due in 40 days",
+                riskStatus: "on-track",
+              },
+              {
+                name: "Release",
+                status: "upcoming",
+                dueDate: "Due in 50 days",
+                riskStatus: "on-track",
+              },
+            ],
     });
     setShowEditModal(true);
   };
@@ -953,35 +1383,39 @@ const ProjectsPage = () => {
     e.preventDefault();
     if (!editProjectData.name.trim()) return;
 
-    const isCompleted = editProjectData.sprintPhase === 'completed';
-    const milestones = (editProjectData.milestones || []).map(m => {
+    const isCompleted = editProjectData.sprintPhase === "completed";
+    const milestones = (editProjectData.milestones || []).map((m) => {
       let status = m.status;
       if (isCompleted) {
-        status = 'completed';
+        status = "completed";
       }
       return {
         name: m.name,
-        dueDate: m.dueDate || '',
+        dueDate: m.dueDate || "",
         status: status,
-        riskStatus: m.riskStatus || 'on-track'
+        riskStatus: m.riskStatus || "on-track",
       };
     });
 
     const currentTasks = editProjectData.tasks;
-    const lines = editProjectData.tasksText.split('\n').filter(t => t.trim() !== '');
+    const lines = editProjectData.tasksText
+      .split("\n")
+      .filter((t) => t.trim() !== "");
 
     // Map new tasks while retaining completed states if names match
     const updatedTasks = lines.map((line, idx) => {
-      const match = currentTasks.find(t => t.title.toLowerCase() === line.trim().toLowerCase());
+      const match = currentTasks.find(
+        (t) => t.title.toLowerCase() === line.trim().toLowerCase(),
+      );
       return {
         id: match ? match.id : `t-edit-${Date.now()}-${idx}`,
         title: line.trim(),
-        priority: match ? match.priority : 'high',
-        completed: match ? match.completed : false
+        priority: match ? match.priority : "high",
+        completed: match ? match.completed : false,
       };
     });
 
-    const updatedProjects = projects.map(proj => {
+    const updatedProjects = projects.map((proj) => {
       if (proj.id === editProjectData.id) {
         return {
           ...proj,
@@ -992,17 +1426,20 @@ const ProjectsPage = () => {
           sprint: {
             label: editProjectData.sprintStatus,
             phase: editProjectData.sprintPhase,
-            health: editProjectData.sprintHealth
+            health: editProjectData.sprintHealth,
           },
-          progress: editProjectData.sprintPhase === 'completed' ? 100 : (parseInt(editProjectData.progress) || 0),
+          progress:
+            editProjectData.sprintPhase === "completed"
+              ? 100
+              : parseInt(editProjectData.progress) || 0,
           nextMilestone: {
             title: editProjectData.nextMilestoneTitle,
             statusText: editProjectData.nextMilestoneStatus,
-            dueText: editProjectData.nextMilestoneDue
+            dueText: editProjectData.nextMilestoneDue,
           },
           milestones,
           tasks: updatedTasks,
-          lastActive: 'Just modified'
+          lastActive: "Just modified",
         };
       }
       return proj;
@@ -1011,30 +1448,34 @@ const ProjectsPage = () => {
     setProjects(updatedProjects);
     setShowEditModal(false);
 
-    const updatedProj = updatedProjects.find(p => p.id === editProjectData.id);
+    const updatedProj = updatedProjects.find(
+      (p) => p.id === editProjectData.id,
+    );
     if (updatedProj) {
       fetch(`http://127.0.0.1:5000/api/projects/${editProjectData.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedProj)
+        body: JSON.stringify(updatedProj),
       })
-        .then(res => res.json())
-        .then(data => console.log('Updated project in MongoDB:', data))
-        .catch(err => console.error('Error updating project in MongoDB:', err));
+        .then((res) => res.json())
+        .then((data) => console.log("Updated project in MongoDB:", data))
+        .catch((err) =>
+          console.error("Error updating project in MongoDB:", err),
+        );
     }
 
     // Add activity log
     const editAct = {
       id: `act-edit-${Date.now()}`,
-      type: 'user',
-      userAvatar: 'AR',
-      userName: 'Alex Rivest',
-      message: ' updated details and roadmap milestones for ',
+      type: "user",
+      userAvatar: "AR",
+      userName: "Alex Rivest",
+      message: " updated details and roadmap milestones for ",
       highlightProject: editProjectData.name,
-      meta: 'Project settings and sprints updated',
-      time: 'JUST NOW'
+      meta: "Project settings and sprints updated",
+      time: "JUST NOW",
     };
     setActivities([editAct, ...activities]);
   };
@@ -1048,24 +1489,33 @@ const ProjectsPage = () => {
   const handleConfirmDelete = () => {
     if (!activeProject) return;
 
-    fetch(`http://127.0.0.1:5000/api/projects/${activeProject.id}`, {
-      method: 'DELETE'
-    })
-      .then(res => res.json())
-      .then(data => console.log('Deleted project from MongoDB:', data))
-      .catch(err => console.error('Error deleting project from MongoDB:', err));
+    const userStr = localStorage.getItem("user");
+    const user = userStr ? JSON.parse(userStr) : null;
+    const initiatorEmail = user ? user.email : "";
 
-    setProjects(projects.filter(p => p.id !== activeProject.id));
+    fetch(
+      `http://127.0.0.1:5000/api/projects/${activeProject.id}?initiatorEmail=${encodeURIComponent(initiatorEmail)}`,
+      {
+        method: "DELETE",
+      },
+    )
+      .then((res) => res.json())
+      .then((data) => console.log("Deleted project from MongoDB:", data))
+      .catch((err) =>
+        console.error("Error deleting project from MongoDB:", err),
+      );
+
+    setProjects(projects.filter((p) => p.id !== activeProject.id));
     setShowDeleteModal(false);
 
     // Add activity log
     const delAct = {
       id: `act-del-${Date.now()}`,
-      type: 'system',
+      type: "system",
       message: `Project ${activeProject.name} was marked deleted and archived. `,
       highlightProject: activeProject.code,
-      meta: 'Resource files cleaned and stored in archive storage',
-      time: 'JUST NOW'
+      meta: "Resource files cleaned and stored in archive storage",
+      time: "JUST NOW",
     };
     setActivities([delAct, ...activities]);
     setActiveProject(null);
@@ -1076,116 +1526,135 @@ const ProjectsPage = () => {
     if (!newMember.name.trim() || !newMember.email.trim()) return;
 
     const nameParts = newMember.name.trim().split(/\s+/);
-    let initials = '';
+    let initials = "";
     if (nameParts.length > 1) {
-      initials = (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+      initials = (
+        nameParts[0][0] + nameParts[nameParts.length - 1][0]
+      ).toUpperCase();
     } else {
       initials = nameParts[0].slice(0, 2).toUpperCase();
     }
 
-    const updatedProjects = projects.map(proj => {
+    const updatedProjects = projects.map((proj) => {
       if (proj.id === activeProject.id) {
-        const updatedTeam = [...(proj.team || []), {
-          name: newMember.name.trim(),
-          email: newMember.email.trim(),
-          initials
-        }];
+        const updatedTeam = [
+          ...(proj.team || []),
+          {
+            name: newMember.name.trim(),
+            email: newMember.email.trim(),
+            initials,
+          },
+        ];
         const updatedMembers = [...proj.members, initials];
         return {
           ...proj,
           team: updatedTeam,
           members: updatedMembers,
-          memberCount: updatedMembers.length
+          memberCount: updatedMembers.length,
         };
       }
       return proj;
     });
 
     setProjects(updatedProjects);
-    
-    const updatedActiveProj = updatedProjects.find(p => p.id === activeProject.id);
+
+    const updatedActiveProj = updatedProjects.find(
+      (p) => p.id === activeProject.id,
+    );
     setActiveProject(updatedActiveProj);
 
     if (updatedActiveProj) {
       fetch(`http://127.0.0.1:5000/api/projects/${activeProject.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedActiveProj)
+        body: JSON.stringify(updatedActiveProj),
       })
-        .then(res => res.json())
-        .then(data => console.log('Added team member in MongoDB:', data))
-        .catch(err => console.error('Error adding team member in MongoDB:', err));
+        .then((res) => res.json())
+        .then((data) => console.log("Added team member in MongoDB:", data))
+        .catch((err) =>
+          console.error("Error adding team member in MongoDB:", err),
+        );
     }
 
     const memberAct = {
       id: `act-member-${Date.now()}`,
-      type: 'user',
-      userAvatar: 'AR',
-      userName: 'Alex Rivest',
+      type: "user",
+      userAvatar: "AR",
+      userName: "Alex Rivest",
       message: ` added ${newMember.name.trim()} to `,
       highlightProject: activeProject.name,
       meta: `New member registered with email: ${newMember.email.trim()}`,
-      time: 'JUST NOW'
+      time: "JUST NOW",
     };
     setActivities([memberAct, ...activities]);
 
-    setNewMember({ name: '', email: '' });
+    setNewMember({ name: "", email: "" });
   };
 
   const handleRemoveMember = (memberEmail) => {
-    const updatedProjects = projects.map(proj => {
+    const updatedProjects = projects.map((proj) => {
       if (proj.id === activeProject.id) {
-        const updatedTeam = (proj.team || []).filter(m => m.email !== memberEmail);
-        const updatedMembers = updatedTeam.map(m => m.initials);
+        const updatedTeam = (proj.team || []).filter(
+          (m) => m.email !== memberEmail,
+        );
+        const updatedMembers = updatedTeam.map((m) => m.initials);
         return {
           ...proj,
           team: updatedTeam,
           members: updatedMembers,
-          memberCount: updatedMembers.length
+          memberCount: updatedMembers.length,
         };
       }
       return proj;
     });
 
     setProjects(updatedProjects);
-    
-    const updatedActiveProj = updatedProjects.find(p => p.id === activeProject.id);
+
+    const updatedActiveProj = updatedProjects.find(
+      (p) => p.id === activeProject.id,
+    );
     setActiveProject(updatedActiveProj);
 
     if (updatedActiveProj) {
       fetch(`http://127.0.0.1:5000/api/projects/${activeProject.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedActiveProj)
+        body: JSON.stringify(updatedActiveProj),
       })
-        .then(res => res.json())
-        .then(data => console.log('Removed team member from MongoDB:', data))
-        .catch(err => console.error('Error removing team member from MongoDB:', err));
+        .then((res) => res.json())
+        .then((data) => console.log("Removed team member from MongoDB:", data))
+        .catch((err) =>
+          console.error("Error removing team member from MongoDB:", err),
+        );
     }
 
     const removeAct = {
       id: `act-member-remove-${Date.now()}`,
-      type: 'system',
+      type: "system",
       message: `Removed a member from project `,
       highlightProject: activeProject.name,
       meta: `Member email: ${memberEmail}`,
-      time: 'JUST NOW'
+      time: "JUST NOW",
     };
     setActivities([removeAct, ...activities]);
   };
 
   // Filter projects based on query and user membership
-  const filteredProjects = projects.filter(proj => {
+  const filteredProjects = projects.filter((proj) => {
     const userStr = localStorage.getItem("user");
     const user = userStr ? JSON.parse(userStr) : null;
-    const userEmail = user && user.email ? user.email.toLowerCase() : '';
-    
+    const userEmail = user && user.email ? user.email.toLowerCase() : "";
+
     // Check if user is a member of the project team
-    const isMember = proj.team && proj.team.some(member => member.email && member.email.toLowerCase() === userEmail);
+    const isMember =
+      proj.team &&
+      proj.team.some(
+        (member) => member.email && member.email.toLowerCase() === userEmail,
+      );
     if (!isMember) return false;
 
     return (
@@ -1193,6 +1662,11 @@ const ProjectsPage = () => {
       proj.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       proj.sprintStatus.toLowerCase().includes(searchQuery.toLowerCase())
     );
+  });
+
+  const filteredNotifs = notifications.filter((n) => {
+    if (notifProjectFilter === "all") return true;
+    return n.projectId === notifProjectFilter;
   });
 
   return (
@@ -1300,31 +1774,52 @@ const ProjectsPage = () => {
       <div className="absolute bottom-[10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none" />
 
       <div className="dash-layout">
-        {isSidebarOpen && <div className="dash-sidebar-overlay" onClick={() => setIsSidebarOpen(false)} />}
+        {isSidebarOpen && (
+          <div
+            className="dash-sidebar-overlay"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
 
         {/* ── SIDEBAR ── */}
-        <aside className={`dash-sidebar ${isSidebarOpen ? 'dash-sidebar-open' : ''}`}>
+        <aside
+          className={`dash-sidebar ${isSidebarOpen ? "dash-sidebar-open" : ""}`}
+        >
           <div className="dash-sidebar-header">
             <div className="dash-logo">
-              <img src={nexforgeLogo} alt="NexForge" className="dash-logo-img" />
+              <img
+                src={nexforgeLogo}
+                alt="NexForge"
+                className="dash-logo-img"
+              />
               <h1 className="neon-text-teal">NexForge</h1>
             </div>
-            <button className="dash-sidebar-close" onClick={() => setIsSidebarOpen(false)}>✕</button>
+            <button
+              className="dash-sidebar-close"
+              onClick={() => setIsSidebarOpen(false)}
+            >
+              ✕
+            </button>
           </div>
 
           <nav className="dash-nav">
             {[
-              { icon: '🧭', label: 'Dashboard', path: '/dashboard/student' },
-              { icon: '🚀', label: 'My Projects', active: true, path: '/dashboard/projects' },
-              { icon: '🌐', label: 'Team Activity', path: '#/' },
-              { icon: '⚡', label: 'Recommendations', path: '#/' },
-              { icon: '🎓', label: 'Skills', path: '#/' },
-              { icon: '💻', label: 'Internship Prep', path: '#/' },
+              { icon: "🧭", label: "Dashboard", path: "/dashboard/student" },
+              {
+                icon: "🚀",
+                label: "My Projects",
+                active: true,
+                path: "/dashboard/projects",
+              },
+              { icon: "🌐", label: "Team Activity", path: "#/" },
+              { icon: "⚡", label: "Recommendations", path: "#/" },
+              { icon: "🎓", label: "Skills", path: "#/" },
+              { icon: "💻", label: "Internship Prep", path: "#/" },
             ].map((item, i) => (
               <Link
                 key={item.label}
                 to={item.path}
-                className={`dash-nav-item ${item.active ? 'dash-nav-active' : ''}`}
+                className={`dash-nav-item ${item.active ? "dash-nav-active" : ""}`}
                 style={{ animationDelay: `${i * 0.05}s` }}
                 onClick={() => setIsSidebarOpen(false)}
               >
@@ -1348,7 +1843,6 @@ const ProjectsPage = () => {
 
         {/* ── MAIN CONTENT AREA ── */}
         <main className="dash-main flex-1 flex flex-col p-4 sm:p-6 md:p-8 overflow-y-auto max-w-[1280px] mx-auto w-full">
-
           {/* TOP BAR */}
           <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pb-6 border-b border-[#1E293B]/60 mb-8">
             <div className="flex items-center justify-between md:justify-start md:space-x-6 w-full md:w-auto">
@@ -1359,26 +1853,30 @@ const ProjectsPage = () => {
                 >
                   ☰
                 </button>
-                <h2 className="text-xl font-bold font-display text-white tracking-wide">Projects</h2>
+                <h2 className="text-xl font-bold font-display text-white tracking-wide">
+                  Projects
+                </h2>
               </div>
 
               {/* Grid / List toggle */}
               <div className="bg-[#11141D]/90 border border-[#1E293B]/60 p-1 rounded-xl flex items-center space-x-1 select-none">
                 <button
-                  onClick={() => setViewMode('grid')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'grid'
-                    ? 'bg-[#1E293B] text-[#38debb]'
-                    : 'text-slate-400 hover:text-slate-200'
-                    }`}
+                  onClick={() => setViewMode("grid")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === "grid"
+                      ? "bg-[#1E293B] text-[#38debb]"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
                 >
                   Grid
                 </button>
                 <button
-                  onClick={() => setViewMode('list')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === 'list'
-                    ? 'bg-[#1E293B] text-[#38debb]'
-                    : 'text-slate-400 hover:text-slate-200'
-                    }`}
+                  onClick={() => setViewMode("list")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === "list"
+                      ? "bg-[#1E293B] text-[#38debb]"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
                 >
                   List
                 </button>
@@ -1401,39 +1899,116 @@ const ProjectsPage = () => {
               {/* Notification bell dropdown toggle */}
               <div className="relative">
                 <button
+                  type="button"
                   onClick={() => {
                     setShowNotifDropdown(!showNotifDropdown);
-                    setUnreadNotifications(0);
                   }}
-                  className="relative p-2 rounded-xl bg-[#11141D]/80 border border-[#1E293B]/60 text-slate-400 hover:text-[#38debb] hover:border-[#38debb]/30 transition-all"
+                  className="relative p-2 rounded-xl bg-[#11141D]/80 border border-[#1E293B]/60 text-slate-400 hover:text-[#38debb] hover:border-[#38debb]/30 transition-all font-display"
                 >
                   <Bell className="w-4 h-4" />
                   {unreadNotifications > 0 && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border border-[#11141D] animate-pulse-red" />
+                    <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-red-500 border border-[#11141D] text-white flex items-center justify-center min-w-[16px] min-h-[16px] animate-pulse-red">
+                      {unreadNotifications}
+                    </span>
                   )}
                 </button>
 
                 {showNotifDropdown && (
-                  <div className="absolute right-0 mt-3 w-80 bg-[#11141D] border border-slate-800 rounded-2xl p-4 shadow-2xl z-30">
+                  <div className="absolute right-0 mt-3 w-80 bg-[#11141D] border border-slate-800 rounded-2xl p-4 shadow-2xl z-30 font-sans">
                     <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-2">
-                      <span className="text-xs font-bold text-slate-200">Recent Notifications</span>
-                      <button className="text-[10px] text-[#38debb] hover:underline" onClick={() => setUnreadNotifications(0)}>Clear</button>
+                      <span className="text-xs font-bold text-slate-200">
+                        Recent Notifications
+                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          type="button"
+                          className="text-[10px] text-[#38debb] hover:underline"
+                          onClick={handleMarkAllRead}
+                        >
+                          Read All
+                        </button>
+                        <span className="text-slate-700 text-[10px]">•</span>
+                        <button
+                          type="button"
+                          className="text-[10px] text-red-400 hover:underline"
+                          onClick={handleClearAll}
+                        >
+                          Clear All
+                        </button>
+                      </div>
                     </div>
-                    <div className="space-y-3 max-h-60 overflow-y-auto">
-                      <div className="text-xs p-2 bg-[#181F2E]/40 border border-slate-800/80 rounded-lg">
-                        <span className="text-[#38debb] font-semibold">Alex</span> updated milestones for Quantum CRM Shell.
-                        <span className="block text-[10px] text-slate-500 mt-1">Just now</span>
-                      </div>
-                      <div className="text-xs p-2 bg-[#181F2E]/40 border border-slate-800/80 rounded-lg">
-                        <span className="text-[#38debb] font-semibold">System</span> built successfully #429 for NeuralNexus.
-                        <span className="block text-[10px] text-slate-500 mt-1">5m ago</span>
-                      </div>
+
+                    {/* Project Filter */}
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/60">
+                      <span className="text-[10px] font-bold text-slate-400">
+                        Filter by Project
+                      </span>
+                      <select
+                        value={notifProjectFilter}
+                        onChange={(e) => setNotifProjectFilter(e.target.value)}
+                        className="bg-slate-900 border border-slate-850 rounded px-1.5 py-0.5 text-[10px] text-slate-300 focus:outline-none max-w-[150px]"
+                      >
+                        <option value="all">All Projects</option>
+                        {projects.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
+                      {filteredNotifs.length === 0 ? (
+                        <div className="text-xs text-slate-500 text-center py-4">
+                          No notifications found.
+                        </div>
+                      ) : (
+                        filteredNotifs.map((notif) => (
+                          <div
+                            key={notif._id}
+                            className={`text-xs p-2 border rounded-lg transition-all flex flex-col gap-1.5 ${
+                              notif.read
+                                ? "bg-[#181F2E]/20 border-slate-800/40 text-slate-400"
+                                : "bg-[#181F2E]/50 border-[#38debb]/20 text-slate-200"
+                            }`}
+                          >
+                            <div className="flex justify-between items-start gap-2">
+                              <span className="font-medium pr-6 leading-snug">
+                                {notif.message}
+                              </span>
+                              <div className="flex items-center space-x-1.5 shrink-0">
+                                {!notif.read && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarkRead(notif._id)}
+                                    className="p-0.5 hover:bg-slate-800 text-[#38debb] rounded transition-colors"
+                                    title="Mark as read"
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center text-[9px] text-slate-500 mt-0.5">
+                              <span>
+                                {new Date(notif.createdAt).toLocaleTimeString(
+                                  [],
+                                  { hour: "2-digit", minute: "2-digit" },
+                                )}
+                              </span>
+                              {notif.projectCode && (
+                                <span className="px-1.5 py-0.5 bg-slate-900 border border-slate-855 text-[8px] font-bold text-slate-400 rounded uppercase">
+                                  {notif.projectCode}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
               </div>
-
-
             </div>
           </header>
 
@@ -1477,13 +2052,17 @@ const ProjectsPage = () => {
               show: {
                 opacity: 1,
                 transition: {
-                  staggerChildren: 0.15
-                }
-              }
+                  staggerChildren: 0.15,
+                },
+              },
             }}
             initial="hidden"
             animate="show"
-            className={viewMode === 'grid' ? "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12" : "space-y-4 mb-12"}
+            className={
+              viewMode === "grid"
+                ? "grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12"
+                : "space-y-4 mb-12"
+            }
           >
             {filteredProjects.map((proj) => (
               <ProjectCard
@@ -1491,7 +2070,9 @@ const ProjectsPage = () => {
                 proj={proj}
                 isAccordionOpen={openAccordionId === proj.id}
                 onToggleAccordion={() => handleToggleAccordion(proj.id)}
-                onToggleTask={(taskId) => handleToggleTaskCompleted(proj.id, taskId)}
+                onToggleTask={(taskId) =>
+                  handleToggleTaskCompleted(proj.id, taskId)
+                }
                 onEditClick={handleEditClick}
                 onDeleteClick={handleDeleteClick}
                 onTeamClick={() => {
@@ -1499,13 +2080,18 @@ const ProjectsPage = () => {
                   setShowTeamModal(true);
                 }}
                 viewMode={viewMode}
+                user={user}
+                onAssignTask={handleAssignTask}
+                onAddComment={handleAddComment}
               />
             ))}
 
             {filteredProjects.length === 0 && (
               <div className="col-span-full border border-dashed border-slate-800/80 rounded-2xl p-12 text-center bg-[#11141D]/30">
                 <Layers className="w-12 h-12 text-slate-700 mx-auto mb-4" />
-                <p className="text-slate-400 font-medium">No active projects found matching "{searchQuery}"</p>
+                <p className="text-slate-400 font-medium">
+                  No active projects found matching "{searchQuery}"
+                </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="text-[#38debb] text-xs font-bold hover:underline mt-2 inline-block"
@@ -1535,9 +2121,9 @@ const ProjectsPage = () => {
                 hidden: {},
                 show: {
                   transition: {
-                    staggerChildren: 0.15
-                  }
-                }
+                    staggerChildren: 0.15,
+                  },
+                },
               }}
               initial="hidden"
               animate="show"
@@ -1556,15 +2142,15 @@ const ProjectsPage = () => {
                       transition: {
                         type: "spring",
                         stiffness: 85,
-                        damping: 14
-                      }
-                    }
+                        damping: 14,
+                      },
+                    },
                   }}
                   className="relative group"
                 >
                   {/* Timeline icon node */}
                   <div className="absolute left-[-32px] top-4 w-7 h-7 rounded-full bg-[#11141D] border border-slate-800 flex items-center justify-center z-10 text-xs">
-                    {act.type === 'system' ? (
+                    {act.type === "system" ? (
                       <Cloud className="w-3.5 h-3.5 text-[#38debb]" />
                     ) : (
                       <User className="w-3.5 h-3.5 text-[#00b0ff]" />
@@ -1574,23 +2160,34 @@ const ProjectsPage = () => {
                   {/* Activity box */}
                   <div className="bg-[#11141D]/60 border border-slate-800/80 hover:border-slate-700/60 p-4 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-[#1E293B]/20 transition-all">
                     <div className="text-xs text-slate-300 leading-relaxed min-w-0 flex-1">
-                      {act.type === 'user' && (
+                      {act.type === "user" && (
                         <span className="inline-flex items-center mr-2">
-                          <span className="w-5 h-5 rounded-full bg-slate-800 text-[8px] font-bold text-[#38debb] border border-slate-700 flex items-center justify-center mr-1.5 uppercase">{act.userAvatar}</span>
-                          <strong className="text-white font-bold">{act.userName}</strong>
+                          <span className="w-5 h-5 rounded-full bg-slate-800 text-[8px] font-bold text-[#38debb] border border-slate-700 flex items-center justify-center mr-1.5 uppercase">
+                            {act.userAvatar}
+                          </span>
+                          <strong className="text-white font-bold">
+                            {act.userName}
+                          </strong>
                         </span>
                       )}
-                      {act.type === 'system' && (
-                        <strong className="text-[#38debb] mr-1.5">System</strong>
+                      {act.type === "system" && (
+                        <strong className="text-[#38debb] mr-1.5">
+                          System
+                        </strong>
                       )}
                       <span>{act.message}</span>
-                      <strong className="text-[#38debb]">{act.highlightProject}</strong>.
-                      <span className="block text-[10px] text-slate-500 mt-1 font-medium">{act.meta}</span>
+                      <strong className="text-[#38debb]">
+                        {act.highlightProject}
+                      </strong>
+                      .
+                      <span className="block text-[10px] text-slate-500 mt-1 font-medium">
+                        {act.meta}
+                      </span>
                     </div>
 
                     <div className="shrink-0 flex items-center space-x-2">
                       {/* Micro pulse dot for live items */}
-                      {act.time === 'JUST NOW' && (
+                      {act.time === "JUST NOW" && (
                         <span className="w-1.5 h-1.5 rounded-full bg-[#38debb] animate-pulse-teal" />
                       )}
                       <span className="text-[9px] font-semibold text-slate-500 bg-slate-800/40 border border-slate-800/80 px-2 py-0.5 rounded font-display tracking-wide uppercase">
@@ -1629,7 +2226,9 @@ const ProjectsPage = () => {
               className="relative w-full max-w-lg max-h-[90vh] flex flex-col border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between p-6 pb-3 border-b border-slate-800">
-                <h3 className="text-lg font-bold font-display text-white">Create New Project</h3>
+                <h3 className="text-lg font-bold font-display text-white">
+                  Create New Project
+                </h3>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
@@ -1638,15 +2237,22 @@ const ProjectsPage = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleCreateProject} className="flex flex-col flex-1 overflow-hidden">
+              <form
+                onSubmit={handleCreateProject}
+                className="flex flex-col flex-1 overflow-hidden"
+              >
                 <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4 pr-3 min-h-0 scrollbar-thin">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project Name</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Project Name
+                    </label>
                     <input
                       type="text"
                       required
                       value={newProject.name}
-                      onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                      onChange={(e) =>
+                        setNewProject({ ...newProject, name: e.target.value })
+                      }
                       placeholder="e.g. Hyperion Storage Layer"
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
@@ -1654,10 +2260,17 @@ const ProjectsPage = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Priority</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Priority
+                      </label>
                       <select
                         value={newProject.priority}
-                        onChange={(e) => setNewProject({ ...newProject, priority: e.target.value })}
+                        onChange={(e) =>
+                          setNewProject({
+                            ...newProject,
+                            priority: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
                         <option value="high">High Priority</option>
@@ -1667,13 +2280,20 @@ const ProjectsPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Milestone Progress (%)</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Milestone Progress (%)
+                      </label>
                       <input
                         type="number"
                         min="0"
                         max="100"
                         value={newProject.progress}
-                        onChange={(e) => setNewProject({ ...newProject, progress: e.target.value })}
+                        onChange={(e) =>
+                          setNewProject({
+                            ...newProject,
+                            progress: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       />
                     </div>
@@ -1681,23 +2301,32 @@ const ProjectsPage = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Sprint Label
+                      </label>
                       <input
                         type="text"
                         value={newProject.sprintStatus}
-                        onChange={(e) => setNewProject({ ...newProject, sprintStatus: e.target.value })}
+                        onChange={(e) =>
+                          setNewProject({
+                            ...newProject,
+                            sprintStatus: e.target.value,
+                          })
+                        }
                         placeholder="e.g. Sprint 01"
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Sprint Phase
+                      </label>
                       <select
                         value={newProject.sprintPhase}
                         onChange={(e) => {
                           const val = e.target.value;
                           const updates = { sprintPhase: val };
-                          if (val === 'completed') {
+                          if (val === "completed") {
                             updates.progress = 100;
                             updates.activePhaseIndex = 3;
                           }
@@ -1712,10 +2341,17 @@ const ProjectsPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Sprint Health
+                      </label>
                       <select
                         value={newProject.sprintHealth}
-                        onChange={(e) => setNewProject({ ...newProject, sprintHealth: e.target.value })}
+                        onChange={(e) =>
+                          setNewProject({
+                            ...newProject,
+                            sprintHealth: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
                         <option value="healthy">Healthy</option>
@@ -1726,12 +2362,19 @@ const ProjectsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Next Milestone Title
+                    </label>
                     <input
                       type="text"
                       required
                       value={newProject.nextMilestoneTitle}
-                      onChange={(e) => setNewProject({ ...newProject, nextMilestoneTitle: e.target.value })}
+                      onChange={(e) =>
+                        setNewProject({
+                          ...newProject,
+                          nextMilestoneTitle: e.target.value,
+                        })
+                      }
                       placeholder="e.g. API Gateway Integration"
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
@@ -1739,10 +2382,17 @@ const ProjectsPage = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Label</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Next Milestone Label
+                      </label>
                       <select
                         value={newProject.nextMilestoneStatus}
-                        onChange={(e) => setNewProject({ ...newProject, nextMilestoneStatus: e.target.value })}
+                        onChange={(e) =>
+                          setNewProject({
+                            ...newProject,
+                            nextMilestoneStatus: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
                         <option value="UPCOMING">UPCOMING</option>
@@ -1751,11 +2401,18 @@ const ProjectsPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Due date text</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Due date text
+                      </label>
                       <input
                         type="text"
                         value={newProject.nextMilestoneDue}
-                        onChange={(e) => setNewProject({ ...newProject, nextMilestoneDue: e.target.value })}
+                        onChange={(e) =>
+                          setNewProject({
+                            ...newProject,
+                            nextMilestoneDue: e.target.value,
+                          })
+                        }
                         placeholder="e.g. Due in 5 days"
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       />
@@ -1763,30 +2420,47 @@ const ProjectsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Roadmap Active Phase</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Roadmap Active Phase
+                    </label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                      {['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4'].map((ph, idx) => (
-                        <button
-                          type="button"
-                          key={idx}
-                          onClick={() => setNewProject({ ...newProject, activePhaseIndex: idx })}
-                          className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${newProject.activePhaseIndex === idx
-                            ? 'bg-[#38debb]/10 border-[#38debb] text-[#38debb]'
-                            : 'bg-slate-900 border-slate-800 text-slate-400'
+                      {["Phase 1", "Phase 2", "Phase 3", "Phase 4"].map(
+                        (ph, idx) => (
+                          <button
+                            type="button"
+                            key={idx}
+                            onClick={() =>
+                              setNewProject({
+                                ...newProject,
+                                activePhaseIndex: idx,
+                              })
+                            }
+                            className={`py-2 text-[10px] font-bold border rounded-lg transition-all ${
+                              newProject.activePhaseIndex === idx
+                                ? "bg-[#38debb]/10 border-[#38debb] text-[#38debb]"
+                                : "bg-slate-900 border-slate-800 text-slate-400"
                             }`}
-                        >
-                          {ph}
-                        </button>
-                      ))}
+                          >
+                            {ph}
+                          </button>
+                        ),
+                      )}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Initial tasks (One per line)</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Initial tasks (One per line)
+                    </label>
                     <textarea
                       rows="3"
                       value={newProject.tasksText}
-                      onChange={(e) => setNewProject({ ...newProject, tasksText: e.target.value })}
+                      onChange={(e) =>
+                        setNewProject({
+                          ...newProject,
+                          tasksText: e.target.value,
+                        })
+                      }
                       placeholder="Implement auth logic&#10;Write unit tests"
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all resize-none"
                     />
@@ -1838,7 +2512,9 @@ const ProjectsPage = () => {
               className="relative w-full max-w-lg max-h-[90vh] flex flex-col border border-slate-800/80 rounded-2xl bg-[#11141D] text-white shadow-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between p-6 pb-3 border-b border-slate-800">
-                <h3 className="text-lg font-bold font-display text-white">Edit Project Details</h3>
+                <h3 className="text-lg font-bold font-display text-white">
+                  Edit Project Details
+                </h3>
                 <button
                   onClick={() => setShowEditModal(false)}
                   className="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
@@ -1847,25 +2523,42 @@ const ProjectsPage = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleUpdateProject} className="flex flex-col flex-1 overflow-hidden">
+              <form
+                onSubmit={handleUpdateProject}
+                className="flex flex-col flex-1 overflow-hidden"
+              >
                 <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-4 pr-3 min-h-0 scrollbar-thin">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project Name</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Project Name
+                    </label>
                     <input
                       type="text"
                       required
                       value={editProjectData.name}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, name: e.target.value })}
+                      onChange={(e) =>
+                        setEditProjectData({
+                          ...editProjectData,
+                          name: e.target.value,
+                        })
+                      }
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Priority</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Priority
+                      </label>
                       <select
                         value={editProjectData.priority}
-                        onChange={(e) => setEditProjectData({ ...editProjectData, priority: e.target.value })}
+                        onChange={(e) =>
+                          setEditProjectData({
+                            ...editProjectData,
+                            priority: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
                         <option value="high">High Priority</option>
@@ -1875,13 +2568,20 @@ const ProjectsPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Progress (%)</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Progress (%)
+                      </label>
                       <input
                         type="number"
                         min="0"
                         max="100"
                         value={editProjectData.progress}
-                        onChange={(e) => setEditProjectData({ ...editProjectData, progress: e.target.value })}
+                        onChange={(e) =>
+                          setEditProjectData({
+                            ...editProjectData,
+                            progress: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       />
                     </div>
@@ -1889,26 +2589,38 @@ const ProjectsPage = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Label</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Sprint Label
+                      </label>
                       <input
                         type="text"
                         value={editProjectData.sprintStatus}
-                        onChange={(e) => setEditProjectData({ ...editProjectData, sprintStatus: e.target.value })}
+                        onChange={(e) =>
+                          setEditProjectData({
+                            ...editProjectData,
+                            sprintStatus: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Phase</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Sprint Phase
+                      </label>
                       <select
                         value={editProjectData.sprintPhase}
                         onChange={(e) => {
                           const val = e.target.value;
                           const updates = { sprintPhase: val };
-                          if (val === 'completed') {
+                          if (val === "completed") {
                             updates.progress = 100;
                             updates.activePhaseIndex = 3;
                           }
-                          setEditProjectData({ ...editProjectData, ...updates });
+                          setEditProjectData({
+                            ...editProjectData,
+                            ...updates,
+                          });
                         }}
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
@@ -1919,10 +2631,17 @@ const ProjectsPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Sprint Health</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Sprint Health
+                      </label>
                       <select
                         value={editProjectData.sprintHealth}
-                        onChange={(e) => setEditProjectData({ ...editProjectData, sprintHealth: e.target.value })}
+                        onChange={(e) =>
+                          setEditProjectData({
+                            ...editProjectData,
+                            sprintHealth: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
                         <option value="healthy">Healthy</option>
@@ -1933,22 +2652,36 @@ const ProjectsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Title</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Next Milestone Title
+                    </label>
                     <input
                       type="text"
                       required
                       value={editProjectData.nextMilestoneTitle}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneTitle: e.target.value })}
+                      onChange={(e) =>
+                        setEditProjectData({
+                          ...editProjectData,
+                          nextMilestoneTitle: e.target.value,
+                        })
+                      }
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Next Milestone Label</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Next Milestone Label
+                      </label>
                       <select
                         value={editProjectData.nextMilestoneStatus}
-                        onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneStatus: e.target.value })}
+                        onChange={(e) =>
+                          setEditProjectData({
+                            ...editProjectData,
+                            nextMilestoneStatus: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all cursor-pointer"
                       >
                         <option value="UPCOMING">UPCOMING</option>
@@ -1957,45 +2690,71 @@ const ProjectsPage = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Due date text</label>
+                      <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                        Due date text
+                      </label>
                       <input
                         type="text"
                         value={editProjectData.nextMilestoneDue}
-                        onChange={(e) => setEditProjectData({ ...editProjectData, nextMilestoneDue: e.target.value })}
+                        onChange={(e) =>
+                          setEditProjectData({
+                            ...editProjectData,
+                            nextMilestoneDue: e.target.value,
+                          })
+                        }
                         className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-2 tracking-wide uppercase">Project Milestones (Checkpoints)</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-2 tracking-wide uppercase">
+                      Project Milestones (Checkpoints)
+                    </label>
                     <div className="space-y-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800/80">
                       {(editProjectData.milestones || []).map((ms, idx) => (
-                        <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center pb-2 border-b border-slate-800/60 last:border-b-0 last:pb-0">
+                        <div
+                          key={idx}
+                          className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center pb-2 border-b border-slate-800/60 last:border-b-0 last:pb-0"
+                        >
                           {/* Name Input */}
                           <div className="col-span-1 sm:col-span-1">
-                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Name</span>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">
+                              Name
+                            </span>
                             <input
                               type="text"
                               value={ms.name}
                               onChange={(e) => {
-                                const updatedMilestones = [...editProjectData.milestones];
+                                const updatedMilestones = [
+                                  ...editProjectData.milestones,
+                                ];
                                 updatedMilestones[idx].name = e.target.value;
-                                setEditProjectData({ ...editProjectData, milestones: updatedMilestones });
+                                setEditProjectData({
+                                  ...editProjectData,
+                                  milestones: updatedMilestones,
+                                });
                               }}
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all"
                             />
                           </div>
                           {/* Due Date Input */}
                           <div>
-                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Due Date</span>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">
+                              Due Date
+                            </span>
                             <input
                               type="text"
-                              value={ms.dueDate || ''}
+                              value={ms.dueDate || ""}
                               onChange={(e) => {
-                                const updatedMilestones = [...editProjectData.milestones];
+                                const updatedMilestones = [
+                                  ...editProjectData.milestones,
+                                ];
                                 updatedMilestones[idx].dueDate = e.target.value;
-                                setEditProjectData({ ...editProjectData, milestones: updatedMilestones });
+                                setEditProjectData({
+                                  ...editProjectData,
+                                  milestones: updatedMilestones,
+                                });
                               }}
                               placeholder="e.g. Due July 20"
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-700 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all"
@@ -2003,19 +2762,28 @@ const ProjectsPage = () => {
                           </div>
                           {/* Completion Status Select */}
                           <div>
-                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Status</span>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">
+                              Status
+                            </span>
                             <select
                               value={ms.status}
                               onChange={(e) => {
-                                const updatedMilestones = [...editProjectData.milestones];
+                                const updatedMilestones = [
+                                  ...editProjectData.milestones,
+                                ];
                                 updatedMilestones[idx].status = e.target.value;
-                                
+
                                 // Automatically update activePhaseIndex for backwards compatibility
-                                const activeIdx = updatedMilestones.findIndex(m => m.status === 'active');
-                                setEditProjectData({ 
-                                  ...editProjectData, 
+                                const activeIdx = updatedMilestones.findIndex(
+                                  (m) => m.status === "active",
+                                );
+                                setEditProjectData({
+                                  ...editProjectData,
                                   milestones: updatedMilestones,
-                                  activePhaseIndex: activeIdx !== -1 ? activeIdx : editProjectData.activePhaseIndex
+                                  activePhaseIndex:
+                                    activeIdx !== -1
+                                      ? activeIdx
+                                      : editProjectData.activePhaseIndex,
                                 });
                               }}
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all cursor-pointer"
@@ -2027,13 +2795,21 @@ const ProjectsPage = () => {
                           </div>
                           {/* Risk Status Select */}
                           <div>
-                            <span className="text-[10px] text-slate-500 font-bold block mb-1">Risk Status</span>
+                            <span className="text-[10px] text-slate-500 font-bold block mb-1">
+                              Risk Status
+                            </span>
                             <select
-                              value={ms.riskStatus || 'on-track'}
+                              value={ms.riskStatus || "on-track"}
                               onChange={(e) => {
-                                const updatedMilestones = [...editProjectData.milestones];
-                                updatedMilestones[idx].riskStatus = e.target.value;
-                                setEditProjectData({ ...editProjectData, milestones: updatedMilestones });
+                                const updatedMilestones = [
+                                  ...editProjectData.milestones,
+                                ];
+                                updatedMilestones[idx].riskStatus =
+                                  e.target.value;
+                                setEditProjectData({
+                                  ...editProjectData,
+                                  milestones: updatedMilestones,
+                                });
                               }}
                               className="w-full bg-slate-950 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-lg px-2 py-1 text-[10px] focus:ring-0 focus:outline-none transition-all cursor-pointer"
                             >
@@ -2048,11 +2824,18 @@ const ProjectsPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">Project tasks (One per line)</label>
+                    <label className="block text-xs font-bold text-slate-400 mb-1 tracking-wide uppercase">
+                      Project tasks (One per line)
+                    </label>
                     <textarea
                       rows="3"
                       value={editProjectData.tasksText}
-                      onChange={(e) => setEditProjectData({ ...editProjectData, tasksText: e.target.value })}
+                      onChange={(e) =>
+                        setEditProjectData({
+                          ...editProjectData,
+                          tasksText: e.target.value,
+                        })
+                      }
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-600 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all resize-none"
                     />
                   </div>
@@ -2107,8 +2890,13 @@ const ProjectsPage = () => {
                 <span>Delete Project Permanently</span>
               </h3>
               <p className="mt-3 text-xs text-slate-400 leading-relaxed">
-                Are you sure you want to delete project <strong className="text-white font-semibold">{activeProject.name}</strong> ({activeProject.code})?
-                This action is irreversible. The project's milestones, tasks, and repository attachments will be permanently scrubbed.
+                Are you sure you want to delete project{" "}
+                <strong className="text-white font-semibold">
+                  {activeProject.name}
+                </strong>{" "}
+                ({activeProject.code})? This action is irreversible. The
+                project's milestones, tasks, and repository attachments will be
+                permanently scrubbed.
               </p>
 
               <div className="mt-6 flex justify-end space-x-3">
@@ -2175,7 +2963,9 @@ const ProjectsPage = () => {
                   Current Members
                 </label>
                 {(activeProject.team || []).length === 0 ? (
-                  <div className="text-xs text-slate-500 py-2 italic font-medium">No members assigned to this project yet.</div>
+                  <div className="text-xs text-slate-500 py-2 italic font-medium">
+                    No members assigned to this project yet.
+                  </div>
                 ) : (
                   (activeProject.team || []).map((member, idx) => (
                     <div
@@ -2187,8 +2977,12 @@ const ProjectsPage = () => {
                           {member.initials}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-200 truncate">{member.name}</p>
-                          <p className="text-[10px] text-slate-500 truncate">{member.email}</p>
+                          <p className="font-bold text-slate-200 truncate">
+                            {member.name}
+                          </p>
+                          <p className="text-[10px] text-slate-500 truncate">
+                            {member.email}
+                          </p>
                         </div>
                       </div>
                       <button
@@ -2204,7 +2998,10 @@ const ProjectsPage = () => {
               </div>
 
               {/* Add New Member Form */}
-              <form onSubmit={handleAddMember} className="border-t border-slate-800/60 pt-4">
+              <form
+                onSubmit={handleAddMember}
+                className="border-t border-slate-800/60 pt-4"
+              >
                 <label className="block text-xs font-bold text-slate-400 tracking-wide uppercase mb-3">
                   Add New Member
                 </label>
@@ -2214,7 +3011,9 @@ const ProjectsPage = () => {
                       type="text"
                       placeholder="Full Name"
                       value={newMember.name}
-                      onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                      onChange={(e) =>
+                        setNewMember({ ...newMember, name: e.target.value })
+                      }
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       required
                     />
@@ -2224,7 +3023,9 @@ const ProjectsPage = () => {
                       type="email"
                       placeholder="Email Address"
                       value={newMember.email}
-                      onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                      onChange={(e) =>
+                        setNewMember({ ...newMember, email: e.target.value })
+                      }
                       className="w-full bg-slate-900 border border-slate-800 focus:border-[#38debb]/50 text-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-0 focus:outline-none transition-all"
                       required
                     />

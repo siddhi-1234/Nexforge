@@ -42,10 +42,11 @@ io.on("connection", (socket) => {
         console.log(`User ${userId} joined room`);
     });
 
-    socket.on("update-project-sprint", async ({ projectId, sprint }) => {
+    socket.on("update-project-sprint", async ({ projectId, sprint, initiatorEmail }) => {
         try {
             const project = await Project.findOne({ id: projectId });
             if (project) {
+                const oldPhase = project.sprint ? project.sprint.phase : null;
                 project.sprint = sprint;
                 project.sprintStatus = sprint.label;
                 if (sprint && sprint.phase === 'completed') {
@@ -57,6 +58,16 @@ io.on("connection", (socket) => {
                 const updatedProject = await project.save();
                 io.emit("sprint-changed", { projectId, sprint: updatedProject.sprint });
                 io.emit("project-updated", updatedProject);
+
+                if (oldPhase !== sprint.phase) {
+                    const { notifyProjectMembers } = await import("./utils/notificationService.js");
+                    await notifyProjectMembers(io, {
+                        project: updatedProject,
+                        initiatorEmail,
+                        message: `Sprint phase for project '${updatedProject.name}' was changed to '${sprint.phase}'`,
+                        type: 'sprint-change'
+                    });
+                }
             }
         } catch (err) {
             console.error("Error updating sprint via socket:", err.message);

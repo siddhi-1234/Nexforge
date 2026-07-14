@@ -18,6 +18,15 @@ const NotificationSchema = new mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        projectId: {
+            type: String,
+        },
+        projectCode: {
+            type: String,
+        },
+        projectName: {
+            type: String,
+        },
     },
     {
         timestamps: true,
@@ -26,4 +35,4 @@ const NotificationSchema = new mongoose.Schema(
 
 const Notification = mongoose.model("Notification", NotificationSchema);
 
-module.exports = Notification;
+module.exports = Notification;
