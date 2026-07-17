@@ -710,7 +710,22 @@ const ProjectsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const userStr = localStorage.getItem("user");
-  const user = userStr ? JSON.parse(userStr) : null;
+  const defaultUser = {
+    name: "Student Developer",
+    email: "student@nexforge.io",
+    role: "student",
+    firebaseUid: "student123",
+  };
+  const user = userStr ? JSON.parse(userStr) : defaultUser;
+  const userInitials =
+    user && user.name
+      ? user.name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .substring(0, 2)
+      : "SD";
 
   // Standard Mock Projects
   const [projects, setProjects] = useState([]);
@@ -750,9 +765,11 @@ const ProjectsPage = () => {
         );
         const data = await res.json();
         if (data.notifications) {
-          setNotifications(data.notifications);
+          const liveNotifications =
+            data.notifications.filter(isLiveNotification);
+          setNotifications(liveNotifications);
           setUnreadNotifications(
-            data.notifications.filter((n) => !n.read).length,
+            liveNotifications.filter((n) => !n.read).length,
           );
         }
       } catch (err) {
@@ -771,7 +788,7 @@ const ProjectsPage = () => {
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       if (user) {
-        socket.emit("join-user-room", user.firebaseUid);
+        socket.emit("join-user-room", user.firebaseUid.toLowerCase());
         if (user.email) {
           socket.emit("join-user-room", user.email.toLowerCase());
         }
@@ -849,6 +866,7 @@ const ProjectsPage = () => {
 
     const handleNewNotification = (notif) => {
       console.log("Socket new-notification event received:", notif);
+      if (!isLiveNotification(notif)) return;
       setNotifications((prev) => {
         if (prev.some((n) => n._id === notif._id)) return prev;
         return [notif, ...prev];
@@ -889,27 +907,37 @@ const ProjectsPage = () => {
     };
   }, []);
 
+  const isLiveNotification = (notif) => {
+    const message = (notif?.message || "").toLowerCase();
+    const type = (notif?.type || "").toLowerCase();
+
+    const allowedTypes = new Set([
+      "project-created",
+      "team-member-added",
+      "team-member-removed",
+      "project-deleted",
+      "sprint-health-risk",
+      "milestone-completed",
+      "phase-completed",
+      "project-completed",
+      "comment",
+    ]);
+
+    if (allowedTypes.has(type)) return true;
+
+    return [
+      "created by",
+      "was added to project",
+      "was deleted",
+      "sprint health",
+      "has been completed",
+      "phase completed",
+      "new update from",
+    ].some((keyword) => message.includes(keyword));
+  };
+
   // Live activity timeline data
-  const [activities, setActivities] = useState([
-    {
-      id: "act-1",
-      type: "system",
-      message: "System automatically synchronized 14 assets for ",
-      highlightProject: "NeuralNexus",
-      meta: "Deployment successful • Build #429",
-      time: "JUST NOW",
-    },
-    {
-      id: "act-2",
-      type: "user",
-      userAvatar: "MC",
-      userName: "Marcus Chen",
-      message: " pushed 4 new style definitions to the ",
-      highlightProject: "Forge Vault",
-      meta: "Updated global design tokens for Enterprise clients",
-      time: "2H AGO",
-    },
-  ]);
+  const [activities, setActivities] = useState([]);
 
   // UI State management
   const [openAccordionId, setOpenAccordionId] = useState("prj-1");
@@ -1457,7 +1485,10 @@ const ProjectsPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedProj),
+        body: JSON.stringify({
+          ...updatedProj,
+          initiatorEmail: user ? user.email : "",
+        }),
       })
         .then((res) => res.json())
         .then((data) => console.log("Updated project in MongoDB:", data))
@@ -1470,8 +1501,8 @@ const ProjectsPage = () => {
     const editAct = {
       id: `act-edit-${Date.now()}`,
       type: "user",
-      userAvatar: "AR",
-      userName: "Alex Rivest",
+      userAvatar: userInitials,
+      userName: user ? user.name : "Alex Rivest",
       message: " updated details and roadmap milestones for ",
       highlightProject: editProjectData.name,
       meta: "Project settings and sprints updated",
@@ -1569,7 +1600,10 @@ const ProjectsPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedActiveProj),
+        body: JSON.stringify({
+          ...updatedActiveProj,
+          initiatorEmail: user ? user.email : "",
+        }),
       })
         .then((res) => res.json())
         .then((data) => console.log("Added team member in MongoDB:", data))
@@ -1581,8 +1615,8 @@ const ProjectsPage = () => {
     const memberAct = {
       id: `act-member-${Date.now()}`,
       type: "user",
-      userAvatar: "AR",
-      userName: "Alex Rivest",
+      userAvatar: userInitials,
+      userName: user ? user.name : "Alex Rivest",
       message: ` added ${newMember.name.trim()} to `,
       highlightProject: activeProject.name,
       meta: `New member registered with email: ${newMember.email.trim()}`,
@@ -1623,7 +1657,10 @@ const ProjectsPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(updatedActiveProj),
+        body: JSON.stringify({
+          ...updatedActiveProj,
+          initiatorEmail: user ? user.email : "",
+        }),
       })
         .then((res) => res.json())
         .then((data) => console.log("Removed team member from MongoDB:", data))
@@ -1834,10 +1871,17 @@ const ProjectsPage = () => {
               <span className="dash-nav-icon">⚙️</span>
               <span>Settings</span>
             </a>
-            <a href="#/" className="dash-nav-item">
-              <span className="dash-nav-icon">💬</span>
-              <span>Support</span>
-            </a>
+            <div className="dash-sidebar-user">
+              <div className="dash-sidebar-avatar">{userInitials}</div>
+              <div className="dash-sidebar-user-info">
+                <span className="dash-sidebar-user-name">
+                  {user ? user.name : ""}
+                </span>
+                <span className="dash-sidebar-user-role">
+                  {user ? user.role : ""}
+                </span>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -1894,120 +1938,6 @@ const ProjectsPage = () => {
                   placeholder="Search projects, tasks, or files..."
                   className="w-full bg-[#11141D]/90 border border-[#1E293B]/60 focus:border-[#38debb]/50 text-slate-200 placeholder-slate-500 rounded-xl pl-10 pr-4 py-2 text-xs font-medium focus:ring-0 focus:outline-none transition-all"
                 />
-              </div>
-
-              {/* Notification bell dropdown toggle */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNotifDropdown(!showNotifDropdown);
-                  }}
-                  className="relative p-2 rounded-xl bg-[#11141D]/80 border border-[#1E293B]/60 text-slate-400 hover:text-[#38debb] hover:border-[#38debb]/30 transition-all font-display"
-                >
-                  <Bell className="w-4 h-4" />
-                  {unreadNotifications > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-red-500 border border-[#11141D] text-white flex items-center justify-center min-w-[16px] min-h-[16px] animate-pulse-red">
-                      {unreadNotifications}
-                    </span>
-                  )}
-                </button>
-
-                {showNotifDropdown && (
-                  <div className="absolute right-0 mt-3 w-80 bg-[#11141D] border border-slate-800 rounded-2xl p-4 shadow-2xl z-30 font-sans">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-2">
-                      <span className="text-xs font-bold text-slate-200">
-                        Recent Notifications
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          type="button"
-                          className="text-[10px] text-[#38debb] hover:underline"
-                          onClick={handleMarkAllRead}
-                        >
-                          Read All
-                        </button>
-                        <span className="text-slate-700 text-[10px]">•</span>
-                        <button
-                          type="button"
-                          className="text-[10px] text-red-400 hover:underline"
-                          onClick={handleClearAll}
-                        >
-                          Clear All
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Project Filter */}
-                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-800/60">
-                      <span className="text-[10px] font-bold text-slate-400">
-                        Filter by Project
-                      </span>
-                      <select
-                        value={notifProjectFilter}
-                        onChange={(e) => setNotifProjectFilter(e.target.value)}
-                        className="bg-slate-900 border border-slate-850 rounded px-1.5 py-0.5 text-[10px] text-slate-300 focus:outline-none max-w-[150px]"
-                      >
-                        <option value="all">All Projects</option>
-                        {projects.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-3 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
-                      {filteredNotifs.length === 0 ? (
-                        <div className="text-xs text-slate-500 text-center py-4">
-                          No notifications found.
-                        </div>
-                      ) : (
-                        filteredNotifs.map((notif) => (
-                          <div
-                            key={notif._id}
-                            className={`text-xs p-2 border rounded-lg transition-all flex flex-col gap-1.5 ${
-                              notif.read
-                                ? "bg-[#181F2E]/20 border-slate-800/40 text-slate-400"
-                                : "bg-[#181F2E]/50 border-[#38debb]/20 text-slate-200"
-                            }`}
-                          >
-                            <div className="flex justify-between items-start gap-2">
-                              <span className="font-medium pr-6 leading-snug">
-                                {notif.message}
-                              </span>
-                              <div className="flex items-center space-x-1.5 shrink-0">
-                                {!notif.read && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleMarkRead(notif._id)}
-                                    className="p-0.5 hover:bg-slate-800 text-[#38debb] rounded transition-colors"
-                                    title="Mark as read"
-                                  >
-                                    <Check className="w-3.5 h-3.5" />
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center text-[9px] text-slate-500 mt-0.5">
-                              <span>
-                                {new Date(notif.createdAt).toLocaleTimeString(
-                                  [],
-                                  { hour: "2-digit", minute: "2-digit" },
-                                )}
-                              </span>
-                              {notif.projectCode && (
-                                <span className="px-1.5 py-0.5 bg-slate-900 border border-slate-855 text-[8px] font-bold text-slate-400 rounded uppercase">
-                                  {notif.projectCode}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </header>
@@ -2109,10 +2039,6 @@ const ProjectsPage = () => {
                 <span className="w-2.5 h-2.5 rounded-full bg-[#38debb] animate-pulse-teal inline-block" />
                 <span>Live Activity Feed</span>
               </h2>
-              <button className="text-xs font-bold text-[#38debb] hover:text-[#38debb]/80 hover:underline flex items-center space-x-1.5 transition-all">
-                <span>VIEW ALL LOGS</span>
-                <span className="text-sm font-semibold">→</span>
-              </button>
             </div>
 
             {/* 6) Live Timeline slide-in container */}

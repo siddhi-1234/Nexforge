@@ -1321,9 +1321,17 @@ Dark Glassmorphism + Neon Accents + Premium Animations
 
     .dash-logo h1,
     .dash-logo p,
-    .dash-nav-bottom,
     .dash-nav-item span:last-child {
         display: none;
+    }
+
+    .dash-nav-bottom {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 12px;
     }
 
     /* Collapsed sidebar: shrink the logo slightly and let it
@@ -1745,5 +1753,99 @@ Dark Glassmorphism + Neon Accents + Premium Animations
         left: 16px;
         width: auto;
         max-height: 60vh;
+    }
+}
+
+/* ── Sidebar User Profile Block ── */
+.dash-sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.dash-sidebar-user:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(56, 222, 187, 0.2);
+}
+
+.dash-sidebar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-teal), #00b0ff);
+    color: #05070a;
+    font-weight: 800;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(56, 222, 187, 0.2);
+}
+
+.dash-sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.dash-sidebar-user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-sidebar-user-role {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-top: 1px;
+}
+
+/* ── Sidebar User Responsiveness Override ── */
+@media (max-width: 1024px) {
+    .dash-sidebar-user {
+        padding: 6px;
+        background: transparent;
+        border: none;
+        justify-content: center;
+        width: 100%;
+        margin-top: 4px;
+        box-shadow: none;
+    }
+    
+    .dash-sidebar-user:hover {
+        background: transparent;
+    }
+
+    .dash-sidebar-user-info {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .dash-sidebar-user {
+        padding: 10px 14px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        justify-content: flex-start;
+        width: auto;
+        margin-top: 12px;
+    }
+
+    .dash-sidebar-user-info {
+        display: flex;
     }
 }

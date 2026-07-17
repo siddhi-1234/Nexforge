@@ -231,12 +231,40 @@ exports.createProject = async (req, res) => {
     const projectData = {
       ...req.body,
       createdByEmail: req.body.createdByEmail || "",
+      team: Array.isArray(req.body.team)
+        ? req.body.team.map((member) => ({
+            name: member.name || "",
+            email: member.email || "",
+            initials: member.initials || "",
+          }))
+        : [],
+      members: Array.isArray(req.body.members) ? req.body.members : [],
+      memberCount: Array.isArray(req.body.team) ? req.body.team.length : 0,
     };
     const newProject = new Project(projectData);
     await newProject.save();
     if (global.io) {
       global.io.emit("project-created", newProject);
     }
+
+    const creatorEmail =
+      req.body.createdByEmail || req.body.initiatorEmail || "";
+    const creatorName =
+      req.body.createdByName ||
+      req.body.creatorName ||
+      creatorEmail ||
+      "a team member";
+
+    if (global.io && creatorEmail) {
+      const { notifyProjectMembers } = require("../utils/notificationService");
+      await notifyProjectMembers(global.io, {
+        project: newProject,
+        initiatorEmail: creatorEmail,
+        message: `Project '${newProject.name}' was created by ${creatorName}`,
+        type: "project-created",
+      });
+    }
+
     res.status(201).json({
       message: "Project successfully created in MongoDB",
       project: newProject,
@@ -281,24 +309,45 @@ exports.updateProject = async (req, res) => {
       global.io.emit("project-updated", updatedProject);
     }
 
-    // Notifications triggering by comparing old and new states
+    // Notify only for meaningful live project activity
     const { notifyProjectMembers } = require("../utils/notificationService");
 
-    // 1. Sprint Phase changes
+    const oldTeamEmails = (oldProject.team || []).map((member) =>
+      (member.email || "").toLowerCase(),
+    );
+    const newTeamEmails = (updatedProject.team || []).map((member) =>
+      (member.email || "").toLowerCase(),
+    );
+    const addedTeamMembers = (updatedProject.team || []).filter(
+      (member) =>
+        member.email && !oldTeamEmails.includes(member.email.toLowerCase()),
+    );
+    if (addedTeamMembers.length > 0) {
+      const addedNames = addedTeamMembers
+        .map((member) => member.name)
+        .join(", ");
+      await notifyProjectMembers(global.io, {
+        project: updatedProject,
+        initiatorEmail,
+        message: `Team member${addedTeamMembers.length > 1 ? "s" : ""} ${addedNames} was added to project '${updatedProject.name}'`,
+        type: "team-member-added",
+      });
+    }
+
     if (
       oldProject.sprint &&
       updatedProject.sprint &&
-      oldProject.sprint.phase !== updatedProject.sprint.phase
+      oldProject.sprint.health !== updatedProject.sprint.health &&
+      updatedProject.sprint.health !== "healthy"
     ) {
       await notifyProjectMembers(global.io, {
         project: updatedProject,
         initiatorEmail,
-        message: `Sprint phase for project '${updatedProject.name}' was changed to '${updatedProject.sprint.phase}'`,
-        type: "sprint-change",
+        message: `Sprint health for project '${updatedProject.name}' is now ${updatedProject.sprint.health.toUpperCase()}`,
+        type: "sprint-health-risk",
       });
     }
 
-    // 2. Comments added
     const oldCommentsCount = (oldProject.comments || []).length;
     const newCommentsCount = (updatedProject.comments || []).length;
     if (newCommentsCount > oldCommentsCount) {
@@ -306,88 +355,46 @@ exports.updateProject = async (req, res) => {
       await notifyProjectMembers(global.io, {
         project: updatedProject,
         initiatorEmail: initiatorEmail || latestComment.email,
-        message: `New comment by ${latestComment.author} in project '${updatedProject.name}': "${latestComment.text}"`,
+        message: `New update from ${latestComment.author} in project '${updatedProject.name}'`,
         type: "comment",
       });
     }
 
-    // 3. Task Assignments
-    const oldTasks = oldProject.tasks || [];
-    const newTasks = updatedProject.tasks || [];
-    for (const newTask of newTasks) {
-      const oldTask = oldTasks.find((t) => t.id === newTask.id);
-      if (
-        newTask.assignee &&
-        (!oldTask || oldTask.assignee !== newTask.assignee)
-      ) {
-        const assignedMember = updatedProject.team.find(
-          (m) => m.initials === newTask.assignee,
-        );
-        if (assignedMember) {
-          await notifyProjectMembers(global.io, {
-            project: updatedProject,
-            initiatorEmail,
-            message: `You have been assigned to task '${newTask.title}' in project '${updatedProject.name}'`,
-            type: "task-assignment",
-            targetEmail: assignedMember.email,
-          });
-        }
-      }
-    }
-
-    // 4. Milestone Risk changes
     const oldMilestones = oldProject.milestones || [];
     const newMilestones = updatedProject.milestones || [];
     for (const newMs of newMilestones) {
       const oldMs = oldMilestones.find((m) => m.name === newMs.name);
-      if (
-        newMs.riskStatus &&
-        newMs.riskStatus !== "on-track" &&
-        (!oldMs || oldMs.riskStatus !== newMs.riskStatus)
-      ) {
+      if (oldMs?.status !== "completed" && newMs.status === "completed") {
         await notifyProjectMembers(global.io, {
           project: updatedProject,
           initiatorEmail,
-          message: `Milestone '${newMs.name}' in project '${updatedProject.name}' is now ${newMs.riskStatus.toUpperCase()}`,
-          type: "milestone-risk",
+          message: `Milestone '${newMs.name}' in project '${updatedProject.name}' has been completed`,
+          type: "milestone-completed",
         });
       }
     }
 
-    // 5. Overdue Items check
-    for (const newMs of newMilestones) {
-      const oldMs = oldMilestones.find((m) => m.name === newMs.name);
-      if (
-        newMs.status !== "completed" &&
-        newMs.dueDate &&
-        isDatePast(newMs.dueDate)
-      ) {
-        if (
-          !oldMs ||
-          oldMs.status === "completed" ||
-          !isDatePast(oldMs.dueDate) ||
-          oldMs.riskStatus !== newMs.riskStatus
-        ) {
-          await notifyProjectMembers(global.io, {
-            project: updatedProject,
-            initiatorEmail,
-            message: `OVERDUE: Milestone '${newMs.name}' in project '${updatedProject.name}' is past its due date (${newMs.dueDate})`,
-            type: "overdue",
-          });
-        }
-      }
+    if (
+      oldProject.sprint &&
+      updatedProject.sprint &&
+      oldProject.sprint.phase !== updatedProject.sprint.phase &&
+      updatedProject.sprint.phase === "completed"
+    ) {
+      await notifyProjectMembers(global.io, {
+        project: updatedProject,
+        initiatorEmail,
+        message: `Phase completed for project '${updatedProject.name}'`,
+        type: "phase-completed",
+      });
     }
 
-    // 6. Destructive Actions: Task deleted
-    for (const oldTask of oldTasks) {
-      if (!newTasks.some((t) => t.id === oldTask.id)) {
-        await notifyProjectMembers(global.io, {
-          project: updatedProject,
-          initiatorEmail,
-          message: `Task '${oldTask.title}' was deleted from project '${updatedProject.name}'`,
-          type: "destructive-action",
-        });
-      }
+    if (oldProject.progress !== 100 && updatedProject.progress === 100) {
+      await notifyProjectMembers(global.io, {
+        project: updatedProject,
+        initiatorEmail,
+        message: `Project '${updatedProject.name}' has been completed`,
+        type: "project-completed",
+      });
     }
 
     res.status(200).json({
@@ -416,11 +423,11 @@ exports.deleteProject = async (req, res) => {
     await notifyProjectMembers(global.io, {
       project,
       initiatorEmail,
-      message: `DESTRUCTIVE ACTION: Project '${project.name}' (${project.code}) was deleted`,
-      type: "destructive-action",
+      message: `Project '${project.name}' (${project.code}) was deleted`,
+      type: "project-deleted",
     });
 
-    await Project.findOneAndDelete({ id });
+    await Project.deleteOne({ id });
 
     if (global.io) {
       global.io.emit("project-deleted", id);
@@ -448,6 +455,7 @@ exports.updateProjectSprint = async (req, res) => {
     }
 
     const oldPhase = project.sprint ? project.sprint.phase : null;
+    const oldHealth = project.sprint ? project.sprint.health : null;
     project.sprint = sprint;
     project.sprintStatus = sprint.label;
     if (sprint && sprint.phase === "completed") {
@@ -470,13 +478,27 @@ exports.updateProjectSprint = async (req, res) => {
       global.io.emit("project-updated", updatedProject);
     }
 
-    if (oldPhase !== sprint.phase) {
+    if (oldPhase !== sprint.phase && sprint.phase === "completed") {
       const { notifyProjectMembers } = require("../utils/notificationService");
       await notifyProjectMembers(global.io, {
         project: updatedProject,
         initiatorEmail,
-        message: `Sprint phase for project '${updatedProject.name}' was changed to '${sprint.phase}'`,
-        type: "sprint-change",
+        message: `Phase completed for project '${updatedProject.name}'`,
+        type: "phase-completed",
+      });
+    }
+
+    if (
+      oldHealth !== sprint.health &&
+      sprint.health &&
+      sprint.health !== "healthy"
+    ) {
+      const { notifyProjectMembers } = require("../utils/notificationService");
+      await notifyProjectMembers(global.io, {
+        project: updatedProject,
+        initiatorEmail,
+        message: `Sprint health for project '${updatedProject.name}' is now ${sprint.health.toUpperCase()}`,
+        type: "sprint-health-risk",
       });
     }
 

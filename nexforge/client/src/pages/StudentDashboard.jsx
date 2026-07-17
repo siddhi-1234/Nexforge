@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import './dashboard.css';
 import nexforgeLogo from './logo.png';
 import socket from "../socket/socket";
@@ -101,6 +101,23 @@ const TiltCard = ({ children, className = '', style = {} }) => {
 Main Dashboard Component
 ──────────────────────────────────────────── */
 const StudentDashboard = () => {
+    const user = useMemo(() => {
+        const userStr = localStorage.getItem("user");
+        const defaultUser = {
+            name: "Student Developer",
+            email: "student@nexforge.io",
+            role: "student",
+            firebaseUid: "student123"
+        };
+        return userStr ? JSON.parse(userStr) : defaultUser;
+    }, []);
+
+    const userInitials = useMemo(() => {
+        return user.name
+            ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2)
+            : "SD";
+    }, [user]);
+
     const [visibleSections, setVisibleSections] = useState({});
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -112,35 +129,53 @@ const StudentDashboard = () => {
     const sectionRefs = useRef([]);
 
     useEffect(() => {
+        if (!user) return;
 
-        // Replace with logged in user ID later
-        const userId = "student123";
-
-        socket.emit("join-user-room", userId);
-
-        socket.on("new-notification", (notification) => {
-
-            setNotifications((prev) => [
-                notification,
-                ...prev
-            ]);
-
-            setUnreadCount((prev) => prev + 1);
-        });
-
-
-
-        return () => {
-            socket.off("new-notification");
+        const onConnect = () => {
+            console.log("Socket connected in StudentDashboard, ID:", socket.id);
+            socket.emit("join-user-room", user.firebaseUid.toLowerCase());
+            if (user.email) {
+                socket.emit("join-user-room", user.email.toLowerCase());
+            }
         };
 
-    }, []);
+        const handleNewNotification = (notification) => {
+            console.log("Socket new-notification event received in StudentDashboard:", notification);
+            setNotifications((prev) => {
+                if (prev.some((n) => n._id === notification._id)) return prev;
+                return [notification, ...prev];
+            });
+            setUnreadCount((prev) => prev + 1);
+        };
+
+        const handleUnreadCount = (count) => {
+            console.log("Socket notification-unread-count event received in StudentDashboard:", count);
+            setUnreadCount(count);
+        };
+
+        socket.on("connect", onConnect);
+        socket.on("new-notification", handleNewNotification);
+        socket.on("notification-unread-count", handleUnreadCount);
+
+        if (socket.connected) {
+            onConnect();
+        }
+
+        return () => {
+            socket.off("connect", onConnect);
+            socket.off("new-notification", handleNewNotification);
+            socket.off("notification-unread-count", handleUnreadCount);
+        };
+
+    }, [user]);
 
     useEffect(() => {
         const fetchNotifications = async () => {
+            if (!user) return;
             try {
+                const emailQuery = user.email ? `?email=${encodeURIComponent(user.email)}` : "";
                 const res = await fetch(
-                    `http://localhost:5000/api/notifications/student123`
+                    `http://localhost:5000/api/notifications/${user.firebaseUid}${emailQuery}`
                 );
 
                 const data = await res.json();
@@ -156,7 +191,7 @@ const StudentDashboard = () => {
         };
 
         fetchNotifications();
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -236,10 +271,13 @@ const StudentDashboard = () => {
                             <span className="dash-nav-icon">⚙️</span>
                             <span>Settings</span>
                         </a>
-                        <a href="#/" className="dash-nav-item">
-                            <span className="dash-nav-icon">💬</span>
-                            <span>Support</span>
-                        </a>
+                        <div className="dash-sidebar-user">
+                            <div className="dash-sidebar-avatar">{userInitials}</div>
+                            <div className="dash-sidebar-user-info">
+                                <span className="dash-sidebar-user-name">{user.name}</span>
+                                <span className="dash-sidebar-user-role">{user.role}</span>
+                            </div>
+                        </div>
                     </div>
                 </aside>
 
@@ -311,9 +349,9 @@ const StudentDashboard = () => {
 
                             <div className="dash-profile glass-profile">
                                 <div className="dash-profile-text">
-                                    <p>Student Developer</p>
+                                    <p>{user.name}</p>
                                 </div>
-                                <div className="dash-avatar">SD</div>
+                                <div className="dash-avatar">{userInitials}</div>
                             </div>
                         </div>
                     </header>
