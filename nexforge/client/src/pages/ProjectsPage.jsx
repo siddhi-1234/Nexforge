@@ -1848,7 +1848,11 @@ const ProjectsPage = () => {
                 active: true,
                 path: "/dashboard/projects",
               },
-              { icon: "🌐", label: "Team Activity", path: "#/" },
+              {
+                icon: "🌐",
+                label: "Team Activity",
+                path: "/dashboard/team-activity",
+              },
               { icon: "⚡", label: "Recommendations", path: "#/" },
               { icon: "🎓", label: "Skills", path: "#/" },
               { icon: "💻", label: "Internship Prep", path: "#/" },
@@ -1951,16 +1955,6 @@ const ProjectsPage = () => {
               <h1 className="text-3xl font-extrabold font-display text-white tracking-tight leading-none mb-2">
                 Projects 🚀💻
               </h1>
-              <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400">
-                <span>Active sprints:</span>
-                <span className="text-white font-bold flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-[#38debb] animate-pulse-teal" />
-                  <span>03</span>
-                </span>
-                <span className="text-slate-600">•</span>
-                <span>Completion:</span>
-                <span className="text-white font-bold">68%</span>
-              </div>
             </div>
 
             {/* Create Project Button with Radial Pulse Shadow */}
