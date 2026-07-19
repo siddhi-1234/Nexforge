@@ -1,490 +1,779 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef } from "react";
 import {
-  Users,
-  Activity,
-  GitCommit,
-  TrendingUp,
+  Search,
+  Bell,
   ChevronDown,
-  ChevronUp,
-  Menu,
+  MessageCircle,
+  ArrowRight,
   X,
-  Zap,
-  Award,
-  Flame,
-  BarChart3,
-  MessageSquare,
-  Clock,
+  Play,
+  Share2,
+  CheckCircle,
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import nexforgeLogo from "./logo.png";
-import socket from "../socket/socket";
-import "./dashboard.css";
 import "./TeamActivity.css";
 
-/* ─────────────────────────────────────
-   COUNT-UP ANIMATION
-   ───────────────────────────────────── */
-function CountUp({ target, duration = 1200 }) {
+/* ────────────────────────────────────────────────────────
+   ANIMATED UTILITIES & REUSABLE SUB-COMPONENTS
+   ──────────────────────────────────────────────────────── */
+function CountUp({ target, duration = 1000 }) {
   const [value, setValue] = useState(0);
-
   useEffect(() => {
     let frame;
     const start = performance.now();
     const animate = (now) => {
       const progress = Math.min((now - start) / duration, 1);
-      const easeOutExpo = 1 - Math.pow(2, -10 * progress);
-      setValue(Math.ceil(easeOutExpo * target));
+      const easeOutQuad = 1 - (1 - progress) * (1 - progress);
+      setValue(Math.ceil(easeOutQuad * target));
       if (progress < 1) frame = requestAnimationFrame(animate);
     };
     frame = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frame);
   }, [target, duration]);
-
   return <>{value.toLocaleString()}</>;
 }
 
-/* ────────────────────────────────────────────────────────
-   PULSING STATUS DOT (Live pulsing status for online members)
-   ──────────────────────────────────────────────────────── */
-function PulsingDot({ isOnline }) {
+function SpotlightHoverCard({ children, className = "" }) {
+  const cardRef = useRef(null);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    setCoords({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  };
+
   return (
-    <div className={`pulsing-dot ${isOnline ? "online" : "offline"}`}>
-      <div className="dot-inner" />
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={`spotlight-hover-card ${className}`}
+    >
+      {isHovered && (
+        <div
+          className="spotlight-overlay"
+          style={{
+            background: `radial-gradient(280px circle at ${coords.x}px ${coords.y}px, rgba(56, 222, 187, 0.08), transparent 85%)`,
+          }}
+        />
+      )}
+      <div className="card-content-inner">{children}</div>
     </div>
   );
 }
 
-/* ─────────────────────────────────────
-   MAIN TEAM ACTIVITY PAGE
-   ───────────────────────────────────── */
-const TeamActivity = () => {
-  const user = useMemo(() => {
-    const userStr = localStorage.getItem("user");
-    const defaultUser = {
-      name: "Developer",
-      email: "dev@nexforge.io",
-      role: "student",
-      firebaseUid: "dev123",
-    };
-    return userStr ? JSON.parse(userStr) : defaultUser;
+function RevealWrapper({ children, delay = "0s", className = "" }) {
+  const wrapperRef = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.02 },
+    );
+    if (wrapperRef.current) observer.observe(wrapperRef.current);
+    return () => observer.disconnect();
   }, []);
 
-  const userInitials = useMemo(() => {
-    return user.name
-      ? user.name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-          .substring(0, 2)
-      : "SD";
-  }, [user]);
+  return (
+    <div
+      ref={wrapperRef}
+      className={`spring-reveal-node ${visible ? "revealed" : ""} ${className}`}
+      style={{ transitionDelay: delay }}
+    >
+      {children}
+    </div>
+  );
+}
 
+/* ────────────────────────────────────────────────────────
+   MAIN TEAM ACTIVITY CONTROLLER
+   ──────────────────────────────────────────────────────── */
+const TeamActivity = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [expandedProjects, setExpandedProjects] = useState({});
-
-  const toggleProject = (id) => {
-    setExpandedProjects((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-  /* Sample Data */
-  const stats = [
-    { label: "Team Members", value: 24, icon: Users },
-    { label: "Online Now", value: 12, icon: Activity },
-    { label: "Active Projects", value: 8, icon: BarChart3 },
-    { label: "Commits Today", value: 142, icon: GitCommit },
-  ];
-
-  const teamMembers = [
-    {
-      id: 1,
-      name: "Sarah Kumar",
-      role: "Lead Dev",
-      online: true,
-      avatar: "SK",
-    },
-    { id: 2, name: "Alex Mercer", role: "Backend", online: true, avatar: "AM" },
-    {
-      id: 3,
-      name: "Julian Vane",
-      role: "UI Designer",
-      online: false,
-      avatar: "JV",
-    },
-    {
-      id: 4,
-      name: "Maya Patel",
-      role: "QA Engineer",
-      online: true,
-      avatar: "MP",
-    },
-  ];
-
-  const topContributors = [
-    { rank: 1, name: "Sarah Kumar", commits: 287, avatar: "SK", flame: true },
-    { rank: 2, name: "Alex Mercer", commits: 256, avatar: "AM", flame: true },
-    { rank: 3, name: "Maya Patel", commits: 189, avatar: "MP", flame: false },
-  ];
-
-  const projectStreams = [
-    {
-      id: 1,
-      name: "NeuralNexus Redesign",
-      status: "In Progress",
-      progress: 65,
-      activities: [
-        {
-          author: "Sarah K.",
-          message: "Pushed vector mesh shader logic",
-          time: "2m ago",
-        },
-        {
-          author: "Alex M.",
-          message: "Fixed memory leak in worker thread",
-          time: "15m ago",
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: "Quantum CRM",
-      status: "Review",
-      progress: 85,
-      activities: [
-        {
-          author: "Julian V.",
-          message: "Redesigned dashboard theme engine",
-          time: "45m ago",
-        },
-      ],
-    },
-  ];
+  const [chatGroupOpen, setChatGroupOpen] = useState(true);
+  const [projectExpanded, setProjectExpanded] = useState(true);
 
   return (
     <div className="dashboard-page">
-      {/* Background Glows */}
+      {/* Background Layer Wells */}
       <div className="dash-bg-glow dash-bg-glow-1" />
       <div className="dash-bg-glow dash-bg-glow-2" />
       <div className="dash-bg-glow dash-bg-glow-3" />
 
       <div className="dash-layout">
-        {/* ────── SIDEBAR ────── */}
-        <motion.aside
-          className={`dash-sidebar ${isSidebarOpen ? "open" : ""}`}
-          initial={{ x: -250 }}
-          animate={{ x: 0 }}
-          transition={{ duration: 0.3 }}
+        {isSidebarOpen && (
+          <div
+            className="dash-sidebar-overlay"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
+        {/* ── SIDEBAR FRAMEWORK ── */}
+        <aside
+          className={`dash-sidebar ${isSidebarOpen ? "dash-sidebar-open" : ""}`}
         >
           <div className="dash-sidebar-header">
             <div className="dash-logo">
-              <img
-                src={nexforgeLogo}
-                alt="NexForge"
-                className="dash-logo-img"
-              />
-              <div>
-                <h1>NEXFORGE</h1>
-                <p>Team Command</p>
-              </div>
+              <h1 className="neon-text-teal">NEXFORGE</h1>
+              <p>Vanguard Command</p>
             </div>
             <button
               className="dash-sidebar-close"
               onClick={() => setIsSidebarOpen(false)}
             >
-              <X size={20} />
+              <X size={16} />
             </button>
           </div>
 
           <nav className="dash-nav">
-            <NavLink icon={Activity} label="Overview" to="/dashboard/student" />
-            <NavLink
-              icon={GitCommit}
-              label="Activity"
-              to="/dashboard/team-activity"
-              active
-            />
-            <NavLink
-              icon={BarChart3}
-              label="Analytics"
-              to="/dashboard/projects"
-            />
-            <NavLink icon={Users} label="Team" to="/dashboard/projects" />
+            <button type="button" className="dash-nav-item dash-nav-active">
+              <span className="nav-icon">📊</span>
+              <span>Overview</span>
+            </button>
+            <button type="button" className="dash-nav-item">
+              <span className="nav-icon">📈</span>
+              <span>Activity</span>
+            </button>
+            <button type="button" className="dash-nav-item">
+              <span className="nav-icon">💻</span>
+              <span>Commits</span>
+            </button>
+            <button type="button" className="dash-nav-item">
+              <span className="nav-icon">📁</span>
+              <span>Files</span>
+            </button>
+            <button type="button" className="dash-nav-item">
+              <span className="nav-icon">💡</span>
+              <span>Insights</span>
+            </button>
           </nav>
 
           <div className="dash-nav-bottom">
-            <NavLink icon={MessageSquare} label="Support" />
-            <NavLink icon={X} label="Logout" />
-          </div>
-        </motion.aside>
-
-        {/* ────── MAIN CONTENT ────── */}
-        <main className="dash-main" style={{ marginLeft: "250px" }}>
-          {/* Top Header */}
-          <header className="dash-header">
-            <button
-              className="dash-menu-btn"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            >
-              <Menu size={20} />
+            <button className="quick-action-btn-float float-bob-animation">
+              Quick Action
             </button>
-            <h1>Team Activity</h1>
-            <div className="dash-header-right">
-              <button className="dash-btn-icon">
-                <Zap size={18} />
+            <button type="button" className="dash-nav-item">
+              <span className="nav-icon">⚙️</span>
+              <span>Support</span>
+            </button>
+            <button type="button" className="dash-nav-item">
+              <span className="nav-icon">📝</span>
+              <span>Logs</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* ── MAIN AREA ── */}
+        <main className="dash-main">
+          <header className="dash-topbar glassmorphism">
+            <div className="dash-topbar-left">
+              <button
+                className="dash-menu-btn"
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                ☰
               </button>
-              <div className="dash-user-avatar">{userInitials}</div>
+              <div className="top-global-nav-items hidden md:flex">
+                <button type="button" className="top-nav-link text-[#38debb]">
+                  Dashboard
+                </button>
+                <button type="button" className="top-nav-link">
+                  Analytics
+                </button>
+                <button type="button" className="top-nav-link">
+                  Projects
+                </button>
+                <button type="button" className="top-nav-link">
+                  Team
+                </button>
+              </div>
+            </div>
+
+            <div className="dash-topbar-right">
+              <div className="dash-search glass-input">
+                <Search size={14} className="text-slate-500" />
+                <input type="text" placeholder="Search systems..." />
+              </div>
+              <button className="dash-icon-btn">
+                <Bell size={16} />
+                <span className="dash-notif-dot" />
+              </button>
+              <div className="dash-avatar">SD</div>
             </div>
           </header>
 
-          <div className="dash-content">
-            {/* ────── STATS ROW ────── */}
-            <motion.div
-              className="team-stats-row"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              {stats.map((stat, idx) => {
-                const Icon = stat.icon;
-                return (
-                  <motion.div
-                    key={idx}
-                    className="dash-card stat-card-team"
-                    whileHover={{ y: -4 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="stat-header">
-                      <Icon size={20} className="stat-icon" />
-                      <span className="stat-label">{stat.label}</span>
-                    </div>
-                    <div className="stat-value-large">
-                      <CountUp target={stat.value} />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-
-            {/* ────── MAIN GRID ────── */}
-            <div className="team-grid">
-              {/* Team Members */}
-              <motion.div
-                className="dash-card team-members-card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
+          {/* Dashboard Contents Grid Layout */}
+          <div className="dash-content activity-dashboard-matrix">
+            {/* ── LEFT & CENTER SYSTEM COLUMN (66% Width) ── */}
+            <div className="matrix-primary-space">
+              {/* Analytics Counter Row */}
+              <RevealWrapper
+                id="counters"
+                className="grid grid-cols-2 md:grid-cols-4 gap-4"
               >
-                <div className="card-header">
-                  <h2>Team Members</h2>
-                  <span className="member-badge">{teamMembers.length}</span>
+                <div className="dash-card metric-counter-tile">
+                  <span className="tile-label">Team Members</span>
+                  <h2 className="tile-metric">
+                    <CountUp target={24} />
+                  </h2>
+                  <span className="tile-delta text-emerald-400">
+                    ↗ +2 this week
+                  </span>
                 </div>
-                <div className="members-grid">
-                  {teamMembers.map((member) => (
-                    <div key={member.id} className="member-item">
-                      <div className="member-avatar-large">
-                        {member.avatar}
-                        <PulsingDot isOnline={member.online} />
-                      </div>
-                      <div className="member-details">
-                        <p className="member-name">{member.name}</p>
-                        <p className="member-role">{member.role}</p>
-                      </div>
+                <div className="dash-card metric-counter-tile">
+                  <span className="tile-label">Online Now</span>
+                  <h2 className="tile-metric flex items-center gap-2">
+                    <CountUp target={12} />
+                    <span className="live-pulsing-dot-teal shrink-0" />
+                  </h2>
+                  <span className="tile-delta text-slate-500">
+                    52% capacity active
+                  </span>
+                </div>
+                <div className="dash-card metric-counter-tile">
+                  <span className="tile-label">Active Projects</span>
+                  <h2 className="tile-metric">
+                    <CountUp target={8} />
+                  </h2>
+                  <span className="tile-delta text-amber-400">
+                    ⏱ 2 awaiting review
+                  </span>
+                </div>
+                <div className="dash-card metric-counter-tile">
+                  <span className="tile-label">Commits Today</span>
+                  <h2 className="tile-metric text-[#38debb]">
+                    <CountUp target={142} />
+                  </h2>
+                  <span className="tile-delta text-[#38debb]">
+                    ⚡ Peak velocity reached
+                  </span>
+                </div>
+              </RevealWrapper>
+
+              {/* Center Analytics Chart Block */}
+              <RevealWrapper id="chart" delay="0.04s">
+                <SpotlightHoverCard className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="section-title-outfit flex items-center gap-2">
+                      Velocity Trends
+                    </h3>
+                    <div className="chart-filter-toggle-pills">
+                      <button className="pill-toggle">24H</button>
+                      <button className="pill-toggle pill-toggle-active">
+                        7D
+                      </button>
+                    </div>
+                  </div>
+                  {/* SVG Layout Architecture Vector Graph */}
+                  <div className="chart-rendering-canvas flex items-end justify-between pt-4 h-48">
+                    {[35, 55, 100, 40, 28, 65, 82].map((val, idx) => (
                       <div
-                        className={`status-badge ${member.online ? "online" : "offline"}`}
+                        key={idx}
+                        className="chart-vertical-axis-bar-wrapper flex flex-col items-center flex-1 group"
                       >
-                        {member.online ? "Online" : "Offline"}
+                        <div
+                          className={`chart-bar-drawn ${idx === 2 ? "highlighted-bar" : ""}`}
+                          style={{ "--target-h": `${val}%` }}
+                        />
+                        <span className="chart-axis-label-font mt-2 text-[10px] text-slate-600 uppercase font-bold">
+                          {
+                            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][
+                              idx
+                            ]
+                          }
+                        </span>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
+                    ))}
+                  </div>
+                </SpotlightHoverCard>
+              </RevealWrapper>
 
-              {/* Top Contributors */}
-              <motion.div
-                className="dash-card top-contributors-card"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
+              {/* Expandable Project Activity Container */}
+              <RevealWrapper
+                id="streams"
+                delay="0.08s"
+                className="flex flex-col gap-4"
               >
-                <div className="card-header">
-                  <h2>Top Contributors</h2>
-                  <Award size={18} />
-                </div>
-                <div className="contributors-list">
-                  {topContributors.map((contrib) => (
-                    <div key={contrib.rank} className="contributor-item">
-                      <div className="contributor-rank">
-                        {contrib.rank}
-                        {contrib.flame && (
-                          <Flame size={12} className="flame-icon" />
-                        )}
+                <h3 className="section-title-outfit flex items-center justify-between">
+                  <span>Project Streams</span>
+                  <span className="text-xs text-slate-500 font-normal normal-case font-sans">
+                    Updated 2m ago
+                  </span>
+                </h3>
+
+                <div className="dash-card tracking-stream-block">
+                  <div
+                    className="stream-summary-toggle-row flex items-center justify-between p-5 cursor-pointer hover:bg-white/[0.01]"
+                    onClick={() => setProjectExpanded(!projectExpanded)}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="stream-badge-avatar bg-emerald-500/10 text-emerald-400 font-sans">
+                        🟢
                       </div>
-                      <span className="contributor-name">{contrib.name}</span>
-                      <span className="contributor-commits">
-                        <CountUp target={contrib.commits} duration={1500} />
-                      </span>
+                      <div>
+                        <h4 className="text-sm font-bold text-white">
+                          NeuralNexus Redesign
+                        </h4>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          3 PRs Open • 8 Tasks Remaining
+                        </p>
+                      </div>
                     </div>
-                  ))}
+                    <div
+                      className={`transition-transform duration-300 ${projectExpanded ? "rotate-180" : ""}`}
+                    >
+                      <ChevronDown size={16} className="text-slate-400" />
+                    </div>
+                  </div>
+
+                  {/* Expandable Sub-Section Accordion Drawer */}
+                  <div
+                    className={`stream-accordion-drawer-expandable ${projectExpanded ? "drawer-open" : ""}`}
+                  >
+                    <div className="p-5 pt-0 border-t border-white/[0.03] space-y-2.5 mt-4">
+                      <div className="commit-shimmer-card flex items-center justify-between p-3 rounded-xl bg-black/20 text-xs border border-white/[0.02]">
+                        <span className="text-slate-300 font-medium">
+                          feat: Implement vector mesh shader logic
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-[#38debb]">
+                          #402 merged
+                        </span>
+                      </div>
+                      <div className="commit-shimmer-card flex items-center justify-between p-3 rounded-xl bg-black/20 text-xs border border-white/[0.02]">
+                        <span className="text-slate-300 font-medium">
+                          fix: Memory leak in worker thread
+                        </span>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-red-500/10 text-red-400">
+                          Critical
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </motion.div>
+
+                <div className="dash-card tracking-stream-block p-5 flex items-center justify-between opacity-60">
+                  <div className="flex items-center gap-4">
+                    <div className="stream-badge-avatar bg-blue-500/10 text-blue-400 font-sans">
+                      🔷
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-white">
+                        Quantum CRM
+                      </h4>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        0 PRs Open • 14 Tasks Remaining
+                      </p>
+                    </div>
+                  </div>
+                  <ArrowRight size={14} className="text-slate-500" />
+                </div>
+              </RevealWrapper>
+
+              {/* Kanban Grid Layout Wrapper */}
+              <RevealWrapper
+                id="kanban"
+                delay="0.12s"
+                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"
+              >
+                <div className="kanban-column-wrapper">
+                  <span className="kanban-column-indicator text-slate-500">
+                    To Do [4]
+                  </span>
+                  <div className="dash-card kanban-board-item mt-3 p-4">
+                    <h5 className="font-bold text-xs text-white">
+                      Auth Module Refactor
+                    </h5>
+                    <div className="flex items-center justify-between mt-4 text-[10px] text-slate-500">
+                      <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-white/5">
+                        v2.0.1
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-slate-700" />
+                    </div>
+                  </div>
+                </div>
+                <div className="kanban-column-wrapper">
+                  <span className="kanban-column-indicator text-emerald-400">
+                    In Progress [2]
+                  </span>
+                  <div className="dash-card kanban-board-item item-active-glow mt-3 p-4">
+                    <h5 className="font-bold text-xs text-white">
+                      API Documentation
+                    </h5>
+                    <div className="flex items-center justify-between mt-4 text-[10px]">
+                      <span className="px-1.5 py-0.5 rounded bg-emerald-500/5 text-[#38debb] border border-emerald-500/10">
+                        Docs
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-[#38debb] animate-pulse-teal" />
+                    </div>
+                  </div>
+                </div>
+                <div className="kanban-column-wrapper">
+                  <span className="kanban-column-indicator text-blue-400">
+                    Review [5]
+                  </span>
+                  <div className="dash-card kanban-board-item mt-3 p-4">
+                    <h5 className="font-bold text-xs text-white">
+                      Theme Engine UI
+                    </h5>
+                    <div className="flex items-center justify-between mt-4 text-[10px]">
+                      <span className="px-1.5 py-0.5 rounded bg-blue-500/5 text-blue-400 border border-blue-500/10">
+                        Style
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-blue-400" />
+                    </div>
+                  </div>
+                </div>
+                <div className="kanban-column-wrapper">
+                  <span className="kanban-column-indicator text-slate-500">
+                    Done [12]
+                  </span>
+                  <div className="dash-card kanban-board-item opacity-50 mt-3 p-4">
+                    <h5 className="font-bold text-xs text-white line-through">
+                      Landing Page Fix
+                    </h5>
+                    <div className="flex items-center justify-between mt-4 text-[10px] text-slate-600">
+                      <span>Completed</span>
+                      <CheckCircle size={10} />
+                    </div>
+                  </div>
+                </div>
+              </RevealWrapper>
+
+              {/* Recent Code Streams */}
+              <RevealWrapper
+                id="code-streams"
+                delay="0.16s"
+                className="flex flex-col gap-3"
+              >
+                <h3 className="section-title-outfit">Recent Code Streams</h3>
+                <div className="dash-card p-4 space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-slate-800 text-[9px] font-bold text-slate-300 flex items-center justify-center border border-white/5">
+                        AL
+                      </div>
+                      <p className="text-slate-400">
+                        <strong className="text-white font-bold">
+                          Alex L.
+                        </strong>{" "}
+                        pushed to main
+                      </p>
+                    </div>
+                    <span className="text-emerald-400 font-mono font-bold">
+                      +412 -12
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs border-t border-white/[0.03] pt-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-slate-800 text-[9px] font-bold text-slate-300 flex items-center justify-center border border-white/5">
+                        SK
+                      </div>
+                      <p className="text-slate-400">
+                        <strong className="text-white font-bold">
+                          Sarah K.
+                        </strong>{" "}
+                        merged hotfix/prod-leak
+                      </p>
+                    </div>
+                    <span className="text-red-400 font-mono font-bold">
+                      +5 -92
+                    </span>
+                  </div>
+                </div>
+              </RevealWrapper>
             </div>
 
-            {/* ────── PROJECT STREAMS ────── */}
-            <motion.div
-              className="dash-card project-streams-card"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <div className="card-header">
-                <h2>Project Streams</h2>
-              </div>
-              <div className="streams-list">
-                {projectStreams.map((project) => (
-                  <div key={project.id} className="stream-item">
-                    <button
-                      className="stream-header"
-                      onClick={() => toggleProject(project.id)}
+            {/* ── RIGHT DOCK COMPLEMENTARY COLUMN (33% Width) ── */}
+            <div className="matrix-complementary-space">
+              {/* Pulse State User Index */}
+              <RevealWrapper
+                id="pulse"
+                delay="0.04s"
+                className="flex flex-col gap-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h4 className="section-title-outfit">Pulse</h4>
+                  <span className="text-[10px] font-bold text-[#38debb] bg-[#38debb]/10 border border-[#38debb]/15 px-2 py-0.5 rounded">
+                    12 ONLINE
+                  </span>
+                </div>
+                <div className="dash-card p-4 space-y-3.5">
+                  {[
+                    {
+                      name: "Sarah Konor",
+                      task: "NeuralNexus - Coding",
+                      avatar: "SK",
+                      active: true,
+                    },
+                    {
+                      name: "Alex Mercer",
+                      task: "System - Idle",
+                      avatar: "AM",
+                      active: true,
+                    },
+                    {
+                      name: "Julian Vane",
+                      task: "Away",
+                      avatar: "JV",
+                      active: false,
+                    },
+                  ].map((user, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between text-xs"
                     >
-                      <div className="stream-info">
-                        <h3>{project.name}</h3>
-                        <div className="stream-meta">
-                          <span className="status-badge">{project.status}</span>
-                          <div className="progress-bar-mini">
-                            <div
-                              className="progress-fill"
-                              style={{ width: `${project.progress}%` }}
-                            />
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white">
+                            {user.avatar}
                           </div>
-                          <span className="progress-text">
-                            {project.progress}%
-                          </span>
+                          <span
+                            className={
+                              user.active
+                                ? "live-pulsing-dot-teal-corner"
+                                : "status-dot-away-corner"
+                            }
+                          />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-white text-xs">
+                            {user.name}
+                          </h5>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {user.task}
+                          </p>
                         </div>
                       </div>
-                      <motion.div
-                        animate={{
-                          rotate: expandedProjects[project.id] ? 180 : 0,
-                        }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown size={18} />
-                      </motion.div>
-                    </button>
-
-                    {/* Expand Activity */}
-                    <AnimatePresence>
-                      {expandedProjects[project.id] && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 180,
-                            damping: 22,
-                          }}
-                          className="stream-activities"
-                        >
-                          {project.activities.map((activity, idx) => (
-                            <motion.div
-                              key={idx}
-                              className="activity-item"
-                              initial={{ opacity: 0, x: 20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.1 }}
-                            >
-                              <div className="activity-marker" />
-                              <div className="activity-content">
-                                <p className="activity-author">
-                                  {activity.author}
-                                </p>
-                                <p className="activity-message">
-                                  {activity.message}
-                                </p>
-                                <span className="activity-time">
-                                  {activity.time}
-                                </span>
-                              </div>
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* ────── PULSE PANEL (Right Side) ────── */}
-            <motion.div
-              className="pulse-panel"
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <div className="pulse-card">
-                <h3>Pulse</h3>
-                <p className="pulse-subtitle">Live team updates</p>
-                <div className="pulse-members">
-                  {teamMembers.slice(0, 3).map((m) => (
-                    <div key={m.id} className="pulse-member">
-                      <div className="pulse-avatar">{m.avatar}</div>
-                      <div>
-                        <p className="pulse-name">{m.name}</p>
-                        <p className="pulse-role">{m.role}</p>
-                      </div>
+                      <MessageCircle
+                        size={12}
+                        className="text-slate-600 hover:text-[#38debb] cursor-pointer"
+                      />
                     </div>
                   ))}
                 </div>
-              </div>
+              </RevealWrapper>
 
-              <div className="pulse-card insights-card">
-                <h3>AI Insights</h3>
-                <div className="insight-item">
-                  <span className="insight-icon">⚠️</span>
-                  <p>Build success rate at 95%</p>
+              {/* Command System Logs Exception Banner */}
+              <RevealWrapper id="insights" delay="0.08s">
+                <h4 className="section-title-outfit mb-3">
+                  AI Command Insights
+                </h4>
+                <div className="dash-card p-4 border border-red-500/15 bg-gradient-to-br from-red-500/[0.01] to-transparent">
+                  <div className="flex items-center gap-2.5 text-xs font-bold text-red-400">
+                    <span>Bottleneck Warning</span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+                    Resource exhaustion threshold imminent on cluster node core
+                    arrays. Pipeline acceleration protocols advised.
+                  </p>
                 </div>
-                <div className="insight-item">
-                  <span className="insight-icon">✅</span>
-                  <p>Code quality improved 12%</p>
+              </RevealWrapper>
+
+              {/* Mission Controller Dropdown Chat Box */}
+              <RevealWrapper id="chat-frame" delay="0.12s">
+                <div className="dash-card chat-module-card">
+                  <div
+                    className="chat-header-bar flex items-center justify-between p-4 bg-white/[0.01] border-b border-white/[0.03] cursor-pointer"
+                    onClick={() => setChatGroupOpen(!chatGroupOpen)}
+                  >
+                    <span className="text-xs font-bold text-[#38debb] flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#38debb] animate-pulse" />
+                      MISSION CHAT
+                    </span>
+                    <div
+                      className={`transition-transform duration-200 ${chatGroupOpen ? "" : "rotate-180"}`}
+                    >
+                      <ChevronDown size={14} className="text-slate-500" />
+                    </div>
+                  </div>
+
+                  <div
+                    className={`chat-messages-container-accordion ${chatGroupOpen ? "drawer-open" : ""}`}
+                  >
+                    <div className="p-4 space-y-3 max-h-48 overflow-y-auto">
+                      <div className="chat-bubble-row">
+                        <span className="text-[10px] font-bold text-blue-400">
+                          Alex
+                        </span>
+                        <p className="text-[11px] bg-white/[0.02] border border-white/5 p-2 rounded-xl text-slate-300 mt-1">
+                          Pushed the latest mesh shader updates. Please review
+                          @Sarah
+                        </p>
+                      </div>
+                      <div className="chat-bubble-row text-right">
+                        <span className="text-[10px] font-bold text-[#38debb]">
+                          Sarah
+                        </span>
+                        <p className="text-[11px] bg-[#38debb]/5 border border-[#38debb]/10 p-2 rounded-xl text-[#38debb] mt-1 inline-block text-left">
+                          On it. Looks solid from the diffs.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="p-3 bg-black/40 border-t border-white/[0.03]">
+                      <input
+                        type="text"
+                        placeholder="Transmit message..."
+                        className="w-full bg-transparent border-none outline-none text-xs text-slate-300 placeholder-slate-600"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
+              </RevealWrapper>
+
+              {/* Staggered Document List Stack */}
+              <RevealWrapper
+                id="timeline-stack"
+                delay="0.16s"
+                className="space-y-3"
+              >
+                {[
+                  {
+                    title: "Deployment Success",
+                    meta: "Prod-V4 is now live on Cluster-7",
+                    time: "Just Now",
+                  },
+                  {
+                    title: "New Design Comment",
+                    meta: "Julian: 'The mesh glow looks perfect'",
+                    time: "4m ago",
+                  },
+                  {
+                    title: "Documentation Updated",
+                    meta: "Alex updated API Endpoints v2.0",
+                    time: "1h ago",
+                  },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="dash-card timeline-slide-row p-4 border-l-2 border-l-[#38debb]"
+                  >
+                    <div className="flex justify-between items-start gap-2">
+                      <h5 className="font-bold text-xs text-white">
+                        {item.title}
+                      </h5>
+                      <span className="text-[9px] text-slate-600 font-bold uppercase">
+                        {item.time}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-1 leading-normal">
+                      {item.meta}
+                    </p>
+                  </div>
+                ))}
+              </RevealWrapper>
+
+              {/* Core Shared Attachments */}
+              <RevealWrapper id="shared-core" delay="0.2s">
+                <h4 className="section-title-outfit mb-3">Shared Core</h4>
+                <div className="dash-card p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm">📄</span>
+                      <div>
+                        <p className="font-bold text-slate-300">
+                          brand_guide_v2.pdf
+                        </p>
+                        <span className="text-[10px] text-slate-500">
+                          2.4 MB • 2h ago
+                        </span>
+                      </div>
+                    </div>
+                    <Share2
+                      size={12}
+                      className="text-slate-500 hover:text-white cursor-pointer"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs border-t border-white/[0.03] pt-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm">🎨</span>
+                      <div>
+                        <p className="font-bold text-slate-300">
+                          hero_render_dark.png
+                        </p>
+                        <span className="text-[10px] text-slate-500">
+                          12.1 MB • 5h ago
+                        </span>
+                      </div>
+                    </div>
+                    <Share2
+                      size={12}
+                      className="text-slate-500 hover:text-white cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </RevealWrapper>
+
+              {/* Meet Scheduling Link Drawer */}
+              <RevealWrapper id="syncs" delay="0.24s">
+                <div className="dash-card p-4 bg-gradient-to-br from-blue-500/[0.02] to-transparent">
+                  <span className="text-[9px] font-bold text-blue-400 tracking-wider uppercase block">
+                    Upcoming Syncs
+                  </span>
+                  <div className="flex justify-between items-center mt-2">
+                    <div>
+                      <h5 className="font-bold text-xs text-white">
+                        Sprint Retrospective
+                      </h5>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        Room: Virtual-Delta
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-900 border border-white/5 px-2 py-0.5 rounded">
+                      14:00
+                    </span>
+                  </div>
+                  <button className="w-full mt-4 py-2 bg-gradient-to-r from-[#38debb] to-blue-500 text-black text-xs font-bold uppercase rounded-xl tracking-wide flex items-center justify-center gap-1.5">
+                    <Play size={10} fill="black" /> Join Meeting
+                  </button>
+                </div>
+              </RevealWrapper>
+
+              {/* Leaderboard Stack */}
+              <RevealWrapper id="contributors" delay="0.28s">
+                <h4 className="section-title-outfit mb-3">Top Contributors</h4>
+                <div className="dash-card p-4 space-y-3.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-slate-600 font-bold">
+                        #1
+                      </span>
+                      <div>
+                        <h5 className="font-bold text-white">Sarah Konor</h5>
+                        <span className="text-[10px] text-slate-500">
+                          <CountUp target={892} /> PTS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs border-t border-white/[0.03] pt-3.5">
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-slate-600 font-bold">
+                        #2
+                      </span>
+                      <div>
+                        <h5 className="font-bold text-white">Alex Mercer</h5>
+                        <span className="text-[10px] text-slate-500">
+                          <CountUp target={741} /> PTS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </RevealWrapper>
+            </div>
           </div>
         </main>
       </div>
     </div>
   );
 };
-
-/* ─────────────────────────────────────
-   NAV LINK COMPONENT
-   ───────────────────────────────────── */
-function NavLink({ icon: Icon, label, to, active, onClick }) {
-  const content = (
-    <>
-      <Icon size={18} />
-      <span>{label}</span>
-    </>
-  );
-
-  if (to) {
-    return (
-      <Link to={to} className={`dash-nav-link ${active ? "active" : ""}`}>
-        {content}
-      </Link>
-    );
-  }
-
-  return (
-    <button className="dash-nav-link" onClick={onClick}>
-      {content}
-    </button>
-  );
-}
 
 export default TeamActivity;
