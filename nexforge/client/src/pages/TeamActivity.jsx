@@ -10,7 +10,10 @@ import {
   Share2,
   CheckCircle,
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import nexforgeLogo from "./logo.png";
 import "./TeamActivity.css";
+import "./dashboard.css";
 
 /* ────────────────────────────────────────────────────────
    ANIMATED UTILITIES & REUSABLE SUB-COMPONENTS
@@ -101,6 +104,14 @@ const TeamActivity = () => {
   const [chatGroupOpen, setChatGroupOpen] = useState(true);
   const [projectExpanded, setProjectExpanded] = useState(true);
 
+  const user = { name: "Siddhi S Patil", role: "Product Designer" };
+  const userInitials = user.name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   return (
     <div className="dashboard-page">
       {/* Background Layer Wells */}
@@ -122,8 +133,12 @@ const TeamActivity = () => {
         >
           <div className="dash-sidebar-header">
             <div className="dash-logo">
-              <h1 className="neon-text-teal">NEXFORGE</h1>
-              <p>Vanguard Command</p>
+              <img
+                src={nexforgeLogo}
+                alt="NexForge"
+                className="dash-logo-img"
+              />
+              <h1 className="neon-text-teal">NexForge</h1>
             </div>
             <button
               className="dash-sidebar-close"
@@ -134,40 +149,43 @@ const TeamActivity = () => {
           </div>
 
           <nav className="dash-nav">
-            <button type="button" className="dash-nav-item dash-nav-active">
-              <span className="nav-icon">📊</span>
-              <span>Overview</span>
-            </button>
-            <button type="button" className="dash-nav-item">
-              <span className="nav-icon">📈</span>
-              <span>Activity</span>
-            </button>
-            <button type="button" className="dash-nav-item">
-              <span className="nav-icon">💻</span>
-              <span>Commits</span>
-            </button>
-            <button type="button" className="dash-nav-item">
-              <span className="nav-icon">📁</span>
-              <span>Files</span>
-            </button>
-            <button type="button" className="dash-nav-item">
-              <span className="nav-icon">💡</span>
-              <span>Insights</span>
-            </button>
+            {[
+              { icon: "🧭", label: "Dashboard", path: "/dashboard/student" },
+              { icon: "🚀", label: "My Projects", path: "/dashboard/projects" },
+              {
+                icon: "🌐",
+                label: "Team Activity",
+                path: "/dashboard/team-activity",
+                active: true,
+              },
+              { icon: "⚡", label: "Recommendations", path: "#/" },
+              { icon: "🎓", label: "Skills", path: "#/" },
+              { icon: "💻", label: "Internship Prep", path: "#/" },
+            ].map((item, index) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                className={`dash-nav-item ${item.active ? "dash-nav-active" : ""}`}
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <span className="dash-nav-icon floating-icon">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            ))}
           </nav>
 
           <div className="dash-nav-bottom">
-            <button className="quick-action-btn-float float-bob-animation">
-              Quick Action
-            </button>
-            <button type="button" className="dash-nav-item">
-              <span className="nav-icon">⚙️</span>
-              <span>Support</span>
-            </button>
-            <button type="button" className="dash-nav-item">
-              <span className="nav-icon">📝</span>
-              <span>Logs</span>
-            </button>
+            <a href="#/" className="dash-nav-item">
+              <span className="dash-nav-icon">⚙️</span>
+              <span>Settings</span>
+            </a>
+            <div className="dash-sidebar-user">
+              <div className="dash-sidebar-avatar">{userInitials}</div>
+              <div className="dash-sidebar-user-info">
+                <span className="dash-sidebar-user-name">{user.name}</span>
+                <span className="dash-sidebar-user-role">{user.role}</span>
+              </div>
+            </div>
           </div>
         </aside>
 
@@ -181,27 +199,9 @@ const TeamActivity = () => {
               >
                 ☰
               </button>
-              <div className="top-global-nav-items hidden md:flex">
-                <button type="button" className="top-nav-link text-[#38debb]">
-                  Dashboard
-                </button>
-                <button type="button" className="top-nav-link">
-                  Analytics
-                </button>
-                <button type="button" className="top-nav-link">
-                  Projects
-                </button>
-                <button type="button" className="top-nav-link">
-                  Team
-                </button>
-              </div>
             </div>
 
             <div className="dash-topbar-right">
-              <div className="dash-search glass-input">
-                <Search size={14} className="text-slate-500" />
-                <input type="text" placeholder="Search systems..." />
-              </div>
               <button className="dash-icon-btn">
                 <Bell size={16} />
                 <span className="dash-notif-dot" />
