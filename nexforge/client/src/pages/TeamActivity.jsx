@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-  Search,
   Bell,
   ChevronDown,
   MessageCircle,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import nexforgeLogo from "./logo.png";
+import socket from "../socket/socket";
 import "./TeamActivity.css";
 import "./dashboard.css";
 
@@ -103,14 +103,56 @@ const TeamActivity = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [chatGroupOpen, setChatGroupOpen] = useState(true);
   const [projectExpanded, setProjectExpanded] = useState(true);
+  const [metrics, setMetrics] = useState({
+    teamMembers: 0,
+    onlineNow: 0,
+    activeProjects: 0,
+    commitsToday: 0,
+  });
 
-  const user = { name: "Siddhi S Patil", role: "Product Designer" };
-  const userInitials = user.name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const userStr = localStorage.getItem("user");
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userInitials = user?.name
+    ? user.name
+        .split(" ")
+        .map((part) => part[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "U";
+
+  useEffect(() => {
+    const refreshMetrics = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/projects/metrics",
+        );
+        const data = await response.json();
+        if (data?.metrics) {
+          setMetrics(data.metrics);
+        }
+      } catch (error) {
+        console.error("Failed to load team activity metrics:", error);
+      }
+    };
+
+    refreshMetrics();
+    const intervalId = window.setInterval(refreshMetrics, 15000);
+
+    const handleProjectChange = () => refreshMetrics();
+    socket.on("project-created", handleProjectChange);
+    socket.on("project-updated", handleProjectChange);
+    socket.on("project-deleted", handleProjectChange);
+    socket.on("sprint-changed", handleProjectChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      socket.off("project-created", handleProjectChange);
+      socket.off("project-updated", handleProjectChange);
+      socket.off("project-deleted", handleProjectChange);
+      socket.off("sprint-changed", handleProjectChange);
+    };
+  }, []);
 
   return (
     <div className="dashboard-page">
@@ -206,7 +248,7 @@ const TeamActivity = () => {
                 <Bell size={16} />
                 <span className="dash-notif-dot" />
               </button>
-              <div className="dash-avatar">SD</div>
+              <div className="dash-avatar">{userInitials}</div>
             </div>
           </header>
 
@@ -222,7 +264,7 @@ const TeamActivity = () => {
                 <div className="dash-card metric-counter-tile">
                   <span className="tile-label">Team Members</span>
                   <h2 className="tile-metric">
-                    <CountUp target={24} />
+                    <CountUp target={metrics.teamMembers} />
                   </h2>
                   <span className="tile-delta text-emerald-400">
                     ↗ +2 this week
@@ -231,7 +273,7 @@ const TeamActivity = () => {
                 <div className="dash-card metric-counter-tile">
                   <span className="tile-label">Online Now</span>
                   <h2 className="tile-metric flex items-center gap-2">
-                    <CountUp target={12} />
+                    <CountUp target={metrics.onlineNow} />
                     <span className="live-pulsing-dot-teal shrink-0" />
                   </h2>
                   <span className="tile-delta text-slate-500">
@@ -241,7 +283,7 @@ const TeamActivity = () => {
                 <div className="dash-card metric-counter-tile">
                   <span className="tile-label">Active Projects</span>
                   <h2 className="tile-metric">
-                    <CountUp target={8} />
+                    <CountUp target={metrics.activeProjects} />
                   </h2>
                   <span className="tile-delta text-amber-400">
                     ⏱ 2 awaiting review
@@ -250,7 +292,7 @@ const TeamActivity = () => {
                 <div className="dash-card metric-counter-tile">
                   <span className="tile-label">Commits Today</span>
                   <h2 className="tile-metric text-[#38debb]">
-                    <CountUp target={142} />
+                    <CountUp target={metrics.commitsToday} />
                   </h2>
                   <span className="tile-delta text-[#38debb]">
                     ⚡ Peak velocity reached
