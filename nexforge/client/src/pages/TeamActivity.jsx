@@ -103,6 +103,8 @@ const TeamActivity = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [chatGroupOpen, setChatGroupOpen] = useState(true);
   const [projectExpanded, setProjectExpanded] = useState(true);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [isEditingSelfTask, setIsEditingSelfTask] = useState(false);
   const [metrics, setMetrics] = useState({
     teamMembers: 0,
     onlineNow: 0,
@@ -120,6 +122,72 @@ const TeamActivity = () => {
         .slice(0, 2)
         .toUpperCase()
     : "U";
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/auth/users");
+        const data = await response.json();
+        const mappedUsers = data.map(u => ({
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          avatar: u.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase(),
+          task: "Away",
+          active: false
+        }));
+        setTeamMembers(mappedUsers);
+      } catch (error) {
+        console.error("Failed to fetch team members:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    // Join presence on socket
+    socket.emit("join-presence", {
+      name: user.name,
+      email: user.email,
+      role: user.role
+    });
+
+    // Listen for current active list
+    socket.on("presence-list", (list) => {
+      setTeamMembers(prev => prev.map(member => {
+        const match = list.find(l => l.email.toLowerCase() === member.email.toLowerCase());
+        if (match) {
+          return {
+            ...member,
+            task: match.task,
+            active: match.active
+          };
+        }
+        return member;
+      }));
+    });
+
+    // Listen for live presence updates
+    socket.on("presence-update", (update) => {
+      setTeamMembers(prev => prev.map(member => {
+        if (member.email.toLowerCase() === update.email.toLowerCase()) {
+          return {
+            ...member,
+            task: update.task,
+            active: update.active
+          };
+        }
+        return member;
+      }));
+    });
+
+    return () => {
+      socket.off("presence-list");
+      socket.off("presence-update");
+    };
+  }, [user]);
 
   useEffect(() => {
     const refreshMetrics = async () => {
@@ -273,11 +341,11 @@ const TeamActivity = () => {
                 <div className="dash-card metric-counter-tile">
                   <span className="tile-label">Online Now</span>
                   <h2 className="tile-metric flex items-center gap-2">
-                    <CountUp target={metrics.onlineNow} />
+                    <CountUp target={teamMembers.filter(m => m.active).length} />
                     <span className="live-pulsing-dot-teal shrink-0" />
                   </h2>
                   <span className="tile-delta text-slate-500">
-                    52% capacity active
+                    {teamMembers.length > 0 ? Math.round((teamMembers.filter(m => m.active).length / teamMembers.length) * 100) : 0}% capacity active
                   </span>
                 </div>
                 <div className="dash-card metric-counter-tile">
@@ -544,62 +612,88 @@ const TeamActivity = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="section-title-outfit">Pulse</h4>
                   <span className="text-[10px] font-bold text-[#38debb] bg-[#38debb]/10 border border-[#38debb]/15 px-2 py-0.5 rounded">
-                    12 ONLINE
+                    {teamMembers.filter(m => m.active).length} ONLINE
                   </span>
                 </div>
                 <div className="dash-card p-4 space-y-3.5">
-                  {[
-                    {
-                      name: "Sarah Konor",
-                      task: "NeuralNexus - Coding",
-                      avatar: "SK",
-                      active: true,
-                    },
-                    {
-                      name: "Alex Mercer",
-                      task: "System - Idle",
-                      avatar: "AM",
-                      active: true,
-                    },
-                    {
-                      name: "Julian Vane",
-                      task: "Away",
-                      avatar: "JV",
-                      active: false,
-                    },
-                  ].map((user, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white">
-                            {user.avatar}
+                  {teamMembers.map((member, idx) => {
+                    const isSelf = member.email.toLowerCase() === user?.email?.toLowerCase();
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border border-white/10 flex items-center justify-center text-[10px] font-bold text-white">
+                              {member.avatar}
+                            </div>
+                            <span
+                              className={
+                                member.active
+                                  ? "live-pulsing-dot-teal-corner"
+                                  : "status-dot-away-corner"
+                              }
+                            />
                           </div>
-                          <span
-                            className={
-                              user.active
-                                ? "live-pulsing-dot-teal-corner"
-                                : "status-dot-away-corner"
-                            }
-                          />
+                          <div>
+                            <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
+                              {member.name}
+                              {isSelf && (
+                                <span className="text-[9px] font-bold text-[#38debb] bg-[#38debb]/10 px-1 py-0.2 rounded font-sans uppercase shrink-0">
+                                  You
+                                </span>
+                              )}
+                            </h5>
+                            <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
+                              {isSelf && isEditingSelfTask ? (
+                                <input
+                                  type="text"
+                                  defaultValue={member.task}
+                                  className="bg-black/40 border border-[#38debb]/30 rounded px-1.5 py-0.5 text-white text-[10px] outline-none w-32"
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      const val = e.target.value.trim();
+                                      if (val) {
+                                        socket.emit("update-task-status", { email: member.email, task: val });
+                                      }
+                                      setIsEditingSelfTask(false);
+                                    } else if (e.key === "Escape") {
+                                      setIsEditingSelfTask(false);
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const val = e.target.value.trim();
+                                    if (val) {
+                                      socket.emit("update-task-status", { email: member.email, task: val });
+                                    }
+                                    setIsEditingSelfTask(false);
+                                  }}
+                                  autoFocus
+                                />
+                              ) : (
+                                <>
+                                  {member.task}
+                                  {isSelf && (
+                                    <span
+                                      className="text-[9px] text-[#38debb] hover:underline cursor-pointer font-semibold uppercase"
+                                      onClick={() => setIsEditingSelfTask(true)}
+                                    >
+                                      (Change)
+                                    </span>
+                                  )}
+                                </>
+                              )}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h5 className="font-bold text-white text-xs">
-                            {user.name}
-                          </h5>
-                          <p className="text-[10px] text-slate-500 mt-0.5">
-                            {user.task}
-                          </p>
-                        </div>
+                        <MessageCircle
+                          size={12}
+                          className="text-slate-600 hover:text-[#38debb] cursor-pointer"
+                        />
                       </div>
-                      <MessageCircle
-                        size={12}
-                        className="text-slate-600 hover:text-[#38debb] cursor-pointer"
-                      />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </RevealWrapper>
 
