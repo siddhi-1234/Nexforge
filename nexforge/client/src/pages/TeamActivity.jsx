@@ -105,6 +105,11 @@ const TeamActivity = () => {
   const [projectExpanded, setProjectExpanded] = useState(true);
   const [teamMembers, setTeamMembers] = useState([]);
   const [isEditingSelfTask, setIsEditingSelfTask] = useState(false);
+  const [chartFilter, setChartFilter] = useState("7D");
+  const [velocityData, setVelocityData] = useState({
+    "7D": [35, 55, 42, 40, 28, 65, 82],
+    "24H": [12, 18, 25, 14, 30, 22]
+  });
   const [metrics, setMetrics] = useState({
     teamMembers: 0,
     onlineNow: 0,
@@ -181,6 +186,23 @@ const TeamActivity = () => {
         }
         return member;
       }));
+
+      // Increment velocity trend score in real time on any presence change
+      setVelocityData(prev => {
+        const next7D = [...prev["7D"]];
+        const next24H = [...prev["24H"]];
+
+        const todayIdx = (new Date().getDay() + 6) % 7;
+        next7D[todayIdx] = Math.min(next7D[todayIdx] + 2, 100);
+
+        const hourSlotIdx = Math.floor(new Date().getHours() / 4);
+        next24H[hourSlotIdx] = Math.min(next24H[hourSlotIdx] + 3, 100);
+
+        return {
+          "7D": next7D,
+          "24H": next24H
+        };
+      });
     });
 
     return () => {
@@ -376,32 +398,51 @@ const TeamActivity = () => {
                       Velocity Trends
                     </h3>
                     <div className="chart-filter-toggle-pills">
-                      <button className="pill-toggle">24H</button>
-                      <button className="pill-toggle pill-toggle-active">
+                      <button
+                        className={`pill-toggle ${chartFilter === "24H" ? "pill-toggle-active" : ""}`}
+                        onClick={() => setChartFilter("24H")}
+                      >
+                        24H
+                      </button>
+                      <button
+                        className={`pill-toggle ${chartFilter === "7D" ? "pill-toggle-active" : ""}`}
+                        onClick={() => setChartFilter("7D")}
+                      >
                         7D
                       </button>
                     </div>
                   </div>
                   {/* SVG Layout Architecture Vector Graph */}
                   <div className="chart-rendering-canvas flex items-end justify-between pt-4 h-48">
-                    {[35, 55, 100, 40, 28, 65, 82].map((val, idx) => (
-                      <div
-                        key={idx}
-                        className="chart-vertical-axis-bar-wrapper flex flex-col items-center flex-1 group"
-                      >
+                    {velocityData[chartFilter].map((val, idx) => {
+                      let isHighlighted = false;
+                      let label = "";
+
+                      if (chartFilter === "7D") {
+                        const todayIdx = (new Date().getDay() + 6) % 7;
+                        isHighlighted = idx === todayIdx;
+                        label = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][idx];
+                      } else {
+                        const hourSlotIdx = Math.floor(new Date().getHours() / 4);
+                        isHighlighted = idx === hourSlotIdx;
+                        label = ["12am", "4am", "8am", "12pm", "4pm", "8pm"][idx];
+                      }
+
+                      return (
                         <div
-                          className={`chart-bar-drawn ${idx === 2 ? "highlighted-bar" : ""}`}
-                          style={{ "--target-h": `${val}%` }}
-                        />
-                        <span className="chart-axis-label-font mt-2 text-[10px] text-slate-600 uppercase font-bold">
-                          {
-                            ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][
-                              idx
-                            ]
-                          }
-                        </span>
-                      </div>
-                    ))}
+                          key={idx}
+                          className="chart-vertical-axis-bar-wrapper flex flex-col items-center flex-1 group"
+                        >
+                          <div
+                            className={`chart-bar-drawn ${isHighlighted ? "highlighted-bar" : ""}`}
+                            style={{ "--target-h": `${val}%` }}
+                          />
+                          <span className="chart-axis-label-font mt-2 text-[10px] text-slate-600 uppercase font-bold">
+                            {label}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </SpotlightHoverCard>
               </RevealWrapper>

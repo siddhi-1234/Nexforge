@@ -169,6 +169,7 @@
 .chart-bar-drawn {
   @apply w-7 rounded-t bg-emerald-500/10 border border-emerald-500/20 origin-bottom;
   height: var(--target-h);
+  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   animation: barChartDrawFrame 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .highlighted-bar {
