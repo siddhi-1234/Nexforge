@@ -1,21 +1,9 @@
 const Project = require("../models/Project");
-
-function getRecentActivityCount(projects) {
-  const now = Date.now();
-  const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
-
-  return projects.filter((project) => {
-    const updatedAt = project.updatedAt
-      ? new Date(project.updatedAt).getTime()
-      : null;
-    const createdAt = project.createdAt
-      ? new Date(project.createdAt).getTime()
-      : null;
-    const lastTouch = updatedAt || createdAt;
-
-    return lastTouch && lastTouch >= twentyFourHoursAgo;
-  }).length;
-}
+const {
+  computeMetrics,
+  computeVelocity,
+  broadcastTeamActivity,
+} = require("../utils/teamMetricsService");
 
 // Helper to determine if a dueDate string represents a past date
 function isDatePast(dateStr) {
@@ -211,64 +199,24 @@ const SEED_PROJECTS = [
 
 exports.getProjectMetrics = async (req, res) => {
   try {
-    const projects = await Project.find();
-    const teamMembers = new Set();
-    const onlineMembers = new Set();
-
-    projects.forEach((project) => {
-      (project.team || []).forEach((member) => {
-        if (member.email) {
-          teamMembers.add(member.email.toLowerCase());
-        }
-      });
-
-      if (getRecentActivityCount([project]) > 0) {
-        (project.team || []).forEach((member) => {
-          if (member.email) {
-            onlineMembers.add(member.email.toLowerCase());
-          }
-        });
-      }
-    });
-
-    const activeProjects = projects.filter((project) => {
-      const phase = project.sprint?.phase;
-      return (
-        project.progress < 100 && (phase === "active" || phase === "planning")
-      );
-    }).length;
-
-    const commitsToday = projects.reduce((total, project) => {
-      const projectUpdatedAt = project.updatedAt
-        ? new Date(project.updatedAt)
-        : null;
-      const isToday =
-        projectUpdatedAt &&
-        projectUpdatedAt.getDate() === new Date().getDate() &&
-        projectUpdatedAt.getMonth() === new Date().getMonth() &&
-        projectUpdatedAt.getFullYear() === new Date().getFullYear();
-
-      if (!isToday) {
-        return total;
-      }
-
-      const completedTasks = (project.tasks || []).filter(
-        (task) => task.completed,
-      ).length;
-      return total + completedTasks;
-    }, 0);
-
-    res.status(200).json({
-      metrics: {
-        teamMembers: teamMembers.size,
-        onlineNow: onlineMembers.size,
-        activeProjects,
-        commitsToday,
-      },
-    });
+    const metrics = await computeMetrics();
+    res.status(200).json({ metrics });
   } catch (err) {
     res.status(500).json({
       message: "Error retrieving project metrics",
+      error: err.message,
+    });
+  }
+};
+
+exports.getVelocity = async (req, res) => {
+  try {
+    const projects = await Project.find();
+    const velocity = computeVelocity(projects);
+    res.status(200).json({ velocity });
+  } catch (err) {
+    res.status(500).json({
+      message: "Error retrieving velocity data",
       error: err.message,
     });
   }
@@ -327,6 +275,7 @@ exports.createProject = async (req, res) => {
     await newProject.save();
     if (global.io) {
       global.io.emit("project-created", newProject);
+      broadcastTeamActivity();
     }
 
     const creatorEmail =
@@ -389,6 +338,7 @@ exports.updateProject = async (req, res) => {
         `[Socket] Broadcasting project-updated for project ID: ${id}`,
       );
       global.io.emit("project-updated", updatedProject);
+      broadcastTeamActivity();
     }
 
     // Notify only for meaningful live project activity
@@ -514,6 +464,7 @@ exports.deleteProject = async (req, res) => {
     if (global.io) {
       global.io.emit("project-deleted", id);
       global.io.emit("project-archived", id);
+      broadcastTeamActivity();
     }
     res
       .status(200)
@@ -558,6 +509,7 @@ exports.updateProjectSprint = async (req, res) => {
         sprint: updatedProject.sprint,
       });
       global.io.emit("project-updated", updatedProject);
+      broadcastTeamActivity();
     }
 
     if (oldPhase !== sprint.phase && sprint.phase === "completed") {

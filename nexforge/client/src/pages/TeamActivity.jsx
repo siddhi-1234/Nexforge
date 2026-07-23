@@ -99,6 +99,24 @@ function RevealWrapper({ children, delay = "0s", className = "" }) {
 /* ────────────────────────────────────────────────────────
    MAIN TEAM ACTIVITY CONTROLLER
    ──────────────────────────────────────────────────────── */
+const API_BASE = "http://localhost:5000";
+
+function mapPresenceToMember(presence) {
+  return {
+    name: presence.name,
+    email: presence.email,
+    role: presence.role,
+    avatar: presence.name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase(),
+    task: presence.task,
+    active: presence.active,
+  };
+}
+
 const TeamActivity = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [chatGroupOpen, setChatGroupOpen] = useState(true);
@@ -107,8 +125,8 @@ const TeamActivity = () => {
   const [isEditingSelfTask, setIsEditingSelfTask] = useState(false);
   const [chartFilter, setChartFilter] = useState("7D");
   const [velocityData, setVelocityData] = useState({
-    "7D": [35, 55, 42, 40, 28, 65, 82],
-    "24H": [12, 18, 25, 14, 30, 22]
+    "7D": [0, 0, 0, 0, 0, 0, 0],
+    "24H": [0, 0, 0, 0, 0, 0],
   });
   const [metrics, setMetrics] = useState({
     teamMembers: 0,
@@ -129,80 +147,31 @@ const TeamActivity = () => {
     : "U";
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/auth/users");
-        const data = await response.json();
-        const mappedUsers = data.map(u => ({
-          name: u.name,
-          email: u.email,
-          role: u.role,
-          avatar: u.name.split(" ").map(p => p[0]).join("").slice(0, 2).toUpperCase(),
-          task: "Away",
-          active: false
-        }));
-        setTeamMembers(mappedUsers);
-      } catch (error) {
-        console.error("Failed to fetch team members:", error);
-      }
-    };
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
     if (!socket || !user) return;
 
-    // Join presence on socket
     socket.emit("join-presence", {
       name: user.name,
       email: user.email,
-      role: user.role
+      role: user.role,
     });
 
-    // Listen for current active list
     socket.on("presence-list", (list) => {
-      setTeamMembers(prev => prev.map(member => {
-        const match = list.find(l => l.email.toLowerCase() === member.email.toLowerCase());
-        if (match) {
-          return {
-            ...member,
-            task: match.task,
-            active: match.active
-          };
-        }
-        return member;
-      }));
+      setTeamMembers(list.map(mapPresenceToMember));
     });
 
-    // Listen for live presence updates
     socket.on("presence-update", (update) => {
-      setTeamMembers(prev => prev.map(member => {
-        if (member.email.toLowerCase() === update.email.toLowerCase()) {
-          return {
-            ...member,
-            task: update.task,
-            active: update.active
-          };
-        }
-        return member;
-      }));
-
-      // Increment velocity trend score in real time on any presence change
-      setVelocityData(prev => {
-        const next7D = [...prev["7D"]];
-        const next24H = [...prev["24H"]];
-
-        const todayIdx = (new Date().getDay() + 6) % 7;
-        next7D[todayIdx] = Math.min(next7D[todayIdx] + 2, 100);
-
-        const hourSlotIdx = Math.floor(new Date().getHours() / 4);
-        next24H[hourSlotIdx] = Math.min(next24H[hourSlotIdx] + 3, 100);
-
-        return {
-          "7D": next7D,
-          "24H": next24H
-        };
-      });
+      setTeamMembers((prev) =>
+        prev.map((member) => {
+          if (member.email.toLowerCase() === update.email.toLowerCase()) {
+            return {
+              ...member,
+              task: update.task,
+              active: update.active,
+            };
+          }
+          return member;
+        }),
+      );
     });
 
     return () => {
@@ -214,9 +183,7 @@ const TeamActivity = () => {
   useEffect(() => {
     const refreshMetrics = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/projects/metrics",
-        );
+        const response = await fetch(`${API_BASE}/api/projects/metrics`);
         const data = await response.json();
         if (data?.metrics) {
           setMetrics(data.metrics);
@@ -226,17 +193,41 @@ const TeamActivity = () => {
       }
     };
 
-    refreshMetrics();
-    const intervalId = window.setInterval(refreshMetrics, 15000);
+    const refreshVelocity = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/projects/velocity`);
+        const data = await response.json();
+        if (data?.velocity) {
+          setVelocityData(data.velocity);
+        }
+      } catch (error) {
+        console.error("Failed to load velocity data:", error);
+      }
+    };
 
-    const handleProjectChange = () => refreshMetrics();
+    const refreshTeamData = () => {
+      refreshMetrics();
+      refreshVelocity();
+    };
+
+    refreshTeamData();
+
+    socket.on("metrics-update", ({ metrics: liveMetrics }) => {
+      if (liveMetrics) setMetrics(liveMetrics);
+    });
+    socket.on("velocity-update", ({ velocity }) => {
+      if (velocity) setVelocityData(velocity);
+    });
+
+    const handleProjectChange = () => refreshTeamData();
     socket.on("project-created", handleProjectChange);
     socket.on("project-updated", handleProjectChange);
     socket.on("project-deleted", handleProjectChange);
     socket.on("sprint-changed", handleProjectChange);
 
     return () => {
-      window.clearInterval(intervalId);
+      socket.off("metrics-update");
+      socket.off("velocity-update");
       socket.off("project-created", handleProjectChange);
       socket.off("project-updated", handleProjectChange);
       socket.off("project-deleted", handleProjectChange);
@@ -363,11 +354,16 @@ const TeamActivity = () => {
                 <div className="dash-card metric-counter-tile">
                   <span className="tile-label">Online Now</span>
                   <h2 className="tile-metric flex items-center gap-2">
-                    <CountUp target={teamMembers.filter(m => m.active).length} />
+                    <CountUp target={metrics.onlineNow} />
                     <span className="live-pulsing-dot-teal shrink-0" />
                   </h2>
                   <span className="tile-delta text-slate-500">
-                    {teamMembers.length > 0 ? Math.round((teamMembers.filter(m => m.active).length / teamMembers.length) * 100) : 0}% capacity active
+                    {metrics.teamMembers > 0
+                      ? Math.round(
+                          (metrics.onlineNow / metrics.teamMembers) * 100,
+                        )
+                      : 0}
+                    % capacity active
                   </span>
                 </div>
                 <div className="dash-card metric-counter-tile">
@@ -653,7 +649,7 @@ const TeamActivity = () => {
                 <div className="flex items-center justify-between">
                   <h4 className="section-title-outfit">Pulse</h4>
                   <span className="text-[10px] font-bold text-[#38debb] bg-[#38debb]/10 border border-[#38debb]/15 px-2 py-0.5 rounded">
-                    {teamMembers.filter(m => m.active).length} ONLINE
+                    {metrics.onlineNow} ONLINE
                   </span>
                 </div>
                 <div className="dash-card p-4 space-y-3.5">
@@ -661,7 +657,7 @@ const TeamActivity = () => {
                     const isSelf = member.email.toLowerCase() === user?.email?.toLowerCase();
                     return (
                       <div
-                        key={idx}
+                        key={member.email}
                         className="flex items-center justify-between text-xs"
                       >
                         <div className="flex items-center gap-3">

@@ -5,11 +5,16 @@ import mongoose from "mongoose";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
+import { createRequire } from "module";
 
 import authRoutes from "./routes/authRoutes.js";
 import projectRoutes from "./routes/projectRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import Project from "./models/Project.js";
 import User from "./models/User.js";
+
+const require = createRequire(import.meta.url);
+const { broadcastTeamActivity } = require("./utils/teamMetricsService.js");
 
 const app = express();
 
@@ -35,16 +40,7 @@ global.io = io;
 
 // Active presence map tracking: email.toLowerCase() -> { name, email, role, task, active, socketId }
 const activePresence = new Map();
-
-const SIMULATED_TASKS = [
-  "Coding: Implement WebGL shader library",
-  "Debugging: Optimize asset loader pipeline",
-  "Designing: Draft CRM shell user journey",
-  "Writing: API documentation",
-  "Reviewing PR: Auth module refactor",
-  "Idle",
-  "Away"
-];
+global.activePresence = activePresence;
 
 async function initializePresence() {
   try {
@@ -60,40 +56,10 @@ async function initializePresence() {
         socketId: null
       });
     });
-    console.log(`Initialized presence for ${activePresence.size} users`);
+
   } catch (err) {
     console.error("Error initializing presence:", err.message);
   }
-}
-
-function startPresenceSimulation() {
-  setInterval(() => {
-    if (activePresence.size === 0) return;
-    
-    const emails = Array.from(activePresence.keys());
-    const randomEmail = emails[Math.floor(Math.random() * emails.length)];
-    
-    // Don't simulate status changes for currently connected users!
-    const sockets = Array.from(io.sockets.sockets.values());
-    const isConnected = sockets.some(s => s.userEmail === randomEmail);
-    if (isConnected) return;
-    
-    const randomTask = SIMULATED_TASKS[Math.floor(Math.random() * SIMULATED_TASKS.length)];
-    const isActive = randomTask !== "Away";
-    
-    const userPres = activePresence.get(randomEmail);
-    if (userPres) {
-      userPres.task = randomTask;
-      userPres.active = isActive;
-      activePresence.set(randomEmail, userPres);
-      
-      io.emit("presence-update", {
-        email: randomEmail,
-        task: randomTask,
-        active: isActive
-      });
-    }
-  }, 12000); // simulate status change every 12 seconds
 }
 
 // Socket Events
@@ -128,6 +94,7 @@ io.on("connection", (socket) => {
             sprint: updatedProject.sprint,
           });
           io.emit("project-updated", updatedProject);
+          broadcastTeamActivity();
 
           if (oldPhase !== sprint.phase) {
             const { notifyProjectMembers } =
@@ -167,6 +134,7 @@ io.on("connection", (socket) => {
       });
 
       socket.emit("presence-list", Array.from(activePresence.values()));
+      broadcastTeamActivity();
     }
   });
 
@@ -184,6 +152,7 @@ io.on("connection", (socket) => {
           task: task,
           active: userPres.active
         });
+        broadcastTeamActivity();
       }
     }
   });
@@ -193,7 +162,7 @@ io.on("connection", (socket) => {
       const email = socket.userEmail;
       const sockets = Array.from(io.sockets.sockets.values());
       const hasOtherSocket = sockets.some(s => s.id !== socket.id && s.userEmail === email);
-      
+
       if (!hasOtherSocket) {
         const userPres = activePresence.get(email);
         if (userPres) {
@@ -207,6 +176,7 @@ io.on("connection", (socket) => {
             task: "Away",
             active: false
           });
+          broadcastTeamActivity();
         }
       }
     }
@@ -236,6 +206,7 @@ app.use((req, res, next) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Environment variables
 const MONGO_URI = process.env.MONGODB_URI;
@@ -247,7 +218,6 @@ mongoose
   .then(async () => {
     console.log("Connected to server...");
     await initializePresence();
-    startPresenceSimulation();
 
     // IMPORTANT: use server.listen(), not app.listen()
     server.listen(PORT, () => {
@@ -257,7 +227,3 @@ mongoose
   .catch((err) => {
     console.error("Database connection error:", err.message);
   });
-
-import notificationRoutes from "./routes/notificationRoutes.js";
-
-app.use("/api/notifications", notificationRoutes);
