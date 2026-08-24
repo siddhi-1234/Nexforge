@@ -1,0 +1,583 @@
+/* =========================================================
+   Nexforge Login - custom animations/effects
+   Tailwind handles the layout and component styling.
+   This file handles the visual effects.
+   ========================================================= */
+
+.nf-login {
+    position: relative;
+    isolation: isolate;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+}
+
+.nf-reference-bg {
+    /* background-image: url("/assets/login-bg.png"); (handled inline in JSX) */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    transform: scale(1.03);
+    animation: nf-bg-drift 18s ease-in-out infinite alternate;
+}
+
+@keyframes nf-bg-drift {
+    from {
+        transform: scale(1.03) translate3d(0, 0, 0);
+    }
+
+    to {
+        transform: scale(1.08) translate3d(-1.2%, -0.6%, 0);
+    }
+}
+
+/* Ambient blobs on the right */
+.nf-ambient {
+    position: fixed;
+    width: 420px;
+    height: 420px;
+    border-radius: 999px;
+    filter: blur(100px);
+    pointer-events: none;
+    opacity: 0.16;
+    z-index: 0;
+}
+
+.nf-ambient-one {
+    right: -150px;
+    top: -130px;
+    background: #4f46e5;
+    animation: nf-float-one 11s ease-in-out infinite;
+}
+
+.nf-ambient-two {
+    left: 35%;
+    bottom: -220px;
+    background: #00e5ff;
+    animation: nf-float-two 14s ease-in-out infinite;
+}
+
+@keyframes nf-float-one {
+
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(-70px, 45px, 0) scale(1.15);
+    }
+}
+
+@keyframes nf-float-two {
+
+    0%,
+    100% {
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate3d(70px, -45px, 0) scale(1.18);
+    }
+}
+
+/* Subtle tech grid */
+.nf-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.11;
+    background-image:
+        linear-gradient(rgba(91, 225, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91, 225, 255, 0.08) 1px, transparent 1px);
+    background-size: 46px 46px;
+    mask-image: radial-gradient(circle at 70% 50%, black, transparent 65%);
+    animation: nf-grid-move 25s linear infinite;
+}
+
+@keyframes nf-grid-move {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 46px 46px;
+    }
+}
+
+.nf-noise {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+}
+
+/* Supplied Nexforge logo is a square image.
+   These classes crop the emblem from the SAME supplied logo. */
+.nf-logo-mark {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    flex: 0 0 auto;
+    background: #05051d;
+}
+
+.nf-logo-mark img {
+    position: absolute;
+    max-width: none;
+    height: auto;
+    width: 133px;
+    left: -41px;
+    top: -27px;
+    pointer-events: none;
+    user-select: none;
+}
+
+.nf-logo-mark-small {
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+    box-shadow:
+        0 0 0 1px rgba(112, 87, 255, 0.22),
+        0 0 24px rgba(84, 65, 255, 0.18);
+}
+
+.nf-logo-mark-small img {
+    width: 133px;
+    left: -41px;
+    top: -27px;
+}
+
+.nf-brand-word {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.94);
+}
+
+.nf-card-logo {
+    width: 76px;
+    height: 76px;
+    border-radius: 10px;
+    box-shadow:
+        0 0 0 1px rgba(125, 90, 255, 0.18),
+        0 0 32px rgba(85, 65, 255, 0.12);
+}
+
+.nf-card-logo img {
+    width: 188px;
+    left: -58px;
+    top: -38px;
+}
+
+/* Login card */
+.nf-login-card {
+    position: relative;
+    background:
+        radial-gradient(circle at 50% 0%, rgba(72, 95, 120, 0.13), transparent 35%),
+        linear-gradient(145deg, rgba(15, 31, 47, 0.74), rgba(2, 17, 30, 0.87));
+    box-shadow:
+        0 35px 100px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    animation: nf-card-in 0.8s cubic-bezier(.2, .75, .25, 1) both;
+}
+
+.nf-login-card::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(125deg,
+            rgba(255, 255, 255, .14),
+            transparent 22%,
+            transparent 68%,
+            rgba(0, 225, 255, .25));
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+@keyframes nf-card-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px) scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.nf-title {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #f5f6fb;
+}
+
+.nf-form-glow {
+    position: absolute;
+    width: 360px;
+    height: 360px;
+    border-radius: 50%;
+    background: rgba(0, 229, 255, 0.08);
+    filter: blur(100px);
+    pointer-events: none;
+    animation: nf-form-pulse 7s ease-in-out infinite;
+}
+
+@keyframes nf-form-pulse {
+
+    0%,
+    100% {
+        transform: translate(20%, -5%) scale(1);
+        opacity: .45;
+    }
+
+    50% {
+        transform: translate(-15%, 10%) scale(1.18);
+        opacity: .8;
+    }
+}
+
+/* Inputs */
+.nf-input-wrap {
+    position: relative;
+}
+
+.nf-input {
+    width: 100%;
+    height: 53px;
+    border: 1px solid rgba(110, 137, 158, 0.18);
+    border-bottom-color: rgba(110, 137, 158, 0.27);
+    border-radius: 7px;
+    outline: none;
+    background: rgba(11, 30, 46, 0.88);
+    color: #eef7fb;
+    padding: 0 48px 0 47px;
+    font-size: 14px;
+    transition:
+        border-color .3s ease,
+        box-shadow .3s ease,
+        background .3s ease,
+        transform .3s ease;
+}
+
+.nf-input::placeholder {
+    color: rgba(138, 157, 174, 0.67);
+}
+
+.nf-input:hover {
+    background: rgba(14, 35, 53, 0.95);
+}
+
+.nf-input:focus {
+    border-color: rgba(34, 211, 238, 0.65);
+    box-shadow:
+        0 0 0 3px rgba(34, 211, 238, 0.07),
+        0 0 28px rgba(34, 211, 238, 0.06);
+    background: rgba(13, 34, 52, 0.98);
+    transform: translateY(-1px);
+}
+
+.nf-input-icon {
+    position: absolute;
+    z-index: 2;
+    left: 17px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(157, 176, 191, 0.72);
+    pointer-events: none;
+    transition: color .3s ease, transform .3s ease;
+}
+
+.nf-input-wrap:focus-within .nf-input-icon {
+    color: #67e8f9;
+    transform: translateY(-50%) scale(1.05);
+}
+
+.nf-password-input {
+    padding-right: 52px;
+}
+
+.nf-eye {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    transform: translateY(-50%);
+    color: rgba(173, 189, 202, 0.68);
+    border-radius: 6px;
+    transition: color .25s ease, background .25s ease, transform .25s ease;
+}
+
+.nf-eye:hover {
+    color: #67e8f9;
+    background: rgba(103, 232, 249, 0.06);
+    transform: translateY(-50%) scale(1.08);
+}
+
+/* Checkbox */
+.nf-checkbox {
+    width: 17px;
+    height: 17px;
+    appearance: none;
+    border: 1px solid rgba(145, 169, 186, .55);
+    border-radius: 4px;
+    background: rgba(10, 28, 44, .8);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all .25s ease;
+}
+
+.nf-checkbox::after {
+    content: "";
+    width: 8px;
+    height: 4px;
+    border-left: 2px solid white;
+    border-bottom: 2px solid white;
+    transform: rotate(-45deg) scale(0);
+    transition: transform .18s ease;
+}
+
+.nf-checkbox:checked {
+    border-color: #22d3ee;
+    background: linear-gradient(135deg, #0891b2, #4f46e5);
+    box-shadow: 0 0 14px rgba(34, 211, 238, .18);
+}
+
+.nf-checkbox:checked::after {
+    transform: rotate(-45deg) scale(1);
+}
+
+/* Links */
+.nf-link {
+    color: #e9edf2;
+    transition: color .25s ease, text-shadow .25s ease;
+}
+
+.nf-link:hover {
+    color: #67e8f9;
+    text-shadow: 0 0 18px rgba(103, 232, 249, .28);
+}
+
+/* Login button */
+.nf-login-button {
+    background:
+        linear-gradient(110deg, rgba(10, 38, 53, .95), rgba(9, 25, 43, .95));
+    box-shadow:
+        inset 0 0 18px rgba(34, 211, 238, .025),
+        0 0 0 rgba(34, 211, 238, 0);
+}
+
+.nf-login-button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg,
+            transparent 0%,
+            rgba(34, 211, 238, .10) 48%,
+            transparent 100%);
+    transform: translateX(-120%);
+    transition: transform .7s ease;
+}
+
+.nf-login-button:hover {
+    border-color: #67e8f9;
+    box-shadow:
+        0 0 25px rgba(34, 211, 238, .12),
+        inset 0 0 24px rgba(34, 211, 238, .035);
+    transform: translateY(-2px);
+}
+
+.nf-login-button:hover::after {
+    transform: translateX(120%);
+}
+
+.nf-login-button:active {
+    transform: translateY(0) scale(.99);
+}
+
+.nf-button-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, .16),
+            transparent);
+    transform: skewX(-18deg);
+    animation: nf-button-shine 4.5s ease-in-out infinite;
+}
+
+@keyframes nf-button-shine {
+
+    0%,
+    60% {
+        left: -100%;
+    }
+
+    78%,
+    100% {
+        left: 150%;
+    }
+}
+
+/* Left visual particles */
+.nf-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.nf-particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 999px;
+    background: #67e8f9;
+    box-shadow: 0 0 12px #22d3ee;
+    opacity: 0;
+    animation: nf-particle-float 5s ease-in-out infinite;
+}
+
+@keyframes nf-particle-float {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 25px, 0) scale(.7);
+    }
+
+    25% {
+        opacity: .8;
+    }
+
+    75% {
+        opacity: .4;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate3d(15px, -55px, 0) scale(1.4);
+    }
+}
+
+/* Cyan decorative beams */
+.nf-beam {
+    position: absolute;
+    pointer-events: none;
+    height: 1px;
+    width: 42%;
+    opacity: .5;
+    background: linear-gradient(90deg, transparent, #22d3ee, transparent);
+    filter: drop-shadow(0 0 8px rgba(34, 211, 238, .7));
+}
+
+.nf-beam-one {
+    top: 29%;
+    left: 3%;
+    transform: rotate(-7deg);
+    animation: nf-beam-one 5s ease-in-out infinite alternate;
+}
+
+.nf-beam-two {
+    top: 67%;
+    left: 9%;
+    transform: rotate(9deg);
+    opacity: .25;
+    animation: nf-beam-two 6s ease-in-out infinite alternate;
+}
+
+@keyframes nf-beam-one {
+    from {
+        transform: translateX(-4%) rotate(-7deg);
+        opacity: .18;
+    }
+
+    to {
+        transform: translateX(7%) rotate(-7deg);
+        opacity: .65;
+    }
+}
+
+@keyframes nf-beam-two {
+    from {
+        transform: translateX(2%) rotate(9deg);
+    }
+
+    to {
+        transform: translateX(15%) rotate(9deg);
+    }
+}
+
+.nf-gradient-text {
+    background: linear-gradient(90deg, #ffffff 0%, #8b5cf6 48%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    background-size: 180% auto;
+    animation: nf-gradient-shift 5s ease-in-out infinite alternate;
+}
+
+@keyframes nf-gradient-shift {
+    from {
+        background-position: 0% center;
+    }
+
+    to {
+        background-position: 100% center;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 1023px) {
+    .nf-login-card {
+        max-width: 520px;
+    }
+
+    .nf-grid {
+        opacity: .07;
+    }
+}
+
+@media (max-width: 520px) {
+    .nf-login-card {
+        padding: 30px 21px;
+        border-radius: 16px;
+    }
+
+    .nf-title {
+        font-size: 29px;
+    }
+
+    .nf-input {
+        height: 51px;
+    }
+}
