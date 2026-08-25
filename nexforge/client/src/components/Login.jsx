@@ -160,11 +160,11 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
 
                     <div className="nf-login-card w-full max-w-[500px] rounded-2xl border border-white/10 px-7 py-8 shadow-2xl sm:px-11 sm:py-10">
                         {/* Logo */}
-                        <div className="mb-5 flex justify-center">
+                        <div className="mb-5 flex justify-start">
                             <LogoMark className="nf-card-logo" />
                         </div>
 
-                        <div className="mb-9 text-center">
+                        <div className="mb-9 text-left">
                             <h2 className="nf-title text-3xl font-semibold tracking-tight sm:text-[34px]">
                                 Welcome back
                             </h2>
