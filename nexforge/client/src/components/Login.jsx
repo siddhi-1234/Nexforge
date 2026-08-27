@@ -71,6 +71,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
         password: "",
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [isInteracting, setIsInteracting] = useState(false);
 
     const handleChange = (event) => {
         setForm((current) => ({
@@ -135,8 +136,11 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
 
                     {/* Top-left Nexforge brand */}
                     <div className="absolute left-10 top-7 flex items-center gap-3">
-                        <LogoMark className="nf-logo-mark-small" />
-                        <span className="nf-brand-word">NexForge</span>
+                        <div className={`nf-brand-glow-wrap ${isInteracting ? "nf-glow-boost" : ""}`} aria-hidden="true">
+                            <div className="nf-brand-glow" />
+                        </div>
+                        <LogoMark className="nf-logo-mark-small relative z-10" />
+                        <span className="nf-brand-word relative z-10">NexForge</span>
                     </div>
 
                     {/* Decorative cyan beam */}
@@ -195,6 +199,8 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                         autoComplete="email"
                                         value={form.email}
                                         onChange={handleChange}
+                                        onFocus={() => setIsInteracting(true)}
+                                        onBlur={() => setIsInteracting(false)}
                                         placeholder="Enter your e-mail"
                                         className="nf-input"
                                         required
@@ -223,6 +229,8 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                         autoComplete="current-password"
                                         value={form.password}
                                         onChange={handleChange}
+                                        onFocus={() => setIsInteracting(true)}
+                                        onBlur={() => setIsInteracting(false)}
                                         placeholder="Enter your password"
                                         className="nf-input nf-password-input"
                                         required
@@ -246,6 +254,8 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                         type="checkbox"
                                         checked={remember}
                                         onChange={(event) => setRemember(event.target.checked)}
+                                        onFocus={() => setIsInteracting(true)}
+                                        onBlur={() => setIsInteracting(false)}
                                         className="nf-checkbox"
                                     />
                                     <span>Remember me</span>
@@ -264,6 +274,8 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                             <button
                                 type="submit"
                                 disabled={isLoading}
+                                onMouseEnter={() => setIsInteracting(true)}
+                                onMouseLeave={() => setIsInteracting(false)}
                                 className="nf-login-button group relative flex h-[54px] w-full items-center justify-center overflow-hidden rounded-lg border border-cyan-300/80 text-sm font-bold uppercase tracking-[0.17em] text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70"
                             >
                                 <span className="nf-button-shine" />
