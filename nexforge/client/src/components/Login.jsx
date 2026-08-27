@@ -1,17 +1,5 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import "./CSS/login.css";
-
-
-/*
-  Nexforge Login Page
-  -------------------
-  Required asset:
-  public/assets/logo.png
-
-  The supplied Nexforge logo is used in two ways:
-  1. Full wordmark on the top-left.
-  2. A CSS crop of the same logo to show only the emblem inside the login card.
-*/
 
 const LogoMark = ({ className = "" }) => (
     <span className={`nf-logo-mark ${className}`} aria-hidden="true">
@@ -72,6 +60,23 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [isInteracting, setIsInteracting] = useState(false);
+    const cardRef = useRef(null);
+
+    const handleCardPointerMove = (event) => {
+        const card = cardRef.current;
+        if (!card) return;
+
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty("--nf-mx", `${event.clientX - rect.left}px`);
+        card.style.setProperty("--nf-my", `${event.clientY - rect.top}px`);
+        card.style.setProperty("--nf-sheen-opacity", "1");
+    };
+
+    const handleCardPointerLeave = () => {
+        if (cardRef.current) {
+            cardRef.current.style.setProperty("--nf-sheen-opacity", "0");
+        }
+    };
 
     const handleChange = (event) => {
         setForm((current) => ({
@@ -113,7 +118,10 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
             <div className="relative z-10 flex min-h-screen w-full">
                 {/* LEFT SIDE */}
                 <section className="relative hidden min-h-screen w-1/2 overflow-hidden lg:flex">
-                    <div className="absolute inset-0 nf-reference-bg" style={{ backgroundImage: "url('/assets/login-bg.png')" }} />
+                    <div
+                        className="absolute inset-0 nf-reference-bg"
+                        style={{ backgroundImage: "url('/assets/login-bg.png')" }}
+                    />
 
                     <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(1,14,25,.10),rgba(1,14,25,.35))]" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_45%,rgba(0,255,255,.13),transparent_34%),linear-gradient(180deg,rgba(1,14,25,.05),rgba(1,14,25,.55))]" />
@@ -136,11 +144,8 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
 
                     {/* Top-left Nexforge brand */}
                     <div className="absolute left-10 top-7 flex items-center gap-3">
-                        <div className={`nf-brand-glow-wrap ${isInteracting ? "nf-glow-boost" : ""}`} aria-hidden="true">
-                            <div className="nf-brand-glow" />
-                        </div>
-                        <LogoMark className="nf-logo-mark-small relative z-10" />
-                        <span className="nf-brand-word relative z-10">NexForge</span>
+                        <LogoMark className="nf-logo-mark-small" />
+                        <span className="nf-brand-word">NexForge</span>
                     </div>
 
                     {/* Decorative cyan beam */}
@@ -162,24 +167,32 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                 <section className="relative flex min-h-screen w-full items-center justify-center px-5 py-10 sm:px-8 lg:w-1/2">
                     <div className="nf-form-glow" />
 
-                    <div className="nf-login-card w-full max-w-[500px] rounded-2xl border border-white/10 px-7 py-8 shadow-2xl sm:px-11 sm:py-10">
+                    <div
+                        ref={cardRef}
+                        className="nf-login-card w-full max-w-[500px] rounded-2xl border border-white/10 px-7 py-8 shadow-2xl sm:px-11 sm:py-10"
+                        onPointerMove={handleCardPointerMove}
+                        onPointerLeave={handleCardPointerLeave}
+                    >
+                        <span className="nf-card-sheen" aria-hidden="true" />
+                        <span className="nf-card-perimeter" aria-hidden="true" />
+
                         {/* Logo */}
-                        <div className="mb-5 flex justify-start">
+                        <div className="mb-5 flex justify-center nf-animate-logo">
                             <LogoMark className="nf-card-logo" />
                         </div>
 
-                        <div className="mb-9 text-left">
-                            <h2 className="nf-title text-3xl font-semibold tracking-tight sm:text-[34px]">
+                        <div className="mb-9 text-center">
+                            <h2 className="nf-title text-3xl font-semibold tracking-tight sm:text-[34px] nf-animate-heading">
                                 Welcome back
                             </h2>
-                            <p className="mt-3 text-[15px] text-slate-300/90">
+                            <p className="mt-3 text-[15px] text-slate-300/90 nf-animate-subtext">
                                 Enter your details to continue to NexForge
                             </p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {/* Email */}
-                            <div>
+                            <div className="nf-animate-email">
                                 <label
                                     htmlFor="email"
                                     className="mb-2.5 block text-xs font-semibold uppercase tracking-[0.13em] text-slate-200"
@@ -209,7 +222,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                             </div>
 
                             {/* Password */}
-                            <div>
+                            <div className="nf-animate-password">
                                 <label
                                     htmlFor="password"
                                     className="mb-2.5 block text-xs font-semibold uppercase tracking-[0.13em] text-slate-200"
@@ -248,7 +261,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                             </div>
 
                             {/* Remember + Forgot */}
-                            <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center justify-between gap-4 nf-animate-remember">
                                 <label className="nf-check-label flex cursor-pointer items-center gap-2.5 text-sm text-slate-300">
                                     <input
                                         type="checkbox"
@@ -276,7 +289,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                 disabled={isLoading}
                                 onMouseEnter={() => setIsInteracting(true)}
                                 onMouseLeave={() => setIsInteracting(false)}
-                                className="nf-login-button group relative flex h-[54px] w-full items-center justify-center overflow-hidden rounded-lg border border-cyan-300/80 text-sm font-bold uppercase tracking-[0.17em] text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70"
+                                className="nf-login-button group relative flex h-[54px] w-full items-center justify-center overflow-hidden rounded-lg border border-cyan-300/80 text-sm font-bold uppercase tracking-[0.17em] text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70 nf-animate-login-btn"
                             >
                                 <span className="nf-button-shine" />
                                 <span className="relative z-10">
@@ -285,29 +298,31 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                             </button>
                         </form>
 
-                        <div className="my-8 flex items-center gap-4">
-                            <span className="h-px flex-1 bg-white/10" />
-                            <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                                or
-                            </span>
-                            <span className="h-px flex-1 bg-white/10" />
-                        </div>
+                        <div className="nf-animate-signup">
+                            <div className="my-8 flex items-center gap-4">
+                                <span className="h-px flex-1 bg-white/10" />
+                                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                                    or
+                                </span>
+                                <span className="h-px flex-1 bg-white/10" />
+                            </div>
 
-                        <p className="text-center text-sm text-slate-300">
-                            Don't have an account?
-                            <button
-                                type="button"
-                                onClick={onCreateAccount}
-                                className="nf-link ml-2 font-semibold"
-                            >
-                                Create an account
-                            </button>
-                        </p>
+                            <p className="text-center text-sm text-slate-300">
+                                Don't have an account?
+                                <button
+                                    type="button"
+                                    onClick={onCreateAccount}
+                                    className="nf-link ml-2 font-semibold"
+                                >
+                                    Create an account
+                                </button>
+                            </p>
 
-                        <div className="mt-8 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-600">
-                            <span className="h-1 w-1 rounded-full bg-cyan-400" />
-                            Secure NexForge workspace
-                            <span className="h-1 w-1 rounded-full bg-violet-400" />
+                            <div className="mt-8 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-600">
+                                <span className="h-1 w-1 rounded-full bg-cyan-400" />
+                                Secure NexForge workspace
+                                <span className="h-1 w-1 rounded-full bg-violet-400" />
+                            </div>
                         </div>
                     </div>
                 </section>

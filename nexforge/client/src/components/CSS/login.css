@@ -12,7 +12,6 @@
 }
 
 .nf-reference-bg {
-    /* background-image: url("/assets/login-bg.png"); (handled inline in JSX) */
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
@@ -46,14 +45,24 @@
     right: -150px;
     top: -130px;
     background: #4f46e5;
-    animation: nf-float-one 11s ease-in-out infinite;
+    animation: nf-glow-reveal-one 0.4s ease-out forwards, nf-float-one 11s ease-in-out infinite 0.4s;
 }
 
 .nf-ambient-two {
     left: 35%;
     bottom: -220px;
     background: #00e5ff;
-    animation: nf-float-two 14s ease-in-out infinite;
+    animation: nf-glow-reveal-two 0.4s ease-out forwards, nf-float-two 14s ease-in-out infinite 0.4s;
+}
+
+@keyframes nf-glow-reveal-one {
+    from { opacity: 0; }
+    to { opacity: 0.16; }
+}
+
+@keyframes nf-glow-reveal-two {
+    from { opacity: 0; }
+    to { opacity: 0.16; }
 }
 
 @keyframes nf-float-one {
@@ -92,7 +101,12 @@
         linear-gradient(90deg, rgba(91, 225, 255, 0.08) 1px, transparent 1px);
     background-size: 46px 46px;
     mask-image: radial-gradient(circle at 70% 50%, black, transparent 65%);
-    animation: nf-grid-move 25s linear infinite;
+    animation: nf-grid-reveal 0.4s ease-out forwards, nf-grid-move 25s linear infinite 0.4s;
+}
+
+@keyframes nf-grid-reveal {
+    from { opacity: 0; }
+    to { opacity: 0.11; }
 }
 
 @keyframes nf-grid-move {
@@ -112,6 +126,12 @@
     pointer-events: none;
     opacity: 0.035;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+    animation: nf-noise-reveal 0.4s ease-out forwards;
+}
+
+@keyframes nf-noise-reveal {
+    from { opacity: 0; }
+    to { opacity: 0.035; }
 }
 
 /* Supplied Nexforge logo is a square image.
@@ -122,6 +142,13 @@
     overflow: hidden;
     flex: 0 0 auto;
     background: #05051d;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+}
+
+.nf-logo-mark:hover {
+    transform: translateY(-2px) scale(1.06);
 }
 
 .nf-logo-mark img {
@@ -144,6 +171,12 @@
         0 0 24px rgba(84, 65, 255, 0.18);
 }
 
+.nf-logo-mark-small:hover {
+    box-shadow:
+        0 0 0 1px rgba(139, 92, 246, 0.45),
+        0 0 28px rgba(139, 92, 246, 0.35);
+}
+
 .nf-brand-word {
     font-family: Georgia, "Times New Roman", serif;
     font-size: 24px;
@@ -161,14 +194,20 @@
         0 0 32px rgba(85, 65, 255, 0.12);
 }
 
+.nf-card-logo:hover {
+    box-shadow:
+        0 0 0 1px rgba(139, 92, 246, 0.4),
+        0 0 38px rgba(139, 92, 246, 0.28);
+}
+
 /* Animated forge-light radial glow behind top-left branding */
 .nf-brand-glow-wrap {
     position: absolute;
     inset: -30px -50px;
     pointer-events: none;
     z-index: 0;
-    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
-                opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     opacity: 1;
     transform: scale(1);
 }
@@ -182,16 +221,14 @@
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: radial-gradient(
-        circle,
-        rgba(34, 211, 238, 0.16) 0%,
-        rgba(139, 92, 246, 0.11) 45%,
-        transparent 70%
-    );
+    background: radial-gradient(circle,
+            rgba(34, 211, 238, 0.16) 0%,
+            rgba(139, 92, 246, 0.11) 45%,
+            transparent 70%);
     filter: blur(18px);
     opacity: 0;
     animation: nf-glow-bloom 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards,
-               nf-glow-pulse 9s ease-in-out infinite 0.9s;
+        nf-glow-pulse 9s ease-in-out infinite 0.9s;
 }
 
 @keyframes nf-glow-bloom {
@@ -199,6 +236,7 @@
         opacity: 0;
         transform: scale(0.75);
     }
+
     to {
         opacity: 0.6;
         transform: scale(1);
@@ -206,10 +244,13 @@
 }
 
 @keyframes nf-glow-pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.6;
         transform: scale(1);
     }
+
     50% {
         opacity: 0.68;
         transform: scale(1.05);
@@ -227,7 +268,8 @@
         inset 0 1px 0 rgba(255, 255, 255, 0.035);
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
-    animation: nf-card-in 0.8s cubic-bezier(.2, .75, .25, 1) both;
+    animation: nf-card-in 400ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 100ms;
 }
 
 .nf-login-card::before {
@@ -252,13 +294,67 @@
 @keyframes nf-card-in {
     from {
         opacity: 0;
-        transform: translateY(18px) scale(0.985);
+        transform: translateY(12px) scale(0.98);
     }
 
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
     }
+}
+
+/* Refined staggered entrance animations for card elements */
+@keyframes nf-stagger-in {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+        filter: blur(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+    }
+}
+
+.nf-animate-logo {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 200ms;
+}
+
+.nf-animate-heading {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 250ms;
+}
+
+.nf-animate-subtext {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 300ms;
+}
+
+.nf-animate-email {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 350ms;
+}
+
+.nf-animate-password {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 400ms;
+}
+
+.nf-animate-remember {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 450ms;
+}
+
+.nf-animate-login-btn {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 500ms;
+}
+
+.nf-animate-signup {
+    animation: nf-stagger-in 350ms cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation-delay: 550ms;
 }
 
 .nf-title {
@@ -622,5 +718,120 @@
 
     .nf-input {
         height: 51px;
+    }
+}
+
+
+/* =========================================================
+   Premium glass depth - effect layer only
+   Existing NexForge markup, names and assets are preserved.
+   ========================================================= */
+
+.nf-login-card {
+    --nf-mx: 50%;
+    --nf-my: 50%;
+    --nf-sheen-opacity: 0;
+
+    overflow: hidden;
+    isolation: isolate;
+
+    /* Preserve the existing glass panel, adding only subtle depth. */
+    box-shadow:
+        0 35px 100px rgba(0, 0, 0, 0.45),
+        0 16px 55px rgba(2, 20, 42, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 0.045),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+}
+
+/* Very slow navy / cyan / violet atmosphere behind the glass. */
+.nf-login-card::after {
+    content: "";
+    position: absolute;
+    inset: -35%;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 20% 75%, rgba(10, 68, 112, 0.28), transparent 34%),
+        radial-gradient(circle at 78% 18%, rgba(0, 190, 220, 0.13), transparent 31%),
+        radial-gradient(circle at 65% 88%, rgba(104, 65, 178, 0.18), transparent 36%);
+    background-size: 145% 145%;
+    opacity: 0.8;
+    animation: nf-glass-atmosphere 30s ease-in-out infinite alternate;
+}
+
+/* Soft reflection follows the pointer, never becoming a bright glow. */
+.nf-card-sheen {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background:
+        radial-gradient(260px circle at var(--nf-mx) var(--nf-my),
+            rgba(255, 255, 255, 0.065) 0%,
+            rgba(103, 232, 249, 0.022) 28%,
+            transparent 68%);
+    opacity: var(--nf-sheen-opacity);
+    transition: opacity 0.45s ease;
+}
+
+/* Extremely faint moving highlight around the perimeter. */
+.nf-card-perimeter {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: 1px;
+    background: conic-gradient(from 0deg,
+            transparent 0deg 250deg,
+            rgba(34, 211, 238, 0.105) 278deg,
+            rgba(139, 92, 246, 0.075) 304deg,
+            transparent 330deg 360deg);
+    -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.42;
+    animation: nf-glass-perimeter 20s linear infinite;
+}
+
+@keyframes nf-glass-atmosphere {
+    0% {
+        transform: translate3d(-3%, 3%, 0) scale(1);
+        background-position: 0% 100%;
+    }
+
+    50% {
+        transform: translate3d(2%, -2%, 0) scale(1.025);
+        background-position: 55% 35%;
+    }
+
+    100% {
+        transform: translate3d(4%, 2%, 0) scale(1.015);
+        background-position: 100% 70%;
+    }
+}
+
+@keyframes nf-glass-perimeter {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .nf-login-card::after,
+    .nf-card-perimeter {
+        animation: none !important;
+    }
+
+    .nf-card-sheen {
+        opacity: 0 !important;
+        transition: none !important;
     }
 }
