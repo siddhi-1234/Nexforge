@@ -324,7 +324,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                 </button>
                             </p>
 
-                            <div className="mt-8 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-600">
+                            <div className="mt-8 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white">
                                 <span className="h-1 w-1 rounded-full bg-cyan-400" />
                                 Secure NexForge workspace
                                 <span className="h-1 w-1 rounded-full bg-violet-400" />
