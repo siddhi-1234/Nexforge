@@ -668,6 +668,8 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    line-height: 1.4;
+    padding-bottom: 0.05em;
 }
 
 .nf-forge-text {
@@ -675,12 +677,14 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    line-height: 1.4;
+    padding-bottom: 0.05em;
 }
 
 /* Staggered masked reveal once on page load */
 .nf-reveal-wrapper {
     overflow: hidden;
-    padding-bottom: 0.22em;
+    padding-bottom: 0.15em;
     padding-right: 0.15em;
     margin-bottom: 0.15rem;
 }
@@ -699,8 +703,12 @@
     animation-delay: 0.15s;
 }
 
-.nf-reveal-headline {
+.nf-reveal-headline-1 {
     animation-delay: 0.35s;
+}
+
+.nf-reveal-headline-2 {
+    animation-delay: 0.5s;
 }
 
 @keyframes nf-reveal-slide-up {

@@ -153,8 +153,8 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                     <div className="nf-beam nf-beam-two" />
 
                     <div className="absolute bottom-12 left-10 max-w-xl">
-                        <div className="nf-reveal-wrapper">
-                            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80 nf-reveal-item nf-reveal-tagline">
+                        <div className="nf-reveal-wrapper mb-3">
+                            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80 nf-reveal-item nf-reveal-tagline">
                                 Real projects. Real teams. Real experience.
                             </p>
                         </div>
