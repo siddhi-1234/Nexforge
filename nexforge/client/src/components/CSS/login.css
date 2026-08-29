@@ -680,7 +680,9 @@
 /* Staggered masked reveal once on page load */
 .nf-reveal-wrapper {
     overflow: hidden;
-    margin-bottom: 0.35rem;
+    padding-bottom: 0.22em;
+    padding-right: 0.15em;
+    margin-bottom: 0.15rem;
 }
 
 .nf-reveal-wrapper:last-child {

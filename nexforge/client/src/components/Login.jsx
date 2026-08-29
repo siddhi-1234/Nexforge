@@ -117,7 +117,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
 
             <div className="relative z-10 flex min-h-screen w-full">
                 {/* LEFT SIDE */}
-                <section className="relative hidden h-screen sticky top-0 w-1/2 overflow-hidden lg:flex self-start">
+                <section className="fixed top-0 left-0 hidden h-screen w-1/2 overflow-hidden lg:flex">
                     <div
                         className="absolute inset-0 nf-reference-bg"
                         style={{ backgroundImage: "url('/assets/login-bg.png')" }}
@@ -158,17 +158,19 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                 Real projects. Real teams. Real experience.
                             </p>
                         </div>
-                        <div className="nf-reveal-wrapper">
-                            <h1 className="max-w-lg text-4xl font-semibold leading-tight xl:text-5xl nf-reveal-item nf-reveal-headline">
-                                <span className="nf-forge-text block">Forge the experience</span>
-                                <span className="nf-gradient-text block">your future needs.</span>
-                            </h1>
-                        </div>
+                        <h1 className="max-w-lg text-4xl font-semibold leading-tight xl:text-5xl">
+                            <div className="nf-reveal-wrapper">
+                                <span className="nf-forge-text block nf-reveal-item nf-reveal-headline-1">Forge the experience</span>
+                            </div>
+                            <div className="nf-reveal-wrapper">
+                                <span className="nf-gradient-text block nf-reveal-item nf-reveal-headline-2">your future needs.</span>
+                            </div>
+                        </h1>
                     </div>
                 </section>
 
                 {/* RIGHT SIDE */}
-                <section className="relative flex min-h-screen w-full items-center justify-center px-5 py-10 sm:px-8 lg:w-1/2">
+                <section className="relative flex min-h-screen w-full items-center justify-center px-5 py-10 sm:px-8 lg:w-1/2 lg:ml-auto">
                     <div className="nf-form-glow" />
 
                     <div
