@@ -117,7 +117,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
 
             <div className="relative z-10 flex min-h-screen w-full">
                 {/* LEFT SIDE */}
-                <section className="relative hidden min-h-screen w-1/2 overflow-hidden lg:flex">
+                <section className="relative hidden h-screen sticky top-0 w-1/2 overflow-hidden lg:flex self-start">
                     <div
                         className="absolute inset-0 nf-reference-bg"
                         style={{ backgroundImage: "url('/assets/login-bg.png')" }}
@@ -153,13 +153,17 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                     <div className="nf-beam nf-beam-two" />
 
                     <div className="absolute bottom-12 left-10 max-w-xl">
-                        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80">
-                            Real projects. Real teams. Real experience.
-                        </p>
-                        <h1 className="max-w-lg text-4xl font-semibold leading-tight text-white/95 xl:text-5xl">
-                            Forge the experience
-                            <span className="nf-gradient-text block">your future needs.</span>
-                        </h1>
+                        <div className="nf-reveal-wrapper">
+                            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300/80 nf-reveal-item nf-reveal-tagline">
+                                Real projects. Real teams. Real experience.
+                            </p>
+                        </div>
+                        <div className="nf-reveal-wrapper">
+                            <h1 className="max-w-lg text-4xl font-semibold leading-tight xl:text-5xl nf-reveal-item nf-reveal-headline">
+                                <span className="nf-forge-text block">Forge the experience</span>
+                                <span className="nf-gradient-text block">your future needs.</span>
+                            </h1>
+                        </div>
                     </div>
                 </section>
 

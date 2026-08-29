@@ -664,21 +664,46 @@
 }
 
 .nf-gradient-text {
-    background: linear-gradient(90deg, #ffffff 0%, #8b5cf6 48%, #22d3ee 100%);
+    background: linear-gradient(90deg, #8b5cf6 0%, #22d3ee 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    background-size: 180% auto;
-    animation: nf-gradient-shift 5s ease-in-out infinite alternate;
 }
 
-@keyframes nf-gradient-shift {
-    from {
-        background-position: 0% center;
-    }
+.nf-forge-text {
+    background: linear-gradient(90deg, #ffffff 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
 
+/* Staggered masked reveal once on page load */
+.nf-reveal-wrapper {
+    overflow: hidden;
+    margin-bottom: 0.35rem;
+}
+
+.nf-reveal-wrapper:last-child {
+    margin-bottom: 0;
+}
+
+.nf-reveal-item {
+    display: block;
+    transform: translateY(105%);
+    animation: nf-reveal-slide-up 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.nf-reveal-tagline {
+    animation-delay: 0.15s;
+}
+
+.nf-reveal-headline {
+    animation-delay: 0.35s;
+}
+
+@keyframes nf-reveal-slide-up {
     to {
-        background-position: 100% center;
+        transform: translateY(0);
     }
 }
 
