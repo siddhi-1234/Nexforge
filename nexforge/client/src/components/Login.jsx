@@ -192,17 +192,38 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                         <span className="nf-card-sheen" aria-hidden="true" />
                         <span className="nf-card-perimeter" aria-hidden="true" />
 
-                        {/* Logo */}
-                        <div className="mb-5 flex justify-center nf-animate-logo">
-                            <LogoMark className="nf-card-logo" />
+                        {/* Desktop Header (unchanged on desktop) */}
+                        <div className="hidden lg:block">
+                            <div className="mb-5 flex justify-center nf-animate-logo">
+                                <LogoMark className="nf-card-logo" />
+                            </div>
+
+                            <div className="mb-9 text-center">
+                                <h2 className="nf-title text-3xl font-semibold tracking-tight sm:text-[34px] nf-animate-heading">
+                                    Welcome back
+                                </h2>
+                                <p className="mt-3 text-[15px] text-slate-300/90 nf-animate-subtext">
+                                    Enter your details to continue to NexForge
+                                </p>
+                            </div>
                         </div>
 
-                        <div className="mb-9 text-center">
-                            <h2 className="nf-title text-2xl sm:text-3xl md:text-[34px] font-semibold tracking-tight nf-animate-heading">
-                                Welcome back
-                            </h2>
-                            <p className="mt-3 text-sm sm:text-[15px] text-slate-300/90 nf-animate-subtext">
-                                Enter your details to continue to NexForge
+                        {/* Mobile-only Brand Header */}
+                        <div className="lg:hidden flex flex-col items-center text-center mb-6 nf-animate-logo relative">
+                            {/* Subtle cyan-violet glow behind the logo */}
+                            <div className="absolute -top-4 w-32 h-32 bg-gradient-to-br from-cyan-500/15 to-violet-500/15 rounded-full blur-xl pointer-events-none z-0" />
+                            
+                            <div className="relative z-10 flex items-center gap-2.5 mb-2">
+                                <LogoMark className="nf-mobile-logo" />
+                                <span className="text-xl font-bold tracking-tight text-white">NexForge</span>
+                            </div>
+                            
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-400">
+                                REAL PROJECTS - REAL TEAMS
+                            </p>
+                            
+                            <p className="mt-1 text-xs text-slate-300/90 font-medium max-w-xs">
+                                Build experience that speaks for you.
                             </p>
                         </div>
 
@@ -334,10 +355,20 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                 </button>
                             </p>
 
-                            <div className="mt-8 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white">
+                            {/* Desktop Footer (unchanged on desktop) */}
+                            <div className="hidden lg:flex mt-8 items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white">
                                 <span className="h-1 w-1 rounded-full bg-cyan-400" />
                                 Secure NexForge workspace
                                 <span className="h-1 w-1 rounded-full bg-violet-400" />
+                            </div>
+
+                            {/* Mobile-only Footer with Animated status dot */}
+                            <div className="lg:hidden mt-6 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400/80 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                                </span>
+                                NexForge workspace online
                             </div>
                         </div>
 

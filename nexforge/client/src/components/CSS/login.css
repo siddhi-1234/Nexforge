@@ -200,6 +200,15 @@
         0 0 38px rgba(139, 92, 246, 0.28);
 }
 
+.nf-mobile-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    box-shadow:
+        0 0 0 1px rgba(125, 90, 255, 0.2),
+        0 0 20px rgba(34, 211, 238, 0.2);
+}
+
 /* Animated forge-light radial glow behind top-left branding */
 .nf-brand-glow-wrap {
     position: absolute;
