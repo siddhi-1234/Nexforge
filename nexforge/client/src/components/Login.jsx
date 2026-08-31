@@ -51,7 +51,7 @@ const LockIcon = () => (
     </svg>
 );
 
-export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
+export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLoginSuccess }) {
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState(false);
     const [form, setForm] = useState({
@@ -59,6 +59,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
         password: "",
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [loginSuccess, setLoginSuccess] = useState(false);
     const [isInteracting, setIsInteracting] = useState(false);
     const cardRef = useRef(null);
 
@@ -102,13 +103,22 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
             } else {
                 await new Promise((resolve) => setTimeout(resolve, 900));
             }
+            
+            // Trigger visual success sequence
+            setLoginSuccess(true);
+            
+            setTimeout(() => {
+                if (onLoginSuccess) {
+                    onLoginSuccess();
+                }
+            }, 1200);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <main className="nf-login min-h-screen w-full overflow-hidden bg-[#020d19] text-white">
+        <main className="nf-login min-h-screen w-full overflow-x-hidden overflow-y-auto bg-[#020d19] text-white">
             {/* Ambient background effects */}
             <div className="nf-ambient nf-ambient-one" />
             <div className="nf-ambient nf-ambient-two" />
@@ -170,12 +180,12 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                 </section>
 
                 {/* RIGHT SIDE */}
-                <section className="relative flex min-h-screen w-full items-center justify-center px-5 py-10 sm:px-8 lg:w-1/2 lg:ml-auto">
+                <section className="relative flex min-h-screen w-full items-center justify-center px-4 py-8 sm:px-8 lg:w-1/2 lg:ml-auto">
                     <div className="nf-form-glow" />
 
                     <div
                         ref={cardRef}
-                        className="nf-login-card w-full max-w-[500px] rounded-2xl border border-white/10 px-7 py-8 shadow-2xl sm:px-11 sm:py-10"
+                        className="nf-login-card w-full max-w-[500px] rounded-2xl border border-white/10 px-5 py-7 sm:px-11 sm:py-10 shadow-2xl"
                         onPointerMove={handleCardPointerMove}
                         onPointerLeave={handleCardPointerLeave}
                     >
@@ -188,10 +198,10 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                         </div>
 
                         <div className="mb-9 text-center">
-                            <h2 className="nf-title text-3xl font-semibold tracking-tight sm:text-[34px] nf-animate-heading">
+                            <h2 className="nf-title text-2xl sm:text-3xl md:text-[34px] font-semibold tracking-tight nf-animate-heading">
                                 Welcome back
                             </h2>
-                            <p className="mt-3 text-[15px] text-slate-300/90 nf-animate-subtext">
+                            <p className="mt-3 text-sm sm:text-[15px] text-slate-300/90 nf-animate-subtext">
                                 Enter your details to continue to NexForge
                             </p>
                         </div>
@@ -267,7 +277,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                             </div>
 
                             {/* Remember + Forgot */}
-                            <div className="flex items-center justify-between gap-4 nf-animate-remember">
+                            <div className="flex flex-col gap-3 min-[440px]:flex-row min-[440px]:items-center min-[440px]:justify-between min-[440px]:gap-4 nf-animate-remember">
                                 <label className="nf-check-label flex cursor-pointer items-center gap-2.5 text-sm text-slate-300">
                                     <input
                                         type="checkbox"
@@ -283,7 +293,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                 <button
                                     type="button"
                                     onClick={onForgotPassword}
-                                    className="nf-link text-sm font-semibold"
+                                    className="nf-link text-sm font-semibold text-left min-[440px]:text-right"
                                 >
                                     Forgot your password?
                                 </button>
@@ -330,6 +340,43 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword }) {
                                 <span className="h-1 w-1 rounded-full bg-violet-400" />
                             </div>
                         </div>
+
+                        {loginSuccess && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0b1e2e]/98 backdrop-blur-md rounded-2xl p-5 sm:p-8 text-center z-30 nf-entering-overlay">
+                                <div className="mb-6 relative">
+                                    <LogoMark className="nf-card-logo nf-glow-intensified" />
+                                    {/* Forge Spark Burst */}
+                                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                                        {Array.from({ length: 20 }).map((_, index) => {
+                                            const angle = (index * 360) / 20;
+                                            const distance = 45 + Math.random() * 75;
+                                            const duration = 0.5 + Math.random() * 0.7;
+                                            return (
+                                                <span
+                                                    key={index}
+                                                    className="nf-spark"
+                                                    style={{
+                                                        "--nf-spark-x": `${Math.cos((angle * Math.PI) / 180) * distance}px`,
+                                                        "--nf-spark-y": `${Math.sin((angle * Math.PI) / 180) * distance}px`,
+                                                        animationDuration: `${duration}s`,
+                                                        animationDelay: `${Math.random() * 0.15}s`,
+                                                    }}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                                <h3 className="text-xl font-bold tracking-[0.22em] text-white nf-entering-text">
+                                    ENTERING NEXFORGE
+                                </h3>
+                                <p className="text-xs text-cyan-400/90 mt-2 tracking-[0.1em] font-medium uppercase">
+                                    Forging secure workspace nodes...
+                                </p>
+                                <div className="w-48 h-1 bg-white/10 rounded-full mt-6 overflow-hidden relative">
+                                    <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-cyan-400 to-violet-500 rounded-full nf-entering-progress" />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </section>
             </div>

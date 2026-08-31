@@ -36,3 +36,30 @@
     transform: rotate(360deg);
   }
 }
+
+/* Premium Directional Wipe Transition */
+.nf-wipe-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #020d19;
+  transform: translateX(-100%);
+  pointer-events: none;
+}
+
+.nf-wipe-overlay.active {
+  animation: nf-wipe-swipe 1.0s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  pointer-events: all;
+}
+
+@keyframes nf-wipe-swipe {
+  0% {
+    transform: translateX(-100%);
+  }
+  48%, 52% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
