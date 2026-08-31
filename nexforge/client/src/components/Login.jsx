@@ -119,11 +119,62 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
 
     return (
         <main className="nf-login min-h-screen w-full overflow-x-hidden overflow-y-auto bg-[#020d19] text-white">
-            {/* Ambient background effects */}
-            <div className="nf-ambient nf-ambient-one" />
-            <div className="nf-ambient nf-ambient-two" />
-            <div className="nf-grid" />
-            <div className="nf-noise" />
+            {/* Desktop Ambient background effects */}
+            <div className="hidden lg:block nf-ambient nf-ambient-one" />
+            <div className="hidden lg:block nf-ambient nf-ambient-two" />
+            <div className="hidden lg:block nf-grid" />
+            <div className="hidden lg:block nf-noise" />
+
+            {/* Mobile-only Ambient background effects */}
+            <div className="lg:hidden absolute inset-0 bg-gradient-to-b from-[#020c1b] via-[#010710] to-[#000205] z-0 pointer-events-none overflow-hidden">
+                {/* Large blurred cyan and violet radial glows behind the authentication card */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-violet-600/10 rounded-full blur-[90px] pointer-events-none" />
+                
+                {/* Subtle technical grid */}
+                <div className="nf-mobile-grid" />
+
+                {/* Faint network lines */}
+                <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="15%" y1="20%" x2="45%" y2="35%" stroke="rgba(34, 211, 238, 0.15)" strokeWidth="0.75" />
+                    <line x1="45%" y1="35%" x2="80%" y2="25%" stroke="rgba(139, 92, 246, 0.12)" strokeWidth="0.75" />
+                    <line x1="45%" y1="35%" x2="50%" y2="75%" stroke="rgba(34, 211, 238, 0.12)" strokeWidth="0.75" />
+                    <line x1="20%" y1="65%" x2="50%" y2="75%" stroke="rgba(139, 92, 246, 0.15)" strokeWidth="0.75" />
+                    <line x1="50%" y1="75%" x2="85%" y2="80%" stroke="rgba(34, 211, 238, 0.12)" strokeWidth="0.75" />
+                </svg>
+
+                {/* Softly pulsing nodes representing projects and collaborators */}
+                {/* Node 1: Project Node (Cyan) */}
+                <div className="absolute left-[15%] top-[20%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-cyan-400/40 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400"></span>
+                </div>
+                {/* Node 2: Collaborator Node (Violet) */}
+                <div className="absolute left-[80%] top-[25%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "0.5s" }}></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400"></span>
+                </div>
+                {/* Node 3: Center Hub (Cyan) */}
+                <div className="absolute left-[45%] top-[35%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300/30 opacity-75" style={{ animationDelay: "1s" }}></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300"></span>
+                </div>
+                {/* Node 4: Collaborator Node (Violet) */}
+                <div className="absolute left-[20%] top-[65%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "0.2s" }}></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400"></span>
+                </div>
+                {/* Node 5: Project Node (Cyan) */}
+                <div className="absolute left-[50%] top-[75%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400/30 opacity-75" style={{ animationDelay: "0.8s" }}></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400"></span>
+                </div>
+                {/* Node 6: Collaborator Node (Violet) */}
+                <div className="absolute left-[85%] top-[80%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "1.3s" }}></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400"></span>
+                </div>
+            </div>
 
             <div className="relative z-10 flex min-h-screen w-full">
                 {/* LEFT SIDE */}
