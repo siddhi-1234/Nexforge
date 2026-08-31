@@ -983,3 +983,70 @@
     background-size: 36px 36px;
     mask-image: radial-gradient(circle at center, black, transparent 80%);
 }
+
+/* Mobile-only Ambient Drifting Glows */
+.nf-mob-glow-1 {
+    animation: nf-drift-glow-1 25s ease-in-out infinite alternate;
+}
+.nf-mob-glow-2 {
+    animation: nf-drift-glow-2 30s ease-in-out infinite alternate;
+}
+.nf-mob-glow-3 {
+    animation: nf-drift-glow-3 28s ease-in-out infinite alternate;
+}
+
+@keyframes nf-drift-glow-1 {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-30px, 40px) scale(1.1); }
+    100% { transform: translate(20px, -20px) scale(0.9); }
+}
+@keyframes nf-drift-glow-2 {
+    0% { transform: translate(0, 0) scale(1.1); }
+    50% { transform: translate(40px, -30px) scale(0.9); }
+    100% { transform: translate(-20px, 30px) scale(1.05); }
+}
+@keyframes nf-drift-glow-3 {
+    0% { transform: translate(0, 0) scale(0.95); }
+    50% { transform: translate(-25px, -25px) scale(1.05); }
+    100% { transform: translate(35px, 20px) scale(1); }
+}
+
+/* Traveling particles along SVG network lines */
+.nf-network-line-particle-1 {
+    animation: nf-line-travel-1 7s linear infinite;
+}
+.nf-network-line-particle-2 {
+    animation: nf-line-travel-2 9s linear infinite;
+    animation-delay: 3s;
+}
+
+@keyframes nf-line-travel-1 {
+    0% {
+        stroke-dashoffset: 68;
+    }
+    100% {
+        stroke-dashoffset: -68;
+    }
+}
+@keyframes nf-line-travel-2 {
+    0% {
+        stroke-dashoffset: 58;
+    }
+    100% {
+        stroke-dashoffset: -58;
+    }
+}
+
+/* Floating Glass Cards */
+.nf-mob-float {
+    animation: nf-float-card 6s ease-in-out infinite alternate;
+}
+.nf-mob-float-delayed {
+    animation: nf-float-card 7s ease-in-out infinite alternate;
+    animation-delay: 1.5s;
+}
+
+@keyframes nf-float-card {
+    0% { transform: translateY(0) scale(0.75); }
+    100% { transform: translateY(-8px) scale(0.75); }
+}

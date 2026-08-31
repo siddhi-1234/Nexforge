@@ -127,52 +127,101 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
 
             {/* Mobile-only Ambient background effects */}
             <div className="lg:hidden absolute inset-0 bg-gradient-to-b from-[#020c1b] via-[#010710] to-[#000205] z-0 pointer-events-none overflow-hidden">
-                {/* Large blurred cyan and violet radial glows behind the authentication card */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-violet-600/10 rounded-full blur-[90px] pointer-events-none" />
+                {/* Large blurred cyan, blue, and violet drifting glows behind the authentication card */}
+                <div className="absolute top-[20%] left-[10%] w-[280px] h-[280px] bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none nf-mob-glow-1" />
+                <div className="absolute bottom-[20%] right-[5%] w-[320px] h-[320px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none nf-mob-glow-2" />
+                <div className="absolute top-[45%] left-[30%] w-[240px] h-[240px] bg-blue-500/8 rounded-full blur-[90px] pointer-events-none nf-mob-glow-3" />
                 
                 {/* Subtle technical grid */}
                 <div className="nf-mobile-grid" />
 
                 {/* Faint network lines */}
-                <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                    <line x1="15%" y1="20%" x2="45%" y2="35%" stroke="rgba(34, 211, 238, 0.15)" strokeWidth="0.75" />
-                    <line x1="45%" y1="35%" x2="80%" y2="25%" stroke="rgba(139, 92, 246, 0.12)" strokeWidth="0.75" />
-                    <line x1="45%" y1="35%" x2="50%" y2="75%" stroke="rgba(34, 211, 238, 0.12)" strokeWidth="0.75" />
-                    <line x1="20%" y1="65%" x2="50%" y2="75%" stroke="rgba(139, 92, 246, 0.15)" strokeWidth="0.75" />
-                    <line x1="50%" y1="75%" x2="85%" y2="80%" stroke="rgba(34, 211, 238, 0.12)" strokeWidth="0.75" />
+                <svg className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+                    {/* Background Network Lines */}
+                    <line x1="20%" y1="25%" x2="75%" y2="30%" stroke="rgba(34, 211, 238, 0.15)" strokeWidth="1" />
+                    <line x1="75%" y1="30%" x2="48%" y2="72%" stroke="rgba(139, 92, 246, 0.12)" strokeWidth="1" />
+                    <line x1="48%" y1="72%" x2="20%" y2="25%" stroke="rgba(34, 211, 238, 0.12)" strokeWidth="1" />
+                    
+                    {/* Traveling Particle on Line 1 */}
+                    <line x1="20%" y1="25%" x2="75%" y2="30%" stroke="#22d3ee" strokeWidth="1.5" strokeDasharray="8 60" className="nf-network-line-particle-1" />
+                    
+                    {/* Traveling Particle on Line 2 */}
+                    <line x1="75%" y1="30%" x2="48%" y2="72%" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="8 50" className="nf-network-line-particle-2" />
                 </svg>
 
-                {/* Softly pulsing nodes representing projects and collaborators */}
-                {/* Node 1: Project Node (Cyan) */}
-                <div className="absolute left-[15%] top-[20%] flex items-center justify-center pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-cyan-400/40 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400"></span>
+                {/* Softly pulsing 3D-looking nodes representing projects and collaborators */}
+                {/* Node 1: Project Node (Cyan) - Top Left */}
+                <div className="absolute left-[20%] top-[25%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-cyan-400/40 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400 shadow-[0_0_10px_#22d3ee]"></span>
                 </div>
-                {/* Node 2: Collaborator Node (Violet) */}
-                <div className="absolute left-[80%] top-[25%] flex items-center justify-center pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "0.5s" }}></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400"></span>
+
+                {/* Node 2: Collaborator Node (Violet) - Top Right */}
+                <div className="absolute left-[75%] top-[30%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "0.8s" }}></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-400 shadow-[0_0_10px_#8b5cf6]"></span>
                 </div>
-                {/* Node 3: Center Hub (Cyan) */}
-                <div className="absolute left-[45%] top-[35%] flex items-center justify-center pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-300/30 opacity-75" style={{ animationDelay: "1s" }}></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-300"></span>
+
+                {/* Node 3: Center Hub (Blue) - Bottom Center */}
+                <div className="absolute left-[48%] top-[72%] flex items-center justify-center pointer-events-none">
+                    <span className="animate-ping absolute inline-flex h-3.5 w-3.5 rounded-full bg-blue-400/35 opacity-75" style={{ animationDelay: "1.4s" }}></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-400 shadow-[0_0_10px_#3b82f6]"></span>
                 </div>
-                {/* Node 4: Collaborator Node (Violet) */}
-                <div className="absolute left-[20%] top-[65%] flex items-center justify-center pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "0.2s" }}></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400"></span>
+
+                {/* Floating Glass Task Card (Real Projects / Readiness) - Top Left */}
+                <div className="absolute left-4 top-[10%] p-2.5 rounded-lg border border-white/5 bg-white/2 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] pointer-events-none nf-mob-float z-10">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                        <span className="text-[9px] uppercase tracking-wider text-cyan-400 font-bold">API Gateway</span>
+                    </div>
+                    <p className="text-[10px] text-white font-semibold">Deploy Auth Node</p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                        <div className="w-3.5 h-3.5 rounded-full bg-slate-700 border border-white/10 flex items-center justify-center text-[7px] text-slate-300 font-bold">JD</div>
+                        <span className="text-[8px] text-slate-400">Assigned</span>
+                    </div>
                 </div>
-                {/* Node 5: Project Node (Cyan) */}
-                <div className="absolute left-[50%] top-[75%] flex items-center justify-center pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400/30 opacity-75" style={{ animationDelay: "0.8s" }}></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400"></span>
+
+                {/* Floating Glass Contribution Chart (Contribution Tracking) - Bottom Left */}
+                <div className="absolute left-4 bottom-[15%] p-2.5 rounded-lg border border-white/5 bg-white/2 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] pointer-events-none nf-mob-float-delayed z-10">
+                    <span className="text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1.5 block">Commit Activity</span>
+                    <div className="grid grid-cols-4 gap-1">
+                        <div className="w-3.5 h-3.5 rounded bg-violet-500/20"></div>
+                        <div className="w-3.5 h-3.5 rounded bg-cyan-500/40"></div>
+                        <div className="w-3.5 h-3.5 rounded bg-cyan-500/80"></div>
+                        <div className="w-3.5 h-3.5 rounded bg-violet-500/60"></div>
+                        
+                        <div className="w-3.5 h-3.5 rounded bg-cyan-500/60"></div>
+                        <div className="w-3.5 h-3.5 rounded bg-violet-500/20"></div>
+                        <div className="w-3.5 h-3.5 rounded bg-cyan-500/30"></div>
+                        <div className="w-3.5 h-3.5 rounded bg-cyan-500/90 animate-pulse"></div>
+                    </div>
                 </div>
-                {/* Node 6: Collaborator Node (Violet) */}
-                <div className="absolute left-[85%] top-[80%] flex items-center justify-center pointer-events-none">
-                    <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-violet-400/40 opacity-75" style={{ animationDelay: "1.3s" }}></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-violet-400"></span>
+
+                {/* Floating Glass Verified Skills Badge (Verified Experience) - Top Right */}
+                <div className="absolute right-4 top-[15%] p-2.5 rounded-lg border border-white/5 bg-white/2 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] pointer-events-none nf-mob-float-delayed z-10">
+                    <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-cyan-500/10 border border-cyan-400/20 flex items-center justify-center">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M20 6 9 17l-5-5"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-white font-bold">React verified</p>
+                            <p className="text-[8px] text-cyan-400">Score: 94%</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Floating Glass Team Cluster (Real Teams) - Bottom Right */}
+                <div className="absolute right-4 bottom-[20%] p-2.5 rounded-lg border border-white/5 bg-white/2 backdrop-blur-md shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] pointer-events-none nf-mob-float z-10">
+                    <span className="text-[8px] uppercase tracking-wider text-slate-400 font-bold mb-1 block">Active Team</span>
+                    <div className="flex -space-x-1.5 overflow-hidden py-0.5">
+                        <div className="inline-block h-4 w-4 rounded-full bg-cyan-500 border border-slate-900 flex items-center justify-center text-[7px] text-white font-bold">A</div>
+                        <div className="inline-block h-4 w-4 rounded-full bg-violet-500 border border-slate-900 flex items-center justify-center text-[7px] text-white font-bold">B</div>
+                        <div className="inline-block h-4 w-4 rounded-full bg-slate-700 border border-slate-900 flex items-center justify-center text-[7px] text-white font-bold">C</div>
+                        <div className="inline-block h-4 w-4 rounded-full bg-cyan-400 border border-slate-900 flex items-center justify-center text-[7px] text-white font-bold">+3</div>
+                    </div>
+                    <span className="text-[7px] text-cyan-400 font-semibold block mt-1">4 Open PRs</span>
                 </div>
             </div>
 
