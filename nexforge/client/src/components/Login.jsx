@@ -103,10 +103,10 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
             } else {
                 await new Promise((resolve) => setTimeout(resolve, 900));
             }
-            
+
             // Trigger visual success sequence
             setLoginSuccess(true);
-            
+
             setTimeout(() => {
                 if (onLoginSuccess) {
                     onLoginSuccess();
@@ -131,7 +131,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                 <div className="absolute top-[20%] left-[10%] w-[280px] h-[280px] bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none nf-mob-glow-1" />
                 <div className="absolute bottom-[20%] right-[5%] w-[320px] h-[320px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none nf-mob-glow-2" />
                 <div className="absolute top-[45%] left-[30%] w-[240px] h-[240px] bg-blue-500/8 rounded-full blur-[90px] pointer-events-none nf-mob-glow-3" />
-                
+
                 {/* Subtle technical grid */}
                 <div className="nf-mobile-grid" />
             </div>
@@ -223,19 +223,17 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                         <div className="lg:hidden flex flex-col items-center text-center mb-6 nf-animate-logo relative">
                             {/* Subtle cyan-violet glow behind the logo */}
                             <div className="absolute -top-4 w-32 h-32 bg-gradient-to-br from-cyan-500/15 to-violet-500/15 rounded-full blur-xl pointer-events-none z-0" />
-                            
+
                             <div className="relative z-10 flex items-center gap-2.5 mb-2">
                                 <LogoMark className="nf-mobile-logo" />
                                 <span className="text-xl font-bold tracking-tight text-white">NexForge</span>
                             </div>
-                            
+
                             <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-400">
                                 REAL PROJECTS - REAL TEAMS
                             </p>
-                            
-                            <p className="mt-1 text-xs text-slate-300/90 font-medium max-w-xs">
-                                Build experience that speaks for you.
-                            </p>
+
+
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
