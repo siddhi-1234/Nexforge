@@ -51,7 +51,7 @@ const LockIcon = () => (
     </svg>
 );
 
-export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLoginSuccess }) {
+export default function Login({ onLogin, onGoogleLogin, onCreateAccount, onForgotPassword, onLoginSuccess }) {
     const [showPassword, setShowPassword] = useState(false);
     const [remember, setRemember] = useState(false);
     const [form, setForm] = useState({
