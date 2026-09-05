@@ -319,31 +319,42 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                             </div>
                         </form>
 
-                        {/* Mobile Alternate Actions Matching Reference 1 */}
+                        {/* Alternate Actions / Social Login */}
                         <div className="nf-animate-signup mt-6">
                             <div className="relative flex py-2 items-center justify-center">
                                 <div className="flex-grow border-t border-white/10"></div>
-                                <span className="flex-shrink mx-3 text-[11px] text-slate-400 lowercase">
+                                <span className="flex-shrink mx-3 text-[11px] font-medium uppercase tracking-wider text-slate-400">
                                     Or continue with
                                 </span>
                                 <div className="flex-grow border-t border-white/10"></div>
                             </div>
 
-                            {/* Social Buttons Pills */}
-                            <div className="lg:hidden grid grid-cols-2 gap-3 mt-3">
+                            {/* Google Button */}
+                            <div className="mt-3">
                                 <button
                                     type="button"
-                                    className="flex items-center justify-center gap-2 h-11 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-slate-200 transition-all"
+                                    onClick={onGoogleLogin || (() => {
+                                        if (onLoginSuccess) {
+                                            setIsLoading(true);
+                                            setTimeout(() => {
+                                                setIsLoading(false);
+                                                setLoginSuccess(true);
+                                                setTimeout(() => {
+                                                    onLoginSuccess();
+                                                }, 1200);
+                                            }, 600);
+                                        }
+                                    })}
+                                    className="nf-google-button flex w-full items-center justify-center gap-3 h-[48px] sm:h-[50px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-cyan-400/35 text-xs sm:text-sm font-medium text-slate-200 hover:text-white transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_rgba(34,211,238,0.1)] active:scale-[0.99]"
                                 >
-                                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24">
                                         <path fill="#EA4335" d="M12 5c1.5 0 2.9.5 4 1.5l3-3C17.1 1.7 14.7 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.8C6.5 7.3 9 5 12 5z" />
                                         <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
                                         <path fill="#FBBC05" d="M5.6 14.7c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.7s.7 5 1.9 7.4l3.7-2.8z" />
                                         <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.1L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z" />
                                     </svg>
-                                    Google
+                                    <span>Google</span>
                                 </button>
-
                             </div>
 
                             <p className="mt-5 text-center text-xs text-slate-400">
@@ -356,8 +367,6 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                     Sign up
                                 </button>
                             </p>
-
-
                         </div>
 
                         {loginSuccess && (

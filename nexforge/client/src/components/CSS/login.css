@@ -606,6 +606,26 @@
     }
 }
 
+/* Google Login Button */
+.nf-google-button {
+    background: rgba(14, 33, 50, 0.6);
+    border: 1px solid rgba(110, 137, 158, 0.22);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nf-google-button:hover {
+    background: rgba(19, 44, 66, 0.85);
+    border-color: rgba(34, 211, 238, 0.45);
+    box-shadow: 0 0 24px rgba(34, 211, 238, 0.12), inset 0 0 16px rgba(34, 211, 238, 0.04);
+    transform: translateY(-1.5px);
+}
+
+.nf-google-button:active {
+    transform: translateY(0) scale(0.99);
+}
+
 /* Left visual particles */
 .nf-particles {
     position: absolute;
