@@ -212,10 +212,10 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                         {/* Mobile Header Style matching Reference 1 */}
                         <div className="lg:hidden text-left mb-6 mt-36">
                             <h2 className="text-3xl font-extrabold uppercase tracking-wide text-white">
-                                SIGN IN
+                                Login
                             </h2>
                             <p className="mt-1.5 text-xs text-slate-400 font-medium">
-                                Sign in with email address
+                                Login in with email address
                             </p>
                         </div>
 
@@ -291,17 +291,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
 
                             {/* Remember & Forgot Password */}
                             <div className="flex items-center justify-between text-xs sm:text-sm text-slate-300 pt-1 nf-animate-remember">
-                                <label className="nf-check-label flex cursor-pointer items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={remember}
-                                        onChange={(event) => setRemember(event.target.checked)}
-                                        onFocus={() => setIsInteracting(true)}
-                                        onBlur={() => setIsInteracting(false)}
-                                        className="nf-checkbox"
-                                    />
-                                    <span>Remember me</span>
-                                </label>
+
 
                                 <button
                                     type="button"
@@ -323,7 +313,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                 >
                                     <span className="nf-button-shine" />
                                     <span className="relative z-10 font-bold">
-                                        {isLoading ? "LOGGING IN..." : "Sign in"}
+                                        {isLoading ? "LOGGING IN..." : "Login"}
                                     </span>
                                 </button>
                             </div>
@@ -353,15 +343,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                     </svg>
                                     Google
                                 </button>
-                                <button
-                                    type="button"
-                                    className="flex items-center justify-center gap-2 h-11 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-slate-200 transition-all"
-                                >
-                                    <svg className="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24">
-                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                    </svg>
-                                    Facebook
-                                </button>
+
                             </div>
 
                             <p className="mt-5 text-center text-xs text-slate-400">
@@ -375,9 +357,7 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                 </button>
                             </p>
 
-                            <p className="mt-3 text-center text-[10px] text-slate-500">
-                                By registering you agree to our <a href="#terms" className="underline hover:text-slate-400">Terms and Conditions</a>
-                            </p>
+
                         </div>
 
                         {loginSuccess && (
