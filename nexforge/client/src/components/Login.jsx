@@ -53,14 +53,13 @@ const LockIcon = () => (
 
 export default function Login({ onLogin, onGoogleLogin, onCreateAccount, onForgotPassword, onLoginSuccess }) {
     const [showPassword, setShowPassword] = useState(false);
-    const [remember, setRemember] = useState(false);
+    const [remember] = useState(false);
     const [form, setForm] = useState({
         email: "",
         password: "",
     });
     const [isLoading, setIsLoading] = useState(false);
     const [loginSuccess, setLoginSuccess] = useState(false);
-    const [isInteracting, setIsInteracting] = useState(false);
     const cardRef = useRef(null);
 
     const handleCardPointerMove = (event) => {
@@ -127,6 +126,14 @@ export default function Login({ onLogin, onGoogleLogin, onCreateAccount, onForgo
                     style={{ backgroundImage: "url('/assets/login-bg.png')" }}
                 />
                 <div className="nf-mob-hero-overlay" />
+            </div>
+
+            {/* Mobile Top NexForge Brand on Background Image */}
+            <div className="lg:hidden absolute top-7 left-6 z-20 flex items-center gap-3">
+                <LogoMark className="nf-logo-mark-small" />
+                <span className="nf-brand-word text-2xl font-semibold tracking-tight text-white drop-shadow-lg">
+                    NexForge
+                </span>
             </div>
 
             <div className="relative z-10 flex min-h-screen w-full">
