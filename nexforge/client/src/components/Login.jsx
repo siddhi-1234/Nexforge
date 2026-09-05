@@ -248,8 +248,6 @@ export default function Login({ onLogin, onGoogleLogin, onCreateAccount, onForgo
                                         autoComplete="email"
                                         value={form.email}
                                         onChange={handleChange}
-                                        onFocus={() => setIsInteracting(true)}
-                                        onBlur={() => setIsInteracting(false)}
                                         placeholder="Yourname@gmail.com"
                                         className="nf-input"
                                         required
@@ -278,8 +276,6 @@ export default function Login({ onLogin, onGoogleLogin, onCreateAccount, onForgo
                                         autoComplete="current-password"
                                         value={form.password}
                                         onChange={handleChange}
-                                        onFocus={() => setIsInteracting(true)}
-                                        onBlur={() => setIsInteracting(false)}
                                         placeholder="Enter your password"
                                         className="nf-input nf-password-input"
                                         required
@@ -314,8 +310,6 @@ export default function Login({ onLogin, onGoogleLogin, onCreateAccount, onForgo
                                 <button
                                     type="submit"
                                     disabled={isLoading}
-                                    onMouseEnter={() => setIsInteracting(true)}
-                                    onMouseLeave={() => setIsInteracting(false)}
                                     className="nf-login-button group relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-xl border border-cyan-400/40 text-sm font-semibold tracking-wider text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70"
                                 >
                                     <span className="nf-button-shine" />
