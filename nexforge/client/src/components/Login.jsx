@@ -94,17 +94,12 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
         setIsLoading(true);
 
         try {
-            // Connect your existing login API here.
-            // Example:
-            // await axios.post("http://localhost:5000/api/auth/login", form);
-
             if (onLogin) {
                 await onLogin({ ...form, remember });
             } else {
                 await new Promise((resolve) => setTimeout(resolve, 900));
             }
 
-            // Trigger visual success sequence
             setLoginSuccess(true);
 
             setTimeout(() => {
@@ -125,19 +120,17 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
             <div className="hidden lg:block nf-grid" />
             <div className="hidden lg:block nf-noise" />
 
-            {/* Mobile-only Ambient background effects */}
-            <div className="lg:hidden absolute inset-0 bg-gradient-to-b from-[#020c1b] via-[#010710] to-[#000205] z-0 pointer-events-none overflow-hidden">
-                {/* Large blurred cyan, blue, and violet drifting glows behind the authentication card */}
-                <div className="absolute top-[20%] left-[10%] w-[280px] h-[280px] bg-cyan-500/10 rounded-full blur-[80px] pointer-events-none nf-mob-glow-1" />
-                <div className="absolute bottom-[20%] right-[5%] w-[320px] h-[320px] bg-violet-600/10 rounded-full blur-[100px] pointer-events-none nf-mob-glow-2" />
-                <div className="absolute top-[45%] left-[30%] w-[240px] h-[240px] bg-blue-500/8 rounded-full blur-[90px] pointer-events-none nf-mob-glow-3" />
-
-                {/* Subtle technical grid */}
-                <div className="nf-mobile-grid" />
+            {/* Mobile Header Artwork & Background (Matching Desktop Asset) */}
+            <div className="lg:hidden nf-mob-hero-container">
+                <div
+                    className="nf-mob-hero-bg"
+                    style={{ backgroundImage: "url('/assets/login-bg.png')" }}
+                />
+                <div className="nf-mob-hero-overlay" />
             </div>
 
             <div className="relative z-10 flex min-h-screen w-full">
-                {/* LEFT SIDE */}
+                {/* LEFT SIDE (Desktop Unchanged) */}
                 <section className="fixed top-0 left-0 hidden h-screen w-1/2 overflow-hidden lg:flex">
                     <div
                         className="absolute inset-0 nf-reference-bg"
@@ -147,7 +140,6 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                     <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(1,14,25,.10),rgba(1,14,25,.35))]" />
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_45%,rgba(0,255,255,.13),transparent_34%),linear-gradient(180deg,rgba(1,14,25,.05),rgba(1,14,25,.55))]" />
 
-                    {/* Animated particles */}
                     <div className="nf-particles" aria-hidden="true">
                         {Array.from({ length: 24 }).map((_, index) => (
                             <span
@@ -163,13 +155,11 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                         ))}
                     </div>
 
-                    {/* Top-left Nexforge brand */}
                     <div className="absolute left-10 top-7 flex items-center gap-3">
                         <LogoMark className="nf-logo-mark-small" />
                         <span className="nf-brand-word">NexForge</span>
                     </div>
 
-                    {/* Decorative cyan beam */}
                     <div className="nf-beam nf-beam-one" />
                     <div className="nf-beam nf-beam-two" />
 
@@ -190,9 +180,9 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                     </div>
                 </section>
 
-                {/* RIGHT SIDE */}
-                <section className="relative flex min-h-screen w-full items-center justify-center px-4 py-8 sm:px-8 lg:w-1/2 lg:ml-auto">
-                    <div className="nf-form-glow" />
+                {/* RIGHT SIDE / MOBILE FULL CONTAINER */}
+                <section className="relative flex min-h-screen w-full items-center justify-center px-5 py-6 sm:px-8 lg:w-1/2 lg:ml-auto">
+                    <div className="hidden lg:block nf-form-glow" />
 
                     <div
                         ref={cardRef}
@@ -200,10 +190,10 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                         onPointerMove={handleCardPointerMove}
                         onPointerLeave={handleCardPointerLeave}
                     >
-                        <span className="nf-card-sheen" aria-hidden="true" />
-                        <span className="nf-card-perimeter" aria-hidden="true" />
+                        <span className="nf-card-sheen hidden lg:block" aria-hidden="true" />
+                        <span className="nf-card-perimeter hidden lg:block" aria-hidden="true" />
 
-                        {/* Desktop Header (unchanged on desktop) */}
+                        {/* Desktop Header */}
                         <div className="hidden lg:block">
                             <div className="mb-5 flex justify-center nf-animate-logo">
                                 <LogoMark className="nf-card-logo" />
@@ -219,29 +209,22 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                             </div>
                         </div>
 
-                        {/* Mobile-only Brand Header */}
-                        <div className="lg:hidden flex flex-col items-center text-center mb-6 nf-animate-logo relative">
-                            {/* Subtle cyan-violet glow behind the logo */}
-                            <div className="absolute -top-4 w-32 h-32 bg-gradient-to-br from-cyan-500/15 to-violet-500/15 rounded-full blur-xl pointer-events-none z-0" />
-
-                            <div className="relative z-10 flex items-center gap-2.5 mb-2">
-                                <LogoMark className="nf-mobile-logo" />
-                                <span className="text-xl font-bold tracking-tight text-white">NexForge</span>
-                            </div>
-
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-cyan-400">
-                                REAL PROJECTS - REAL TEAMS
+                        {/* Mobile Header Style matching Reference 1 */}
+                        <div className="lg:hidden text-left mb-6 mt-36">
+                            <h2 className="text-3xl font-extrabold uppercase tracking-wide text-white">
+                                SIGN IN
+                            </h2>
+                            <p className="mt-1.5 text-xs text-slate-400 font-medium">
+                                Sign in with email address
                             </p>
-
-
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            {/* Email */}
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {/* Email Input */}
                             <div className="nf-animate-email">
                                 <label
                                     htmlFor="email"
-                                    className="mb-2.5 block text-xs font-semibold uppercase tracking-[0.13em] text-slate-200"
+                                    className="hidden lg:block mb-2.5 text-xs font-semibold uppercase tracking-[0.13em] text-slate-200"
                                 >
                                     E-mail
                                 </label>
@@ -260,18 +243,18 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                         onChange={handleChange}
                                         onFocus={() => setIsInteracting(true)}
                                         onBlur={() => setIsInteracting(false)}
-                                        placeholder="Enter your e-mail"
+                                        placeholder="Yourname@gmail.com"
                                         className="nf-input"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            {/* Password */}
+                            {/* Password Input */}
                             <div className="nf-animate-password">
                                 <label
                                     htmlFor="password"
-                                    className="mb-2.5 block text-xs font-semibold uppercase tracking-[0.13em] text-slate-200"
+                                    className="hidden lg:block mb-2.5 text-xs font-semibold uppercase tracking-[0.13em] text-slate-200"
                                 >
                                     Password
                                 </label>
@@ -306,9 +289,9 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                 </div>
                             </div>
 
-                            {/* Remember + Forgot */}
-                            <div className="flex flex-col gap-3 min-[440px]:flex-row min-[440px]:items-center min-[440px]:justify-between min-[440px]:gap-4 nf-animate-remember">
-                                <label className="nf-check-label flex cursor-pointer items-center gap-2.5 text-sm text-slate-300">
+                            {/* Remember & Forgot Password */}
+                            <div className="flex items-center justify-between text-xs sm:text-sm text-slate-300 pt-1 nf-animate-remember">
+                                <label className="nf-check-label flex cursor-pointer items-center gap-2">
                                     <input
                                         type="checkbox"
                                         checked={remember}
@@ -323,88 +306,84 @@ export default function Login({ onLogin, onCreateAccount, onForgotPassword, onLo
                                 <button
                                     type="button"
                                     onClick={onForgotPassword}
-                                    className="nf-link text-sm font-semibold text-left min-[440px]:text-right"
+                                    className="nf-link text-xs font-medium text-slate-400 hover:text-cyan-400"
                                 >
-                                    Forgot your password?
+                                    Forgot password?
                                 </button>
                             </div>
 
-                            {/* Login */}
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                onMouseEnter={() => setIsInteracting(true)}
-                                onMouseLeave={() => setIsInteracting(false)}
-                                className="nf-login-button group relative flex h-[54px] w-full items-center justify-center overflow-hidden rounded-lg border border-cyan-300/80 text-sm font-bold uppercase tracking-[0.17em] text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70 nf-animate-login-btn"
-                            >
-                                <span className="nf-button-shine" />
-                                <span className="relative z-10">
-                                    {isLoading ? "LOGGING IN..." : "LOG IN"}
-                                </span>
-                            </button>
+                            {/* Submit Button */}
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    onMouseEnter={() => setIsInteracting(true)}
+                                    onMouseLeave={() => setIsInteracting(false)}
+                                    className="nf-login-button group relative flex h-[50px] w-full items-center justify-center overflow-hidden rounded-xl border border-cyan-400/40 text-sm font-semibold tracking-wider text-white transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-70"
+                                >
+                                    <span className="nf-button-shine" />
+                                    <span className="relative z-10 font-bold">
+                                        {isLoading ? "LOGGING IN..." : "Sign in"}
+                                    </span>
+                                </button>
+                            </div>
                         </form>
 
-                        <div className="nf-animate-signup">
-                            <div className="my-8 flex items-center gap-4">
-                                <span className="h-px flex-1 bg-white/10" />
-                                <span className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                                    or
+                        {/* Mobile Alternate Actions Matching Reference 1 */}
+                        <div className="nf-animate-signup mt-6">
+                            <div className="relative flex py-2 items-center justify-center">
+                                <div className="flex-grow border-t border-white/10"></div>
+                                <span className="flex-shrink mx-3 text-[11px] text-slate-400 lowercase">
+                                    Or continue with
                                 </span>
-                                <span className="h-px flex-1 bg-white/10" />
+                                <div className="flex-grow border-t border-white/10"></div>
                             </div>
 
-                            <p className="text-center text-sm text-slate-300">
+                            {/* Social Buttons Pills */}
+                            <div className="lg:hidden grid grid-cols-2 gap-3 mt-3">
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-center gap-2 h-11 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-slate-200 transition-all"
+                                >
+                                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                                        <path fill="#EA4335" d="M12 5c1.5 0 2.9.5 4 1.5l3-3C17.1 1.7 14.7 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.8C6.5 7.3 9 5 12 5z" />
+                                        <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z" />
+                                        <path fill="#FBBC05" d="M5.6 14.7c-.2-.7-.4-1.5-.4-2.3s.1-1.6.4-2.3L1.9 7.3C.7 9.7 0 12 0 14.7s.7 5 1.9 7.4l3.7-2.8z" />
+                                        <path fill="#34A853" d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.3-6.4-5.1L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z" />
+                                    </svg>
+                                    Google
+                                </button>
+                                <button
+                                    type="button"
+                                    className="flex items-center justify-center gap-2 h-11 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-xs font-medium text-slate-200 transition-all"
+                                >
+                                    <svg className="w-4 h-4 fill-[#1877F2]" viewBox="0 0 24 24">
+                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                    </svg>
+                                    Facebook
+                                </button>
+                            </div>
+
+                            <p className="mt-5 text-center text-xs text-slate-400">
                                 Don't have an account?
                                 <button
                                     type="button"
                                     onClick={onCreateAccount}
-                                    className="nf-link ml-2 font-semibold"
+                                    className="nf-link ml-1.5 font-semibold text-cyan-400"
                                 >
-                                    Create an account
+                                    Sign up
                                 </button>
                             </p>
 
-                            {/* Desktop Footer (unchanged on desktop) */}
-                            <div className="hidden lg:flex mt-8 items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white">
-                                <span className="h-1 w-1 rounded-full bg-cyan-400" />
-                                Secure NexForge workspace
-                                <span className="h-1 w-1 rounded-full bg-violet-400" />
-                            </div>
-
-                            {/* Mobile-only Footer with Animated status dot */}
-                            <div className="lg:hidden mt-6 flex items-center justify-center gap-2 text-[10px] uppercase tracking-[0.18em] text-slate-400">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400/80 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                                </span>
-                                NexForge workspace online
-                            </div>
+                            <p className="mt-3 text-center text-[10px] text-slate-500">
+                                By registering you agree to our <a href="#terms" className="underline hover:text-slate-400">Terms and Conditions</a>
+                            </p>
                         </div>
 
                         {loginSuccess && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0b1e2e]/98 backdrop-blur-md rounded-2xl p-5 sm:p-8 text-center z-30 nf-entering-overlay">
                                 <div className="mb-6 relative">
                                     <LogoMark className="nf-card-logo nf-glow-intensified" />
-                                    {/* Forge Spark Burst */}
-                                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                                        {Array.from({ length: 20 }).map((_, index) => {
-                                            const angle = (index * 360) / 20;
-                                            const distance = 45 + Math.random() * 75;
-                                            const duration = 0.5 + Math.random() * 0.7;
-                                            return (
-                                                <span
-                                                    key={index}
-                                                    className="nf-spark"
-                                                    style={{
-                                                        "--nf-spark-x": `${Math.cos((angle * Math.PI) / 180) * distance}px`,
-                                                        "--nf-spark-y": `${Math.sin((angle * Math.PI) / 180) * distance}px`,
-                                                        animationDuration: `${duration}s`,
-                                                        animationDelay: `${Math.random() * 0.15}s`,
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </div>
                                 </div>
                                 <h3 className="text-xl font-bold tracking-[0.22em] text-white nf-entering-text">
                                     ENTERING NEXFORGE
